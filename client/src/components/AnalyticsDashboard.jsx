@@ -50,54 +50,125 @@ function HourChart({ byHour }) {
   )
 }
 
-export default function AnalyticsDashboard({ shortCode }) {
+function EmptyState() {
+  return (
+    <div className="rounded-xl bg-gecko-dark-border/50 border border-gecko-dark-border p-6 text-center">
+      <p className="text-gecko-slate text-sm mb-1">No traffic yet</p>
+      <p className="text-gecko-slate/80 text-xs">Clicks will appear here after someone uses your short link.</p>
+    </div>
+  )
+}
+
+function getErrorMessage(e) {
+  if (e?.name === "AbortError") return "Request timed out. Check your connection and try again."
+  const msg = e?.errors?.[0] ?? e?.message
+  if (msg) return msg
+  return "Couldn't load analytics. You can still use your short link."
+}
+
+export default function AnalyticsDashboard({ shortCode, totalClicks }) {
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
-    if (!shortCode) return
+    if (!shortCode) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
     getAnalytics(shortCode)
-      .then(setReport)
-      .catch((e) => setError(e?.errors?.[0] || "Failed to load analytics"))
+      .then((data) => {
+        setReport(
+          data && typeof data === "object"
+            ? {
+                by_country: data.by_country ?? data.byCountry ?? {},
+                by_hour: data.by_hour ?? data.byHour ?? {},
+              }
+            : {}
+        )
+      })
+      .catch((e) => setError(getErrorMessage(e)))
       .finally(() => setLoading(false))
-  }, [shortCode])
+  }, [shortCode, retryKey])
 
   if (loading) {
     return (
-      <div className="w-full max-w-2xl rounded-2xl bg-gecko-dark-card border border-gecko-dark-border p-6 animate-pulse">
-        <div className="h-6 bg-gecko-dark-border rounded w-1/3 mb-4" />
-        <div className="h-4 bg-gecko-dark-border rounded w-full mb-2" />
-        <div className="h-4 bg-gecko-dark-border rounded w-5/6" />
-      </div>
+      <section className="w-full max-w-2xl rounded-2xl bg-gecko-dark-card border border-gecko-dark-border p-6">
+        <div className="flex items-baseline justify-between gap-4 mb-4">
+          <h2 className="text-lg font-semibold text-white">Analytics</h2>
+          {typeof totalClicks === "number" && (
+            <span className="text-gecko-slate text-sm">
+              <span className="font-semibold text-gecko-green tabular-nums">{totalClicks}</span> total clicks
+            </span>
+          )}
+        </div>
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 bg-gecko-dark-border rounded w-full" />
+          <div className="h-4 bg-gecko-dark-border rounded w-5/6" />
+          <div className="h-4 bg-gecko-dark-border rounded w-4/6" />
+        </div>
+      </section>
     )
   }
 
   if (error) {
     return (
-      <div className="w-full max-w-2xl rounded-2xl bg-gecko-dark-card border border-gecko-dark-border p-6 text-red-400">
-        {error}
-      </div>
+      <section className="w-full max-w-2xl rounded-2xl bg-gecko-dark-card border border-gecko-dark-border p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white mb-2">Analytics</h2>
+            {typeof totalClicks === "number" && (
+              <p className="text-gecko-slate text-sm mb-2">
+                <span className="font-semibold text-gecko-green tabular-nums">{totalClicks}</span> total clicks
+              </p>
+            )}
+            <p className="text-red-400 text-sm mb-4">{error}</p>
+            <button
+              type="button"
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="text-sm font-medium text-gecko-green hover:text-gecko-green-light focus:underline outline-none"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </section>
     )
   }
 
+  const hasCountry = report?.by_country && Object.keys(report.by_country).length > 0
+  const hasHour = report?.by_hour && Object.keys(report.by_hour).length > 0
+  const hasAnyData = hasCountry || hasHour
+
   return (
     <section className="animate-fade-in w-full max-w-2xl rounded-2xl bg-gecko-dark-card border border-gecko-dark-border p-6 shadow-card">
-      <h2 className="text-lg font-semibold text-white mb-4">Analytics</h2>
-      <div className="grid gap-8 sm:grid-cols-2">
-        <div>
-          <h3 className="text-sm font-medium text-gecko-slate uppercase tracking-wider mb-3">By country</h3>
-          <CountryList byCountry={report?.by_country} />
-        </div>
-        <div className="sm:col-span-2">
-          <h3 className="text-sm font-medium text-gecko-slate uppercase tracking-wider mb-3">Clicks by hour</h3>
-          <div className="max-h-64 overflow-y-auto pr-2">
-            <HourChart byHour={report?.by_hour} />
+      <div className="flex items-baseline justify-between gap-4 mb-4">
+        <h2 className="text-lg font-semibold text-white">Analytics</h2>
+        {typeof totalClicks === "number" && (
+          <span className="text-gecko-slate text-sm">
+            <span className="font-semibold text-gecko-green tabular-nums">{totalClicks}</span> total clicks
+          </span>
+        )}
+      </div>
+      {!hasAnyData ? (
+        <EmptyState />
+      ) : (
+        <div className="grid gap-8 sm:grid-cols-2">
+          <div>
+            <h3 className="text-sm font-medium text-gecko-slate uppercase tracking-wider mb-3">By country</h3>
+            <CountryList byCountry={report?.by_country} />
+          </div>
+          <div className="sm:col-span-2">
+            <h3 className="text-sm font-medium text-gecko-slate uppercase tracking-wider mb-3">Clicks by hour</h3>
+            <div className="max-h-64 overflow-y-auto pr-2">
+              <HourChart byHour={report?.by_hour} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }

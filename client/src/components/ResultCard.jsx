@@ -22,32 +22,16 @@ function CopyButton({ text, label = "Copy" }) {
     >
       {copied ? (
         <>
-          <CheckIcon className="w-4 h-4" />
+          <i className="fa-solid fa-check text-base" aria-hidden />
           <span>Copied</span>
         </>
       ) : (
         <>
-          <ClipboardIcon className="w-4 h-4" />
+          <i className="fa-solid fa-copy text-base" aria-hidden />
           <span>Copy</span>
         </>
       )}
     </button>
-  )
-}
-
-function CheckIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  )
-}
-
-function ClipboardIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h2m8 0a2 2 0 012 2v2m0 8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-8a2 2 0 012-2h2" />
-    </svg>
   )
 }
 

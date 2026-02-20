@@ -7,3 +7,10 @@
     @apply bg-gecko-dark text-white;
   }
 }
+
+.bg-pattern {
+  background-image:
+    linear-gradient(rgba(141, 198, 71, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(141, 198, 71, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}

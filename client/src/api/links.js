@@ -1,4 +1,13 @@
-const API_BASE = "/api/v1"
+const API_BASE =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE
+    ? String(import.meta.env.VITE_API_BASE).replace(/\/$/, "")
+    : "") + "/api/v1"
+
+function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id))
+}
 
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
@@ -23,7 +32,8 @@ export async function getLink(shortCode) {
 }
 
 export async function getAnalytics(shortCode) {
-  const res = await fetch(`${API_BASE}/links/${shortCode}/analytics`, {
+  const url = `${API_BASE}/links/${encodeURIComponent(shortCode)}/analytics`
+  const res = await fetchWithTimeout(url, {
     headers: { Accept: "application/json" },
   })
   return handleResponse(res)

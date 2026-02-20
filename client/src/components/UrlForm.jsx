@@ -1,41 +1,70 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 
-const INPUT_PLACEHOLDER = "https://example.com/your-long-url"
+const INPUT_PLACEHOLDER = "Paste your long URL here"
+
+function normalizeUrl(input) {
+  const trimmed = input.trim()
+  if (!trimmed) return ""
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function hasValidHost(urlString) {
+  try {
+    const url = new URL(urlString)
+    const host = url.hostname
+    return host === "localhost" || host.includes(".")
+  } catch {
+    return false
+  }
+}
 
 export default function UrlForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("")
   const [error, setError] = useState(null)
   const [touched, setTouched] = useState(false)
 
-  const isValid = /^https?:\/\/\S+$/i.test(url.trim())
+  const normalized = normalizeUrl(url)
+  const isValid = /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized)
   const showError = touched && (error || (url.trim() && !isValid))
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    setTouched(true)
-    setError(null)
-    const trimmed = url.trim()
-    if (!trimmed) {
-      setError("Please enter a URL")
-      return
-    }
-    if (!isValid) {
-      setError("URL must start with http:// or https://")
-      return
-    }
-    onSubmit(trimmed)
-  }
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault()
+      setTouched(true)
+      setError(null)
+      const trimmed = url.trim()
+      if (!trimmed) {
+        setError("Please enter a URL")
+        return
+      }
+      const toSubmit = normalizeUrl(trimmed)
+      if (!/^https?:\/\/\S+$/i.test(toSubmit)) {
+        setError("Please enter a valid URL")
+        return
+      }
+      if (!hasValidHost(toSubmit)) {
+        setError("URL must have a valid domain (e.g. example.com)")
+        return
+      }
+      onSubmit(toSubmit)
+    },
+    [url, onSubmit]
+  )
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <label className="sr-only" htmlFor="url-input">
-          Long URL to shorten
-        </label>
-        <input
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <label className="sr-only" htmlFor="url-input">
+            Long URL to shorten
+          </label>
+          <input
           id="url-input"
-          type="url"
+          type="text"
           inputMode="url"
+          autoCorrect="off"
+          spellCheck="false"
           autoComplete="url"
           placeholder={INPUT_PLACEHOLDER}
           value={url}
@@ -56,10 +85,17 @@ export default function UrlForm({ onSubmit, isLoading }) {
         >
           {isLoading ? "Shortening…" : "Shorten"}
         </button>
+        </div>
+        <p className="text-gecko-slate text-sm">
+          Add https:// if needed · Use a full domain (e.g. example.com)
+        </p>
       </div>
       {showError && (
         <p id="url-error" role="alert" className="mt-2 text-sm text-red-400">
-          {error || "URL must start with http:// or https://"}
+          {error ||
+            (!hasValidHost(normalized)
+              ? "URL must have a valid domain (e.g. example.com)"
+              : "Please enter a valid URL")}
         </p>
       )}
     </form>
