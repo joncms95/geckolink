@@ -11,6 +11,7 @@ gem "puma", ">= 5.0"
 gem "redis", ">= 5.0"
 gem "sidekiq", ">= 7.0"
 gem "geocoder", "~> 1.8"
+gem "rack-attack", "~> 6.7"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"

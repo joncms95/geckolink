@@ -35,13 +35,14 @@ We utilize **Service Objects** and **Query Objects** to keep controllers skinny 
 
 To ensure low latency for the user:
 
-1.  **URL Title Fetching**: When a user submits a link, we return the short URL immediately. A Sidekiq job (`FetchTitleJob`) runs in the background to scrape the HTML `<title>` tag and update the record via ActionCable/WebSockets or simple polling.
+1.  **URL Title Fetching**: When a user submits a link, we return the short URL immediately. A Sidekiq job (`TitleFetcherJob`) runs in the background to scrape the HTML `<title>` tag and update the record.
 2.  **Geolocation**: Click analytics are processed asynchronously. When a link is visited, we log the raw event and process IP-to-Location (using GeoIP) in a background worker to avoid slowing down the redirect.
 
 ### 3. Scalability
 
-- **Read-Heavy Optimization**: Short code lookups are cached in Redis to minimize DB hits on redirects.
+- **Redirect lookups**: Short code → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, set `config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"] }` so the cache is shared across instances.
 - **Write Strategy**: We utilize unique indexes on the `short_code` column to prevent race conditions at the database level.
+- **Health checks**: The `/up` endpoint reports app boot status. For HA, configure your platform to also check DB connectivity (e.g. a custom endpoint that runs `ActiveRecord::Base.connection.execute("SELECT 1")`) or rely on the default `/up` and platform health checks.
 
 ---
 
@@ -83,13 +84,25 @@ To ensure low latency for the user:
     ```bash
     bundle exec rspec
     ```
+    Backend is covered by RSpec (unit and request specs). The React frontend is manually tested; add Vitest or Jest for automated frontend tests if desired.
+
+### Deployment
+
+The app is not deployed by default. To deploy (e.g. Render, Heroku):
+
+- **Web**: Run `bin/rails server` (or the platform’s Rails command). Set `PORT` and `RAILS_ENV=production`.
+- **Worker**: Run `bundle exec sidekiq` for background jobs (title fetching, geolocation).
+- **Env**: Set `DATABASE_URL`, `REDIS_URL`, and `RAILS_MASTER_KEY` (for credentials). See `.env.example`.
+- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately and set CORS (see `config/initializers/cors.rb`).
+
+The repo includes a production Dockerfile; use it with your orchestrator or a platform that supports Docker.
 
 ---
 
 ## 🛡 Security
 
 - **Input Sanitization**: All target URLs are validated against a strict regex scheme to prevent Javascript injection (`javascript:`) or local network scanning.
-- **Rate Limiting**: `Rack::Attack` is configured to throttle abusive IP addresses attempting to generate mass links.
+- **Rate Limiting**: `Rack::Attack` throttles requests per IP for link creation and redirects to limit abuse.
 
 ## 📝 License
 

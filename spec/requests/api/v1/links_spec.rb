@@ -29,6 +29,14 @@ RSpec.describe "Api::V1::Links", type: :request do
         expect(response.parsed_body["errors"]).to be_present
       end
     end
+
+    context "without link param" do
+      it "returns 422 with errors" do
+        post api_v1_links_path, params: {}, as: :json
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body["errors"]).to be_present
+      end
+    end
   end
 
   describe "GET /api/v1/links/:short_code" do

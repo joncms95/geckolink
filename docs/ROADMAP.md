@@ -42,6 +42,6 @@
 
 ## Phase 6: Polish & Deployment
 
-- [ ] **Security**: Add Rack::Attack for rate limiting.
-- [ ] **Docs**: Finalize README and WIKI.
+- [x] **Security**: Add Rack::Attack for rate limiting.
+- [x] **Docs**: Finalize README and WIKI.
 - [ ] **Deploy**: Heroku or Render configuration.

@@ -30,3 +30,11 @@ Converting the auto-incrementing Primary Key ID to Base62 (0-9, a-z, A-Z). After
 - **Cons:** Predictable. If I get code `b`, I know `c` is next. This exposes business volume to competitors and allows enumeration attacks. For this URL shortener, predictability is not a significant concern.
 
 **Why Base62 over Random (B)?** We prefer simplicity and operational reliability. Random forces collision handling, retry limits, and optional blocklists; Base62 avoids collisions entirely and keeps the implementation small. Predictability is an acceptable tradeoff for this use case.
+
+## Limitations and workarounds
+
+- **Short code length (max 15 characters):** The spec requires short URL paths to not exceed 15 characters. For IDs below \(62^{15}\) (~768×10¹⁵ links), the short code is at most 15 characters. The application enforces this via a model validation. If the service ever approaches that scale, a different encoding or namespace would be needed; for typical usage this limit is effectively unreachable.
+
+- **Predictability:** Short codes are sequential (id 1 → "1", id 62 → "10"). Anyone can enumerate existing links by guessing the next code. Mitigations: rate limiting on creation and redirect (see Rack::Attack), and optionally requiring authentication for sensitive links in a future iteration.
+
+- **Operational limits:** Title fetching and geolocation depend on external services (target URL availability, GeoIP provider). Failures are handled asynchronously and do not block the user; the link remains usable with a null title or geolocation until the job succeeds or is retried.

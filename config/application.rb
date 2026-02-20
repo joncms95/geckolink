@@ -41,6 +41,8 @@ module WCoingecko
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    config.middleware.use Rack::Attack
+
     config.generators do |g|
       g.test_framework :rspec
       g.fixture_replacement :factory_bot
