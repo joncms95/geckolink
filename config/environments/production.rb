@@ -60,11 +60,14 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
+  # Redis cache store: shared across app instances (redirects, Rack::Attack).
+  # Use REDIS_CACHE_URL for a dedicated cache instance, or leave unset to use REDIS_URL.
+  config.cache_store = :redis_cache_store, config.x.redis_cache_options.merge(
+    url: ENV.fetch("REDIS_CACHE_URL", ENV["REDIS_URL"]).presence || "redis://localhost:6379/1"
+  )
 
   config.active_job.queue_adapter = :sidekiq
-  config.active_job.queue_name_prefix = "w_coingecko_production"
+  config.active_job.queue_name_prefix = "geckolink_production"
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.

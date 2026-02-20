@@ -35,6 +35,7 @@ module Api
           url: link.url,
           short_code: link.short_code,
           title: link.title,
+          icon_url: link.icon_url,
           clicks_count: link.clicks_count,
           short_url: short_url_for(link)
         }

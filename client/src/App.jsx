@@ -41,7 +41,66 @@ function saveRecentLinks(links) {
   } catch (_) {}
 }
 
-function HomePage({ onSubmit, loading, submitError }) {
+function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewDashboard }) {
+  const [iconError, setIconError] = useState(false)
+  const showIcon = createdLink?.icon_url && !iconError
+  return (
+    <div className="mt-8 max-w-2xl mx-auto rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-6 text-left">
+      <div className="flex gap-4 mb-4">
+        {showIcon ? (
+          <img
+            src={createdLink.icon_url}
+            alt=""
+            className="w-10 h-10 rounded-lg shrink-0 object-cover bg-gecko-dark-border"
+            referrerPolicy="no-referrer"
+            onError={() => setIconError(true)}
+          />
+        ) : (
+          <div
+            className="w-10 h-10 rounded-lg shrink-0 bg-gecko-dark-border flex items-center justify-center"
+            aria-hidden
+          >
+            <i className="fa-solid fa-link text-xl text-gecko-slate" aria-hidden />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-gecko-slate text-sm font-medium mb-1">Target URL</p>
+          <p className="text-white text-sm truncate" title={createdLink.url}>
+            {createdLink.url}
+          </p>
+        </div>
+      </div>
+      <p className="text-gecko-slate text-sm font-medium mb-2">Title</p>
+      <p className="text-white text-sm truncate mb-4" title={createdLink.title || ""}>
+        {createdLink.title?.trim() || "Fetching…"}
+      </p>
+      <p className="text-gecko-slate text-sm font-medium mb-2">Short URL</p>
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <p className="text-gecko-green font-medium text-sm truncate flex-1 min-w-0" title={createdLink.short_url}>
+          {createdLink.short_url}
+        </p>
+        <div className="flex gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => onCopyShortUrl(createdLink.short_url)}
+            className="px-4 py-2 rounded-lg font-medium bg-gecko-green text-gecko-dark hover:bg-gecko-green-light focus:ring-2 focus:ring-gecko-green focus:ring-offset-2 focus:ring-offset-gecko-dark"
+          >
+            Copy
+          </button>
+          <button
+            type="button"
+            onClick={onViewDashboard}
+            className="px-4 py-2 rounded-lg font-medium border border-gecko-dark-border text-gecko-slate hover:bg-gecko-dark-border hover:text-white focus:ring-2 focus:ring-gecko-green focus:ring-offset-2 focus:ring-offset-gecko-dark"
+          >
+            View analytics
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HomePage({ onSubmit, loading, submitError, createdLink, onCopyShortUrl, onViewDashboard }) {
   return (
     <main className="max-w-3xl mx-auto px-4 pt-16 pb-24 text-center">
       <h2 className="text-4xl font-bold tracking-tight">
@@ -59,6 +118,13 @@ function HomePage({ onSubmit, loading, submitError }) {
           {submitError}
         </div>
       )}
+      {createdLink && (
+        <CreatedLinkResult
+          createdLink={createdLink}
+          onCopyShortUrl={onCopyShortUrl}
+          onViewDashboard={onViewDashboard}
+        />
+      )}
     </main>
   )
 }
@@ -74,8 +140,9 @@ function AppContent() {
   const [lookupError, setLookupError] = useState(null)
   const [lookupLoading, setLookupLoading] = useState(false)
   const [toast, setToast] = useState(null)
+  const [createdLink, setCreatedLink] = useState(null)
 
-  const isDashboard = location.pathname === "/dashboard"
+  const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
 
   useEffect(() => {
     saveRecentLinks(recentLinks)
@@ -97,16 +164,40 @@ function AppContent() {
     )
   }, [])
 
+  // On dashboard view: refetch all recent links from API and replace list with fresh data.
+  // Removes stale/deleted links (404) and ensures counts/titles are accurate.
+  useEffect(() => {
+    if (!isDashboard || recentLinks.length === 0) return
+    const codes = recentLinks.map((l) => l?.short_code).filter(Boolean)
+    if (codes.length === 0) return
+    let cancelled = false
+    Promise.allSettled(codes.map((code) => getLink(code)))
+      .then((results) => {
+        if (cancelled) return
+        const freshList = results
+          .map((p) => (p.status === "fulfilled" && p.value ? p.value : null))
+          .filter(Boolean)
+        setRecentLinks(freshList)
+        setSelectedLink((prev) => {
+          if (!prev?.short_code) return prev
+          const found = freshList.find((l) => l.short_code === prev.short_code)
+          return found || null
+        })
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [isDashboard, recentLinks.length])
+
   const handleSubmit = useCallback(
     async (url) => {
       setLoading(true)
       setSubmitError(null)
+      setCreatedLink(null)
       try {
         const data = await createLink(url)
         addToRecent(data)
-        setToast("Short URL created successfully!")
-        setSelectedLink(data)
-        navigate("/dashboard")
+        setToast("Short URL created!")
+        setCreatedLink(data)
       } catch (err) {
         const messages = Array.isArray(err?.errors) ? err.errors : [err?.errors || "Something went wrong"]
         setSubmitError(messages.join(". "))
@@ -114,8 +205,23 @@ function AppContent() {
         setLoading(false)
       }
     },
-    [addToRecent, navigate]
+    [addToRecent]
   )
+
+  const updateCreatedLink = useCallback((updates) => {
+    setCreatedLink((prev) => (prev ? { ...prev, ...updates } : null))
+  }, [])
+
+  // Refetch created link after a delay so title (from TitleFetcherJob) appears when ready
+  useEffect(() => {
+    if (!createdLink?.short_code || createdLink.title?.trim()) return
+    const id = setTimeout(() => {
+      getLink(createdLink.short_code)
+        .then((data) => updateCreatedLink(data))
+        .catch(() => {})
+    }, 2500)
+    return () => clearTimeout(id)
+  }, [createdLink?.short_code, createdLink?.title, updateCreatedLink])
 
   const handleLookup = useCallback(
     async (e) => {
@@ -132,13 +238,14 @@ function AppContent() {
         addToRecent(data)
         setSelectedLink(data)
         setLookupValue("")
+        navigate(`/dashboard/${data.short_code}`)
       } catch (err) {
         setLookupError(err?.errors?.[0] || "Short link not found. Check the URL or code and try again.")
       } finally {
         setLookupLoading(false)
       }
     },
-    [lookupValue, addToRecent]
+    [lookupValue, addToRecent, navigate]
   )
 
   const lookupForm = (
@@ -176,7 +283,21 @@ function AppContent() {
         <Route
           path="/"
           element={
-            <HomePage onSubmit={handleSubmit} loading={loading} submitError={submitError} />
+            <HomePage
+              onSubmit={handleSubmit}
+              loading={loading}
+              submitError={submitError}
+              createdLink={createdLink}
+              onCopyShortUrl={async (text) => {
+                try {
+                  await navigator.clipboard.writeText(text)
+                  setToast("Copied to clipboard!")
+                } catch (_) {}
+              }}
+              onViewDashboard={() => {
+                if (createdLink?.short_code) navigate(`/dashboard/${createdLink.short_code}`)
+              }}
+            />
           }
         />
         <Route
@@ -186,7 +307,23 @@ function AppContent() {
               recentLinks={recentLinks}
               selectedLink={selectedLink}
               onSelectLink={setSelectedLink}
+              onAddToRecent={addToRecent}
               onUpdateLink={updateLinkInRecent}
+              onNavigateToStats={navigate}
+              lookupForm={lookupForm}
+            />
+          }
+        />
+        <Route
+          path="/dashboard/:shortCode"
+          element={
+            <DashboardPage
+              recentLinks={recentLinks}
+              selectedLink={selectedLink}
+              onSelectLink={setSelectedLink}
+              onAddToRecent={addToRecent}
+              onUpdateLink={updateLinkInRecent}
+              onNavigateToStats={navigate}
               lookupForm={lookupForm}
             />
           }

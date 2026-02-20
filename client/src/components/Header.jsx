@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom"
 
 export default function Header() {
   const location = useLocation()
-  const isDashboard = location.pathname === "/dashboard"
+  const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
 
   return (
     <header className="border-b border-gecko-dark-border/80 bg-gecko-dark/80 backdrop-blur-sm sticky top-0 z-10">

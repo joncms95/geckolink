@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_20_000003) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_20_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,6 +21,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_20_000003) do
     t.integer "clicks_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "icon_url"
     t.index ["short_code"], name: "index_links_on_short_code", unique: true
   end
 

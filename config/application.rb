@@ -28,6 +28,16 @@ module WCoingecko
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Redis cache options (used when config.cache_store = :redis_cache_store in production/development).
+    # Namespace isolates keys from other apps sharing the same Redis. Error handler avoids raising on Redis failures.
+    config.x.redis_cache_options = {
+      namespace: "geckolink:cache",
+      expires_in: 5.minutes,
+      error_handler: ->(method:, returning:, exception:) {
+        Rails.logger.error { "Redis cache #{method}: #{exception.class} - #{exception.message}" }
+      }
+    }
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

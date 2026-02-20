@@ -1,10 +1,25 @@
+function parseTimeKey(k) {
+  if (k == null || k === "") return NaN
+  const s = String(k).trim()
+  const t = new Date(s).getTime()
+  if (!Number.isNaN(t)) return t
+  if (!/Z|[-+]\d{2}:?\d{2}$/.test(s)) return new Date(s + "Z").getTime()
+  return NaN
+}
+
 export default function ClicksOverTimeChart({ byHour }) {
-  const entries = Object.entries(byHour || {})
-    .map(([k, v]) => [new Date(k).getTime(), v])
+  const raw = byHour != null && typeof byHour === "object" && !Array.isArray(byHour)
+    ? byHour
+    : {}
+  const entries = Object.entries(raw)
+    .map(([k, v]) => {
+      const t = parseTimeKey(k)
+      return Number.isNaN(t) ? null : [t, Number(v) || 0]
+    })
+    .filter(Boolean)
     .sort((a, b) => a[0] - b[0])
     .slice(-24)
 
-  const max = Math.max(1, ...entries.map(([, v]) => v))
   const width = 400
   const height = 160
   const padding = { top: 12, right: 12, bottom: 24, left: 36 }
@@ -21,10 +36,12 @@ export default function ClicksOverTimeChart({ byHour }) {
   }
 
   const minT = entries[0][0]
-  const maxT = entries[entries.length - 1][0] || minT + 1
-  const rangeT = maxT - minT || 1
+  const maxT = entries[entries.length - 1][0]
+  const rangeT = Math.max(maxT - minT, 1)
+  const max = Math.max(1, ...entries.map(([, v]) => v))
+  const plotEntries = entries.length === 1 ? [entries[0], [entries[0][0] + rangeT, entries[0][1]]] : entries
 
-  const points = entries
+  const points = plotEntries
     .map(([t, v], i) => {
       const x = padding.left + (innerWidth * (t - minT)) / rangeT
       const y = padding.top + innerHeight - (innerHeight * v) / max

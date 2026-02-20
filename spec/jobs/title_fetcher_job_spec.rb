@@ -36,6 +36,22 @@ RSpec.describe TitleFetcherJob do
       end
     end
 
+    context "when response is a redirect then HTML with title" do
+      before do
+        stub_request(:get, "https://example.com/")
+          .with(headers: { "User-Agent" => /Firefox/, "Accept" => /text\/html/ })
+          .to_return(status: 302, headers: { "Location" => "https://example.com/welcome" })
+        stub_request(:get, "https://example.com/welcome")
+          .with(headers: { "User-Agent" => /Firefox/, "Accept" => /text\/html/ })
+          .to_return(status: 200, headers: { "Content-Type" => "text/html" }, body: "<html><head><title>Welcome Page</title></head></html>")
+      end
+
+      it "follows redirect and updates link title" do
+        described_class.perform_now(link.id)
+        expect(link.reload.title).to eq("Welcome Page")
+      end
+    end
+
     context "when request times out" do
       before do
         stub_request(:get, %r{\Ahttps://example\.com/?\z}).to_timeout

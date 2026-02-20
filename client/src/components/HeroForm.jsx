@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react"
 
 const URL_PLACEHOLDER = "Enter your long URL here..."
-const CUSTOM_CODE_MAX = 15
 
 function normalizeUrl(input) {
   const trimmed = input.trim()
@@ -73,26 +72,6 @@ export default function HeroForm({ onSubmit, isLoading }) {
           aria-invalid={showError}
           className="w-full px-5 py-4 rounded-xl border border-gecko-dark-border bg-gecko-dark-card text-white placeholder-gecko-slate focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none transition-all disabled:opacity-60"
         />
-        <div className="relative">
-          <label className="sr-only" htmlFor="hero-custom-code">
-            Custom short code (optional)
-          </label>
-          <input
-            id="hero-custom-code"
-            type="text"
-            maxLength={CUSTOM_CODE_MAX}
-            placeholder="Custom short code (optional, max 15 chars)"
-            readOnly
-            className="w-full px-5 py-4 rounded-xl border border-gecko-dark-border bg-gecko-dark-card/50 text-gecko-slate placeholder-gecko-slate outline-none cursor-default pr-16"
-            title="Short codes are auto-generated"
-          />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gecko-slate text-sm tabular-nums pointer-events-none">
-            0/{CUSTOM_CODE_MAX}
-          </span>
-        </div>
-        <p className="text-gecko-slate text-xs -mt-2">
-          Short codes are auto-generated. Custom codes may be supported later.
-        </p>
       </div>
       {showError && (
         <p role="alert" className="text-sm text-red-400 -mt-2 w-full text-center">

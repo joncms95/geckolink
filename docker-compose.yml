@@ -6,7 +6,7 @@ services:
       - "3000:3000"
     env_file: .env
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/w_coingecko_development
+      DATABASE_URL: postgres://postgres:postgres@db:5432/geckolink_development
       REDIS_URL: redis://redis:6379/0
       RAILS_ENV: development
     volumes:
@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: w_coingecko_development
+      POSTGRES_DB: geckolink_development
     ports:
       - "5432:5432"
     volumes:
