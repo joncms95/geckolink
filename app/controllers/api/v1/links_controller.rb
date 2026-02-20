@@ -8,7 +8,7 @@ module Api
         if result.success?
           render json: link_json(result.value), status: :created
         else
-          render json: { errors: result.error }, status: :unprocessable_entity
+          render json: { errors: result.error }, status: :unprocessable_content
         end
       end
 

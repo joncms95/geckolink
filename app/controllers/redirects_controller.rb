@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class RedirectsController < ApplicationController
-  SAFE_REDIRECT_REGEX = %r{\Ahttps?://[^\s]+\z}i
-
   def show
     link = Link.find_by!(short_code: params[:short_code])
     link.increment!(:clicks_count)
@@ -12,10 +10,22 @@ class RedirectsController < ApplicationController
       user_agent: request.user_agent,
     )
 
-    if link.url.match?(SAFE_REDIRECT_REGEX)
-      redirect_to link.url, allow_other_host: true, status: :found
+    redirect_url = safe_redirect_url(link.url)
+    if redirect_url
+      redirect_to redirect_url, allow_other_host: true, status: :found
     else
-      head :unprocessable_entity
+      head :unprocessable_content
     end
+  end
+
+  private
+
+  def safe_redirect_url(url)
+    uri = URI.parse(url)
+    return unless uri.is_a?(URI::HTTP) && uri.host.present?
+
+    uri.to_s
+  rescue URI::InvalidURIError
+    nil
   end
 end
