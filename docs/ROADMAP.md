@@ -35,10 +35,10 @@
 
 ## Phase 5: Frontend (React)
 
-- [ ] Initialize React within the Rails ecosystem (Vite).
-- [ ] **Component**: URL Submission Form (with error states).
-- [ ] **Component**: Result Card (Short URL, Copy to Clipboard, Title).
-- [ ] **Component**: Analytics Dashboard (Simple chart/table of clicks).
+- [x] Initialize React within the Rails ecosystem (Vite).
+- [x] **Component**: URL Submission Form (with error states).
+- [x] **Component**: Result Card (Short URL, Copy to Clipboard, Title).
+- [x] **Component**: Analytics Dashboard (Simple chart/table of clicks).
 
 ## Phase 6: Polish & Deployment
 
