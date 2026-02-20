@@ -2,9 +2,9 @@
 
 ## Phase 1: Foundation & Infrastructure
 
-- [ ] Initialize Rails 7.2 app with PostgreSQL and -T (skip test) flags.
-- [ ] Configure Docker and Docker Compose (App, Postgres, Redis).
-- [ ] Set up RSpec, FactoryBot, and DatabaseCleaner.
+- [x] Initialize Rails 7.2 app with PostgreSQL and -T (skip test) flags.
+- [x] Configure Docker and Docker Compose (App, Postgres, RÏedis).
+- [x] Set up RSpec, FactoryBot, and DatabaseCleaner.
 
 ## Phase 2: Core Backend Logic (The Shortener)
 
