@@ -28,7 +28,7 @@ We utilize a modern, reliable stack aligned with high-throughput requirements:
 
 We utilize **Service Objects** and **Query Objects** to keep controllers skinny and business logic testable.
 
-- `Shortener::CreateService`: Handles the generation logic, collision detection, and initial record creation.
+- `Shortener::CreateService`: Handles the generation logic and initial record creation.
 - `Analytics::ReportQuery`: specialized query object to aggregate click data, ensuring the database handles the heavy lifting for reports.
 
 ### 2. Async Processing

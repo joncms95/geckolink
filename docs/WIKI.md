@@ -1,8 +1,9 @@
-# Wiki: Short Code Generation Strategy
+# Wiki: Short URL Generation Strategy
 
 ## The Problem
 
 We need to generate short, URL-safe strings (Short URLs) that map to long Target URLs.
+
 **Constraint:** Multiple Short URLs can share the same Target URL (1:N relationship).
 
 ## Evaluated Solutions
@@ -14,36 +15,18 @@ Taking a hash of the target URL (e.g., `MD5(target_url)`).
 - **Pros:** Deterministic.
 - **Cons:** Violates the requirement that "Multiple Short URLs can share the same Target URL". Hashing the same URL twice produces the same hash.
 
-### Approach B: Base62 Encoding of Database ID
+### Approach B: Random Alphanumeric String
 
-Converting the auto-incrementing Primary Key ID to Base62 (0-9, a-z, A-Z).
+Generating a random 7-character string using a CSPRNG from alphabet `[A-Z, a-z, 0-9]`; on collision, retry (e.g. up to 3 times).
 
-- **Pros:** Guaranteed uniqueness, no collisions, extremely fast.
-- **Cons:** Predictable. If I get code `b`, I know `c` is next. This exposes business volume to competitors and allows enumeration attacks.
+- **Pros:** Unpredictable; supports 1:N; large space ($62^7$ ~3.5 trillion).
+- **Cons:** Collisions require retry/fallback logic; More complexity than we need.
 
-### Approach C: Random Alphanumeric String (Selected Solution)
+### Approach C: Base62 Encoding of Database ID (Selected Solution)
 
-Generating a random 7-character string using a cryptographically secure pseudo-random number generator (CSPRNG).
+Converting the auto-incrementing Primary Key ID to Base62 (0-9, a-z, A-Z). After insert, encode the new row’s ID to get the short code; no randomness, no collision handling.
 
-#### Implementation Details
+- **Pros:** Guaranteed uniqueness (ID is the source of truth), no collisions, extremely fast, simple to implement. Fits 1:N (every new row gets a new code). No retry or fallback logic.
+- **Cons:** Predictable. If I get code `b`, I know `c` is next. This exposes business volume to competitors and allows enumeration attacks. For this URL shortener, predictability is not a significant concern.
 
-We define the alphabet as `[A-Z, a-z, 0-9]`.
-
-1.  Generate a random 7-char string.
-2.  Attempt to insert into DB.
-3.  If a `UniqueConstraintViolation` occurs (collision), retry up to 3 times.
-
-**Why 7 characters?**
-With 62 characters, a length of 7 gives us $62^7$ combinations (~3.5 trillion).
-
-- At 1,000 links generated per second, it would take ~100 years to reach a 1% collision probability.
-
-#### Limitations & Workarounds
-
-1.  **The "Birthday Problem" (Collisions):**
-    - _Limitation:_ As the database fills up, the probability of generating a duplicate random string increases, requiring more retries and slowing down writes.
-    - _Workaround:_ We implement a "Retry Limit" strategy. If 3 attempts fail, we switch to a fallback strategy (pre-generated keys or appending a nanosecond timestamp). Given the 3.5 trillion search space, this is theoretically negligible for this startup phase.
-
-2.  **Profanity/Offensive Words:**
-    - _Limitation:_ Random generation might accidentally produce offensive words.
-    - _Workaround:_ We use a "Blocklist" filter or remove vowels/confusing characters (like l, 1, I, o, 0) from the allowed alphabet (Base58) to reduce visual ambiguity and offensive potential.
+**Why Base62 over Random (B)?** We prefer simplicity and operational reliability. Random forces collision handling, retry limits, and optional blocklists; Base62 avoids collisions entirely and keeps the implementation small. Predictability is an acceptable tradeoff for this use case.

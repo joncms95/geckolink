@@ -8,14 +8,14 @@
 
 ## Phase 2: Core Backend Logic (The Shortener)
 
-- [ ] **Model**: Create `Link` model (columns: `url`, `slug`, `title`, `clicks_count`).
-- [ ] **Migration**: Add unique index on `slug`.
+- [ ] **Model**: Create `Link` model (columns: `url`, `short_code`, `title`, `clicks_count`).
+- [ ] **Migration**: Add unique index on `short_code`.
 - [ ] **Service**: Implement `Shortener::CreateService`.
   - Input: `original_url`
-  - Logic: Generate 7-char random slug, handle validation, retry on collision.
+  - Logic: Insert record, then set `short_code` from Base62 encoding of new ID, handle URL validation.
 - [ ] **Controller**: Create `Api::V1::LinksController` (create, show).
-- [ ] **Route**: specific route for `/:slug` redirection.
-- [ ] **Spec**: Unit tests for collision handling and URL validation.
+- [ ] **Route**: specific route for `/:short_code` redirection.
+- [ ] **Spec**: Unit tests for URL validation.
 
 ## Phase 3: Background Jobs & Metadata
 
