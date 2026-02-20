@@ -17,6 +17,12 @@ module Api
         render json: link_json(link)
       end
 
+      def analytics
+        link = Link.find_by!(short_code: params[:short_code])
+        report = Analytics::ReportQuery.new(link: link).call
+        render json: report
+      end
+
       private
 
       def link_params

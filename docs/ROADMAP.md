@@ -19,19 +19,19 @@
 
 ## Phase 3: Background Jobs & Metadata
 
-- [ ] **Job**: `TitleFetcherJob`.
+- [x] **Job**: `TitleFetcherJob`.
   - Use `Nokogiri` to parse `<title>`.
   - Handle timeouts and non-HTML responses.
-- [ ] **Integration**: Trigger Job upon successful Link creation.
+- [x] **Integration**: Trigger Job upon successful Link creation.
 
 ## Phase 4: Analytics & Tracking
 
-- [ ] **Model**: Create `Visit` model (columns: `link_id`, `ip_address`, `user_agent`, `geolocation`, `timestamp`).
-- [ ] **Middleware/Service**: Track click events asynchronously.
-- [ ] **Job**: `GeolocateIpJob`.
+- [x] **Model**: Create `Visit` model (columns: `link_id`, `ip_address`, `user_agent`, `geolocation`, `timestamp`).
+- [x] **Middleware/Service**: Track click events asynchronously.
+- [x] **Job**: `GeolocateIpJob`.
   - Use `Geocoder` gem or MaxMind DB.
   - Update `Visit` records with City/Country.
-- [ ] **Query Object**: `Analytics::ReportQuery` to aggregate clicks by country and hour.
+- [x] **Query Object**: `Analytics::ReportQuery` to aggregate clicks by country and hour.
 
 ## Phase 5: Frontend (React)
 

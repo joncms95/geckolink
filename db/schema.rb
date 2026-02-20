@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_20_000001) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_20_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -23,4 +23,20 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_20_000001) do
     t.datetime "updated_at", null: false
     t.index ["short_code"], name: "index_links_on_short_code", unique: true
   end
+
+  create_table "visits", force: :cascade do |t|
+    t.bigint "link_id", null: false
+    t.string "ip_address"
+    t.text "user_agent"
+    t.string "geolocation"
+    t.datetime "visited_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "country"
+    t.index ["country"], name: "index_visits_on_country"
+    t.index ["link_id", "visited_at"], name: "index_visits_on_link_id_and_visited_at"
+    t.index ["link_id"], name: "index_visits_on_link_id"
+  end
+
+  add_foreign_key "visits", "links"
 end

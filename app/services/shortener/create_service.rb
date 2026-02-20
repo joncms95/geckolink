@@ -10,6 +10,7 @@ module Shortener
       return Result.failure(link.errors.full_messages) unless link.valid?
 
       link.save!
+      TitleFetcherJob.perform_later(link.id)
       Result.success(link)
     rescue ActiveRecord::RecordInvalid => e
       Result.failure(e.record.errors.full_messages)

@@ -23,7 +23,7 @@ RSpec.describe Shortener::Base62 do
 
   describe ".decode" do
     it "decodes back to original" do
-      [1, 62, 123, 3844].each do |n|
+      [ 1, 62, 123, 3844 ].each do |n|
         expect(described_class.decode(described_class.encode(n))).to eq(n)
       end
     end

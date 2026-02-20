@@ -17,6 +17,11 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(json["clicks_count"]).to eq(0)
     end
 
+    it "enqueues TitleFetcherJob" do
+      expect { post api_v1_links_path, params: params, as: :json }
+        .to have_enqueued_job(TitleFetcherJob)
+    end
+
     context "with invalid URL" do
       it "returns 422 with errors" do
         post api_v1_links_path, params: { link: { url: "javascript:alert(1)" } }, as: :json
@@ -39,6 +44,25 @@ RSpec.describe "Api::V1::Links", type: :request do
 
     it "returns 404 for unknown short_code" do
       get api_v1_link_path("nonexistent")
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "GET /api/v1/links/:short_code/analytics" do
+    let(:link) { create(:link) }
+
+    it "returns report with by_country and by_hour" do
+      create(:visit, link: link, country: "US")
+      get analytics_api_v1_link_path(link.short_code)
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json).to have_key("by_country")
+      expect(json).to have_key("by_hour")
+      expect(json["by_country"]).to eq("US" => 1)
+    end
+
+    it "returns 404 for unknown short_code" do
+      get analytics_api_v1_link_path("nonexistent")
       expect(response).to have_http_status(:not_found)
     end
   end

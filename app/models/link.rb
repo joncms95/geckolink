@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Link < ApplicationRecord
+  has_many :visits, dependent: :destroy
+
   after_create :assign_short_code
 
   validates :url, presence: true, format: { with: %r{\Ahttps?://[^\s]+\z}i, message: "must be http or https URL" }
