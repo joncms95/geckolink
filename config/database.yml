@@ -81,5 +81,10 @@ test:
 production:
   <<: *default
   database: geckolink_production
-  username: geckolink
-  password: <%= ENV["GECKOLINK_DATABASE_PASSWORD"] %>
+  <% if ENV["DATABASE_URL"].present? %>
+  # Docker Compose (or host) sets DATABASE_URL
+  url: <%= ENV["DATABASE_URL"] %>
+  <% else %>
+  username: postgres
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  <% end %>
