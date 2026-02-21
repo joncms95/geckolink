@@ -1,17 +1,18 @@
+# For deployment (e.g. DigitalOcean). Local development: use bin/dev.
+# Usage: docker compose up -d
+# Requires .env with RAILS_MASTER_KEY and POSTGRES_PASSWORD (see docs/DEPLOY.md).
+
 services:
   app:
     build: .
-    command: bin/rails server -b 0.0.0.0
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "80:3000"
     env_file: .env
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/geckolink_development
+      RAILS_ENV: production
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/geckolink_production
       REDIS_URL: redis://redis:6379/0
-      RAILS_ENV: development
-    volumes:
-      - .:/rails
-      - bundle:/usr/local/bundle
     depends_on:
       db:
         condition: service_healthy
@@ -20,28 +21,25 @@ services:
 
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: geckolink_development
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: geckolink_production
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 3s
+      interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
     volumes:
       - redis_data:/data
 
 volumes:
   postgres_data:
   redis_data:
-  bundle:
