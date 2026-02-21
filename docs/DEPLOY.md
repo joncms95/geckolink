@@ -166,6 +166,12 @@ For a “simple” first deploy, using the droplet IP on port 80 is enough; you 
 
 ---
 
+## Frontend (Vercel)
+
+The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL (e.g. `http://YOUR_DROPLET_IP` or `https://api.yourdomain.com`) with no trailing slash so the app can call the backend.
+
+---
+
 ## Summary checklist
 
 - [ ] Droplet created (Ubuntu or Docker one-click)
