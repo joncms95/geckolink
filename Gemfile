@@ -9,7 +9,8 @@ gem "puma", ">= 5.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"
 gem "redis", ">= 5.0"
-gem "sidekiq", ">= 7.0"
+gem "connection_pool", "~> 2.4"
+gem "sidekiq", ">= 7.0", "< 8"
 gem "geocoder", "~> 1.8"
 gem "rack-attack", "~> 6.7"
 
