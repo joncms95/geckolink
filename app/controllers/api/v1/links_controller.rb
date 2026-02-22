@@ -19,27 +19,30 @@ module Api
         end
       end
 
-      def index
-        page = [ params[:page].to_i, 1 ].max
-        per_page = [ [ params[:per_page].to_i, 1 ].max, MAX_PER_PAGE ].min
-        per_page = DEFAULT_PER_PAGE if per_page.zero?
+      # Logged-in user only: list links for current user, ordered by created_at desc.
+      def my_index
+        return head :unauthorized unless signed_in?
 
-        if signed_in?
-          scope = Link.where(user_id: current_user.id).order(created_at: :desc)
-          total = scope.count
-          links = scope.offset((page - 1) * per_page).limit(per_page)
-        else
-          codes = params[:short_codes].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
-          total = codes.size
-          slice = codes[(page - 1) * per_page, per_page]
-          if slice.blank?
-            links = []
-          else
-            by_code = Link.where(short_code: slice, user_id: nil).index_by(&:short_code)
-            links = slice.filter_map { |c| by_code[c] }
-          end
+        page, per_page = pagination_params
+        scope = current_user.links.order(created_at: :desc, id: :desc)
+        total = scope.count
+        links = scope.offset((page - 1) * per_page).limit(per_page).to_a
+        render json: { links: links.map { |l| link_json(l) }, total: total }
+      end
+
+      # Anonymous lookup by short_codes (e.g. other clients). Dashboard for non-login uses localStorage only.
+      def index
+        codes = params[:short_codes].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
+        if codes.empty?
+          return render json: { links: [], total: 0 }
         end
 
+        page, per_page = pagination_params
+        all_links = Link.where(short_code: codes, user_id: nil).to_a
+        code_order = codes.each_with_index.to_h
+        sorted = all_links.sort_by { |l| code_order[l.short_code] || codes.size }
+        total = sorted.size
+        links = sorted[(page - 1) * per_page, per_page] || []
         render json: { links: links.map { |l| link_json(l) }, total: total }
       end
 
@@ -55,6 +58,13 @@ module Api
       end
 
       private
+
+      def pagination_params
+        page = [ params[:page].to_i, 1 ].max
+        per_page = [ [ params[:per_page].to_i, 1 ].max, MAX_PER_PAGE ].min
+        per_page = DEFAULT_PER_PAGE if per_page.zero?
+        [ page, per_page ]
+      end
 
       def link_params
         params.require(:link).permit(:url)

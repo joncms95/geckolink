@@ -2,6 +2,7 @@ import HeroForm from "../components/HeroForm"
 import CreatedLinkResult from "../components/CreatedLinkResult"
 
 export default function HomePage({
+  user,
   onSubmit,
   loading,
   submitError,
@@ -33,7 +34,7 @@ export default function HomePage({
         <CreatedLinkResult
           createdLink={createdLink}
           onCopyShortUrl={onCopyShortUrl}
-          onViewDashboard={onViewDashboard}
+          onViewDashboard={user ? onViewDashboard : undefined}
         />
       )}
     </main>

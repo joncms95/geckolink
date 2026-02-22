@@ -18,11 +18,10 @@ export async function getLink(shortCode) {
   return handleResponse(res)
 }
 
-export async function getLinks(page = 1, perPage = 10, shortCodes = null) {
-  const params = { page: String(page), per_page: String(perPage) }
-  if (shortCodes?.length) params.short_codes = shortCodes.join(",")
-  const q = new URLSearchParams(params)
-  const res = await fetch(`${getApiBase()}/links?${q}`, {
+/** Logged-in user: fetch current user's links from API (ordered by created_at desc). */
+export async function getMyLinks(page = 1, perPage = 10) {
+  const q = new URLSearchParams({ page: String(page), per_page: String(perPage) })
+  const res = await fetch(`${getApiBase()}/me/links?${q}`, {
     ...defaultFetchOptions,
     headers: { Accept: "application/json" },
   })

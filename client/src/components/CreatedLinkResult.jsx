@@ -53,13 +53,15 @@ export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewD
           >
             Copy
           </button>
-          <button
-            type="button"
-            onClick={onViewDashboard}
-            className={`w-full sm:w-auto ${BTN_SECONDARY}`}
-          >
-            View analytics
-          </button>
+          {onViewDashboard && (
+            <button
+              type="button"
+              onClick={onViewDashboard}
+              className={`w-full sm:w-auto ${BTN_SECONDARY}`}
+            >
+              View analytics
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -81,13 +81,13 @@ function ShortUrlCard({ link, onViewStats, onCopy }) {
 export default function DashboardPage({
   displayedLinks,
   displayedLinksLoading,
-  totalRecentCount,
+  linksTotal,
   hasMoreLinks,
   onLoadMore,
   selectedLink,
   onSelectLink,
-  onAddToRecent,
-  onUpdateLink,
+  onAddToDisplayedLinks,
+  onUpdateLinkInList,
   onNavigateToStats,
   lookupForm,
 }) {
@@ -109,7 +109,7 @@ export default function DashboardPage({
     getLink(shortCodeFromUrl)
       .then((link) => {
         onSelectLink(link)
-        if (onAddToRecent) onAddToRecent(link)
+        if (onAddToDisplayedLinks) onAddToDisplayedLinks(link)
       })
       .catch(() => {})
   }, [shortCodeFromUrl, displayedLinks])
@@ -302,9 +302,9 @@ export default function DashboardPage({
       <section className="min-w-0">
         <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
           Short URLs
-          {totalRecentCount > 0 && (
+          {linksTotal > 0 && (
             <span className="ml-2 text-gecko-slate font-normal text-sm sm:text-base">
-              {displayedLinks.length} of {totalRecentCount}
+              {displayedLinks.length} of {linksTotal}
             </span>
           )}
         </h2>

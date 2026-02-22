@@ -17,17 +17,19 @@ export default function Header({ user, onLogout, onOpenAuth }) {
           <span className="text-lg sm:text-xl font-semibold tracking-tight truncate">GeckoLink</span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2 shrink min-w-0">
-          <Link
-            to="/dashboard"
-            className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark min-h-[44px] ${
-              isDashboard
-                ? "bg-gecko-green/20 text-gecko-green"
-                : "text-gecko-slate hover:text-white hover:bg-gecko-dark-card"
-            }`}
-          >
-            <i className="fa-solid fa-chart-column text-lg sm:text-xl shrink-0" aria-hidden />
-            <span className="hidden sm:inline">Dashboard</span>
-          </Link>
+          {user && (
+            <Link
+              to="/dashboard"
+              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark min-h-[44px] ${
+                isDashboard
+                  ? "bg-gecko-green/20 text-gecko-green"
+                  : "text-gecko-slate hover:text-white hover:bg-gecko-dark-card"
+              }`}
+            >
+              <i className="fa-solid fa-chart-column text-lg sm:text-xl shrink-0" aria-hidden />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+          )}
           {user ? (
             <>
               <span

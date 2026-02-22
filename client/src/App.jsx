@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react"
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom"
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom"
 import { createLink, getLink } from "./api/links"
 import Header from "./components/Header"
 import Toast from "./components/Toast"
@@ -9,7 +9,6 @@ import HomePage from "./pages/HomePage"
 import { useAuth } from "./hooks/useAuth"
 import { useLinksList } from "./hooks/useLinksList"
 import { useErrorDismiss } from "./hooks/useErrorDismiss"
-import { loadRecentLinks, clearRecentLinks } from "./utils/recentLinksStorage"
 import { parseShortCode } from "./utils/shortCode"
 import { BTN_PRIMARY, INPUT_BASE } from "./constants/classes"
 
@@ -17,7 +16,6 @@ function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, login, logout, signup } = useAuth()
-  const [recentLinks, setRecentLinks] = useState(loadRecentLinks)
   const isDashboard =
     location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
 
@@ -29,10 +27,10 @@ function AppContent() {
     selectedLink,
     setSelectedLink,
     loadMoreLinks,
-    addToRecent,
-    updateLinkInRecent,
+    addToDisplayedLinks,
+    updateLinkInList,
     resetAfterAuthChange,
-  } = useLinksList(user, isDashboard, recentLinks, setRecentLinks)
+  } = useLinksList(user, isDashboard)
 
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -58,8 +56,6 @@ function AppContent() {
 
   const handleLogout = useCallback(async () => {
     await logout()
-    setRecentLinks([])
-    clearRecentLinks()
     resetAfterAuthChange()
     resetToHomeState()
   }, [logout, resetAfterAuthChange, resetToHomeState])
@@ -67,8 +63,6 @@ function AppContent() {
   const handleLogin = useCallback(
     async (email, password) => {
       await login(email, password)
-      setRecentLinks([])
-      clearRecentLinks()
       resetAfterAuthChange()
       resetToHomeState()
     },
@@ -78,8 +72,6 @@ function AppContent() {
   const handleSignup = useCallback(
     async (email, password, passwordConfirmation) => {
       await signup(email, password, passwordConfirmation)
-      setRecentLinks([])
-      clearRecentLinks()
       resetAfterAuthChange()
       resetToHomeState()
     },
@@ -93,7 +85,7 @@ function AppContent() {
       setCreatedLink(null)
       try {
         const data = await createLink(url)
-        addToRecent(data)
+        if (user) addToDisplayedLinks(data)
         setToast("Short URL created!")
         setCreatedLink(data)
       } catch (err) {
@@ -105,7 +97,7 @@ function AppContent() {
         setLoading(false)
       }
     },
-    [addToRecent]
+    [user, addToDisplayedLinks]
   )
 
   const handleLookup = useCallback(
@@ -122,7 +114,7 @@ function AppContent() {
       setLookupError(null)
       try {
         const data = await getLink(shortCode)
-        addToRecent(data)
+        addToDisplayedLinks(data)
         setSelectedLink(data)
         setLookupValue("")
         navigate(`/dashboard/${data.short_code}`)
@@ -135,7 +127,7 @@ function AppContent() {
         setLookupLoading(false)
       }
     },
-    [lookupValue, addToRecent, setSelectedLink, navigate]
+    [lookupValue, addToDisplayedLinks, setSelectedLink, navigate]
   )
 
   const lookupForm = (
@@ -185,6 +177,7 @@ function AppContent() {
           path="/"
           element={
             <HomePage
+              user={user}
               onSubmit={handleSubmit}
               loading={loading}
               submitError={submitError}
@@ -205,37 +198,45 @@ function AppContent() {
         <Route
           path="/dashboard"
           element={
-            <DashboardPage
-              displayedLinks={displayedLinks}
-              displayedLinksLoading={displayedLinksLoading}
-              totalRecentCount={linksTotal}
-              hasMoreLinks={hasMoreLinks}
-              onLoadMore={loadMoreLinks}
-              selectedLink={selectedLink}
-              onSelectLink={setSelectedLink}
-              onAddToRecent={addToRecent}
-              onUpdateLink={updateLinkInRecent}
-              onNavigateToStats={navigate}
-              lookupForm={lookupForm}
-            />
+            user ? (
+              <DashboardPage
+                displayedLinks={displayedLinks}
+                displayedLinksLoading={displayedLinksLoading}
+                linksTotal={linksTotal}
+                hasMoreLinks={hasMoreLinks}
+                onLoadMore={loadMoreLinks}
+                selectedLink={selectedLink}
+                onSelectLink={setSelectedLink}
+                onAddToDisplayedLinks={addToDisplayedLinks}
+                onUpdateLinkInList={updateLinkInList}
+                onNavigateToStats={navigate}
+                lookupForm={lookupForm}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/dashboard/:shortCode"
           element={
-            <DashboardPage
-              displayedLinks={displayedLinks}
-              displayedLinksLoading={displayedLinksLoading}
-              totalRecentCount={linksTotal}
-              hasMoreLinks={hasMoreLinks}
-              onLoadMore={loadMoreLinks}
-              selectedLink={selectedLink}
-              onSelectLink={setSelectedLink}
-              onAddToRecent={addToRecent}
-              onUpdateLink={updateLinkInRecent}
-              onNavigateToStats={navigate}
-              lookupForm={lookupForm}
-            />
+            user ? (
+              <DashboardPage
+                displayedLinks={displayedLinks}
+                displayedLinksLoading={displayedLinksLoading}
+                linksTotal={linksTotal}
+                hasMoreLinks={hasMoreLinks}
+                onLoadMore={loadMoreLinks}
+                selectedLink={selectedLink}
+                onSelectLink={setSelectedLink}
+                onAddToDisplayedLinks={addToDisplayedLinks}
+                onUpdateLinkInList={updateLinkInList}
+                onNavigateToStats={navigate}
+                lookupForm={lookupForm}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
       </Routes>

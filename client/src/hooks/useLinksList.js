@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react"
-import { getLinks } from "../api/links"
-import { DASHBOARD_PAGE_SIZE, MAX_RECENT_ANONYMOUS } from "../constants"
-import { loadRecentLinks, saveRecentLinks } from "../utils/recentLinksStorage"
+import { getMyLinks } from "../api/links"
+import { DASHBOARD_PAGE_SIZE } from "../constants"
 
-export function useLinksList(user, isDashboard, recentLinks, setRecentLinks) {
+export function useLinksList(user, isDashboard) {
   const [displayedLinks, setDisplayedLinks] = useState([])
   const [displayedLinksLoading, setDisplayedLinksLoading] = useState(false)
   const [selectedLink, setSelectedLink] = useState(null)
@@ -11,54 +10,25 @@ export function useLinksList(user, isDashboard, recentLinks, setRecentLinks) {
   const [linksPage, setLinksPage] = useState(1)
   const dashboardLoadedRef = useRef(false)
   const previousUserRef = useRef(user)
+  const displayedLinksRef = useRef(displayedLinks)
+  displayedLinksRef.current = displayedLinks
 
   if (previousUserRef.current !== user) {
     previousUserRef.current = user
     dashboardLoadedRef.current = false
   }
 
+  // Login-only dashboard: fetch current user's links from API (created_at desc).
   useEffect(() => {
-    if (!user) saveRecentLinks(recentLinks)
-  }, [user, recentLinks])
-
-  useEffect(() => {
-    if (!isDashboard) {
-      dashboardLoadedRef.current = false
+    if (!isDashboard || !user) {
+      if (!isDashboard) dashboardLoadedRef.current = false
       setLinksPage(1)
       return
     }
     if (dashboardLoadedRef.current) return
     dashboardLoadedRef.current = true
     setDisplayedLinksLoading(true)
-
-    if (!user) {
-      const codes = recentLinks.map((l) => l?.short_code).filter(Boolean)
-      if (codes.length === 0) {
-        setDisplayedLinks([])
-        setLinksTotal(0)
-        setLinksPage(1)
-        setDisplayedLinksLoading(false)
-        return
-      }
-      getLinks(1, DASHBOARD_PAGE_SIZE, codes)
-        .then(({ links, total }) => {
-          setDisplayedLinks(links)
-          setLinksTotal(total)
-          setLinksPage(1)
-          setSelectedLink((prev) => {
-            if (!prev?.short_code) return prev
-            const found = links.find((l) => l.short_code === prev.short_code)
-            return found || prev
-          })
-        })
-        .catch(() => {
-          setDisplayedLinks([])
-          setLinksTotal(0)
-        })
-        .finally(() => setDisplayedLinksLoading(false))
-      return
-    }
-    getLinks(1, DASHBOARD_PAGE_SIZE)
+    getMyLinks(1, DASHBOARD_PAGE_SIZE)
       .then(({ links, total }) => {
         setDisplayedLinks(links)
         setLinksTotal(total)
@@ -76,53 +46,27 @@ export function useLinksList(user, isDashboard, recentLinks, setRecentLinks) {
       .finally(() => setDisplayedLinksLoading(false))
   }, [isDashboard, user])
 
-  const addToRecent = useCallback((link) => {
-    if (user) {
-      if (isDashboard) {
-        setDisplayedLinks((prev) => {
-          const exists = prev.some((l) => l.short_code === link.short_code)
-          if (exists) return prev.map((l) => (l.short_code === link.short_code ? { ...link } : l))
-          return [{ ...link }, ...prev]
-        })
-        setLinksTotal((prev) => prev + 1)
-      }
-    } else {
-      setRecentLinks((prev) => {
-        const rest = prev.filter((l) => l.short_code !== link.short_code)
-        return [{ ...link }, ...rest].slice(0, MAX_RECENT_ANONYMOUS)
-      })
-      if (isDashboard) {
-        setDisplayedLinks((prev) => {
-          const exists = prev.some((l) => l.short_code === link.short_code)
-          if (exists) return prev.map((l) => (l.short_code === link.short_code ? { ...link } : l))
-          return [{ ...link }, ...prev]
-        })
-        setLinksTotal((prev) => prev + 1)
-      }
-    }
+  const addToDisplayedLinks = useCallback((link) => {
+    if (!user || !isDashboard) return
+    const alreadyInList = displayedLinksRef.current.some((l) => l?.short_code === link?.short_code)
+    setDisplayedLinks((prev) => {
+      const exists = prev.some((l) => l.short_code === link.short_code)
+      if (exists) return prev.map((l) => (l.short_code === link.short_code ? { ...link } : l))
+      return [{ ...link }, ...prev]
+    })
+    if (!alreadyInList) setLinksTotal((prev) => prev + 1)
   }, [user, isDashboard])
 
   const loadMoreLinks = useCallback(() => {
-    if (displayedLinks.length >= linksTotal) return
+    if (!user || displayedLinks.length >= linksTotal) return
     setDisplayedLinksLoading(true)
-
-    if (!user) {
-      const codes = recentLinks.map((l) => l.short_code).filter(Boolean)
-      getLinks(linksPage + 1, DASHBOARD_PAGE_SIZE, codes)
-        .then(({ links }) => {
-          setDisplayedLinks((prev) => [...prev, ...links])
-          setLinksPage((p) => p + 1)
-        })
-        .finally(() => setDisplayedLinksLoading(false))
-      return
-    }
-    getLinks(linksPage + 1, DASHBOARD_PAGE_SIZE)
+    getMyLinks(linksPage + 1, DASHBOARD_PAGE_SIZE)
       .then(({ links }) => {
         setDisplayedLinks((prev) => [...prev, ...links])
         setLinksPage((p) => p + 1)
       })
       .finally(() => setDisplayedLinksLoading(false))
-  }, [user, displayedLinks.length, linksTotal, linksPage, recentLinks])
+  }, [user, displayedLinks.length, linksTotal, linksPage])
 
   const resetAfterAuthChange = useCallback(() => {
     setDisplayedLinks([])
@@ -132,10 +76,7 @@ export function useLinksList(user, isDashboard, recentLinks, setRecentLinks) {
     dashboardLoadedRef.current = false
   }, [])
 
-  const updateLinkInRecent = useCallback((shortCode, updatedLink) => {
-    setRecentLinks((prev) =>
-      prev.map((l) => (l.short_code === shortCode ? { ...l, ...updatedLink } : l))
-    )
+  const updateLinkInList = useCallback((shortCode, updatedLink) => {
     setSelectedLink((current) =>
       current?.short_code === shortCode ? { ...current, ...updatedLink } : current
     )
@@ -154,8 +95,8 @@ export function useLinksList(user, isDashboard, recentLinks, setRecentLinks) {
     selectedLink,
     setSelectedLink,
     loadMoreLinks,
-    addToRecent,
-    updateLinkInRecent,
+    addToDisplayedLinks,
+    updateLinkInList,
     resetAfterAuthChange,
   }
 }
