@@ -16,7 +16,7 @@ Simple deployment using Docker and Docker Compose on a single droplet.
 
 1. In [DigitalOcean](https://cloud.digitalocean.com), go to **Droplets** → **Create Droplet**.
 2. **Image**: Choose **Ubuntu 24.04 LTS** (or **Docker** one-click app if you prefer).
-3. **Plan**: Basic shared CPU; **$6/mo** (1 GB RAM) is enough to start; use **$12/mo** (2 GB) if you run Sidekiq or more traffic.
+3. **Plan**: Basic shared CPU; **$6/mo** (1 GB RAM) is enough to start.
 4. **Datacenter**: Pick one close to your users.
 5. **Authentication**: Add your SSH key (recommended) or use a password.
 6. Create the droplet and note its **IP address**.
@@ -151,14 +151,14 @@ docker compose logs -f app
 
 ## Useful commands
 
-| Task                      | Command                                                |
-| ------------------------- | ------------------------------------------------------ |
-| View logs                 | `docker compose logs -f app`                           |
+| Task                      | Command                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| View app logs             | `docker compose logs -f app`                           |
 | Stop stack                | `docker compose down`                                  |
 | Start stack               | `docker compose up -d`                                 |
 | Rebuild after code change | `docker compose build app && docker compose up -d app` |
-| Run Rails console         | `docker compose exec app bin/rails console`            |
-| Run migrations by hand    | `docker compose exec app bin/rails db:migrate`         |
+| Run Rails console         | `docker compose exec app bin/rails console`                            |
+| Run migrations by hand    | `docker compose exec app bin/rails db:migrate`                         |
 
 **If you use HTTPS** (Nginx override), add `-f docker-compose.yml -f docker-compose.https.yml` to every `docker compose` command (e.g. `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`).
 

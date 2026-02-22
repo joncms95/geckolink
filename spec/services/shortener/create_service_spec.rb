@@ -5,6 +5,10 @@ require "rails_helper"
 RSpec.describe Shortener::CreateService do
   subject(:service) { described_class.new }
 
+  before do
+    allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+  end
+
   describe "#call" do
     context "with blank URL" do
       it "returns failure" do

@@ -7,6 +7,10 @@ RSpec.describe "Api::V1::Links", type: :request do
     let(:valid_url) { "https://example.com/page" }
     let(:params) { { link: { url: valid_url } } }
 
+    before do
+      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+    end
+
     it "creates a link and returns short URL" do
       post api_v1_links_path, params: params, as: :json
       expect(response).to have_http_status(:created)
@@ -17,9 +21,21 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(json["clicks_count"]).to eq(0)
     end
 
-    it "enqueues TitleFetcherJob" do
-      expect { post api_v1_links_path, params: params, as: :json }
-        .to have_enqueued_job(TitleFetcherJob)
+    it "returns link with title and icon when fetch succeeds" do
+      allow(Metadata::TitleAndIconFetcher).to receive(:call)
+        .with(valid_url, timeout_sec: 5)
+        .and_return({ title: "Example Page", icon_url: "https://example.com/favicon.ico" })
+      post api_v1_links_path, params: params, as: :json
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["title"]).to eq("Example Page")
+      expect(response.parsed_body["icon_url"]).to eq("https://example.com/favicon.ico")
+    end
+
+    it "returns link with null title when fetch returns null (timeout or failure)" do
+      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+      post api_v1_links_path, params: params, as: :json
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["title"]).to be_nil
     end
 
     context "with invalid URL" do
@@ -35,6 +51,46 @@ RSpec.describe "Api::V1::Links", type: :request do
         post api_v1_links_path, params: {}, as: :json
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.parsed_body["errors"]).to be_present
+      end
+    end
+  end
+
+  describe "GET /api/v1/links (index)" do
+    context "when not authenticated" do
+      it "returns empty list (no dashboard for anonymous; like TinyURL)" do
+        create(:link, url: "https://anon.com", user_id: nil)
+        get api_v1_links_path, params: { page: 1, per_page: 10 }
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["links"]).to eq([])
+        expect(response.parsed_body["total"]).to eq(0)
+      end
+    end
+
+    context "when authenticated" do
+      let(:user) { create(:user) }
+
+      before do
+        post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+      end
+
+      it "returns only current user links ordered by created_at desc" do
+        other_user = create(:user)
+        my_newer = create(:link, url: "https://my-newer.com", user_id: user.id)
+        my_older = create(:link, url: "https://my-older.com", user_id: user.id)
+        create(:link, url: "https://other.com", user_id: other_user.id)
+
+        get api_v1_links_path, params: { page: 1, per_page: 10 }
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json["total"]).to eq(2)
+        expect(json["links"].map { |l| l["short_code"] }).to contain_exactly(my_newer.short_code, my_older.short_code)
+      end
+
+      it "returns empty list when user has no links" do
+        get api_v1_links_path
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["links"]).to eq([])
+        expect(response.parsed_body["total"]).to eq(0)
       end
     end
   end

@@ -1,6 +1,6 @@
 # GeckoLink
 
-GeckoLink is a robust, scalable microservice for URL shortening, featuring real-time analytics, geolocation tracking, and asynchronous metadata fetching.
+GeckoLink is a robust, scalable microservice for URL shortening, featuring real-time analytics and geolocation tracking.
 
 ## 🚀 Live Demo
 
@@ -14,10 +14,9 @@ We utilize a modern, reliable stack aligned with high-throughput requirements:
 
 - **Backend:** Ruby 3.4.8, Rails 7.2.3 (API Mode)
 - **Database:** PostgreSQL 16 (Primary data store)
-- **Caching/Queue:** Redis 7 (Sidekiq queues & caching)
+- **Caching:** Redis 7 (Rails cache store for redirects)
 - **Frontend:** React 18 (via Vite), Tailwind CSS
 - **Testing:** RSpec, FactoryBot, Faker
-- **Background Jobs:** Sidekiq (Title fetching, Geolocation processing)
 - **Containerization:** Docker & Docker Compose
 
 ---
@@ -31,14 +30,17 @@ We utilize **Service Objects** and **Query Objects** to keep controllers skinny 
 - `Shortener::CreateService`: Handles the generation logic and initial record creation.
 - `Analytics::ReportQuery`: Specialized query object to aggregate click data, ensuring the database handles the heavy lifting for reports.
 
-### 2. Async Processing
+### 2. User-specific short URL list
 
-To ensure low latency for the user:
+- **Not logged in**: Short URLs are stored in the browser’s localStorage. The dashboard shows links from localStorage (fetched by short codes from the API; only anonymous links are returned).
+- **Logged in**: Links are associated with the user. The dashboard shows only that user’s links from the database (paginated). Sign up and log in use session cookies (credentials: true with CORS).
 
-1.  **URL Title Fetching**: When a user submits a link, we return the short URL immediately. A Sidekiq job (`TitleFetcherJob`) runs in the background to scrape the HTML `<title>` tag and update the record.
-2.  **Geolocation**: Click analytics are processed asynchronously. When a link is visited, we log the raw event and process IP-to-location (via Geocoder, e.g. ipinfo.io) in a background worker to avoid slowing down the redirect.
+### 3. Synchronous Processing
 
-### 3. Scalability
+1.  **URL Title Fetching**: When a user submits a link, we fetch the page title (and favicon) synchronously with a 5s timeout and return the short URL plus title/icon in the same response. If the fetch fails or times out, the link is still created with null title/icon.
+2.  **Geolocation**: On each redirect we record the visit and resolve IP to location (Geocoder, e.g. ipinfo.io) synchronously with a 2s timeout so analytics have geolocation without running a background worker.
+
+### 4. Scalability
 
 - **Redirect lookups**: Short code → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, the cache uses Redis (`REDIS_URL` or optional `REDIS_CACHE_URL`) so it is shared across instances.
 - **Write Strategy**: We utilize unique indexes on the `short_code` column to prevent race conditions at the database level.
@@ -74,7 +76,7 @@ To ensure low latency for the user:
     ```
 
 3.  **Start Services**
-    We use `foreman` to run Rails, Sidekiq, and the Vite dev server simultaneously.
+    We use `foreman` to run Rails and the Vite dev server.
 
     ```bash
     bin/dev
@@ -91,11 +93,10 @@ To ensure low latency for the user:
 The app is not deployed by default. To deploy (e.g. Render, Heroku):
 
 - **Web**: Run `bin/rails server` (or the platform’s Rails command). Set `PORT` and `RAILS_ENV=production`.
-- **Worker**: Run `bundle exec sidekiq` for background jobs (title fetching, geolocation).
-- **Env**: Set `DATABASE_URL`, `REDIS_URL`, and `RAILS_MASTER_KEY`. For Docker Compose you also need `POSTGRES_PASSWORD` (see `docs/DEPLOY.md`). Optional: `REDIS_CACHE_URL`, `CORS_ORIGINS`. See `.env.example`.
-- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately (e.g. frontend on Vercel) and configure CORS via `CORS_ORIGINS` or the defaults in `config/initializers/cors.rb`.
+- **Env**: **Local:** optional `DATABASE_URL`, `REDIS_URL` (see `.env.example`). **Production/Docker:** required `SECRET_KEY_BASE`, `POSTGRES_PASSWORD`; optional `DISABLE_SSL_REDIRECT`, `CORS_ORIGINS`, `VITE_API_BASE`. See `.env.example` and `docs/DEPLOY.md`.
+- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately (e.g. frontend on Vercel) and set `VITE_API_BASE` and CORS via `CORS_ORIGINS` or the defaults in `config/initializers/cors.rb`.
 
-The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server.
+The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server. Requirements mapping for the assignment is in `docs/REQUIREMENTS_COMPLIANCE.md`.
 
 ---
 

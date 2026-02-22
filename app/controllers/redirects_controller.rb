@@ -18,7 +18,7 @@ class RedirectsController < ApplicationController
     end
 
     Link.increment_counter(:clicks_count, link_id)
-    VisitTrackerJob.perform_later(
+    Analytics::RecordVisit.call(
       link_id: link_id,
       ip_address: request.remote_ip,
       user_agent: request.user_agent,

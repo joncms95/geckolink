@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_20_000004) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_22_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,7 +22,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_20_000004) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "icon_url"
+    t.bigint "user_id"
     t.index ["short_code"], name: "index_links_on_short_code", unique: true
+    t.index ["user_id", "created_at"], name: "index_links_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_links_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
   end
 
   create_table "visits", force: :cascade do |t|
@@ -39,5 +50,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_20_000004) do
     t.index ["link_id"], name: "index_visits_on_link_id"
   end
 
+  add_foreign_key "links", "users"
   add_foreign_key "visits", "links"
 end

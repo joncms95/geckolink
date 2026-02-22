@@ -6,6 +6,15 @@
   body {
     @apply bg-gecko-dark text-white;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .safe-area-padding {
+    padding-top: env(safe-area-inset-top, 0);
+  }
 }
 
 .bg-pattern {

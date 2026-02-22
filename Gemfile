@@ -8,15 +8,13 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "redis", ">= 5.0"
 gem "connection_pool", "~> 2.4"
-gem "sidekiq", ">= 7.0", "< 8"
 gem "geocoder", "~> 1.8"
 gem "rack-attack", "~> 6.7"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -40,7 +38,7 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
-  # Run Rails, Sidekiq, and Vite via Procfile (bin/dev)
+  # Run Rails and Vite via Procfile (bin/dev)
   gem "foreman", require: false
 
   gem "rspec-rails", "~> 7.0"

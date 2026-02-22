@@ -15,9 +15,9 @@ cors_origins = default_origins if cors_origins.empty?
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins(*cors_origins)
-
     resource "*",
       headers: :any,
-      methods: [ :get, :post, :put, :patch, :delete, :options, :head ]
+      methods: [ :get, :post, :put, :patch, :delete, :options, :head ],
+      credentials: true
   end
 end

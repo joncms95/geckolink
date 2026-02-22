@@ -12,8 +12,10 @@ RSpec.describe "Redirects", type: :request do
     expect(link.reload.clicks_count).to eq(1)
   end
 
-  it "enqueues VisitTrackerJob" do
-    expect { get "/#{link.short_code}" }.to have_enqueued_job(VisitTrackerJob)
+  it "records a visit for the link" do
+    get "/#{link.short_code}"
+    expect(link.visits.reload.count).to eq(1)
+    expect(link.visits.last.ip_address).to be_present
   end
 
   it "returns 404 for unknown short_code" do

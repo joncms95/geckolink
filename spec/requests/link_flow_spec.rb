@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe "Link flow (create → redirect → analytics)", type: :request do
   it "creates a link, redirects by short_code, and returns analytics" do
+    allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
     post api_v1_links_path, params: { link: { url: "https://example.com/target" } }, as: :json
     expect(response).to have_http_status(:created)
     json = response.parsed_body
