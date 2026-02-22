@@ -1,16 +1,16 @@
 # For deployment (e.g. DigitalOcean). Local development: use bin/dev.
 # Usage: docker compose up -d
-# Requires .env with RAILS_MASTER_KEY and POSTGRES_PASSWORD (see docs/DEPLOY.md).
+# Requires .env with SECRET_KEY_BASE, POSTGRES_PASSWORD (see docs/DEPLOY.md).
 
 services:
   app:
     build: .
     restart: unless-stopped
-    ports:
-      - "80:3000"
+    ports: "3000:3000"
     env_file: .env
     environment:
       RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/geckolink_production
       REDIS_URL: redis://redis:6379/0
     depends_on:

@@ -7,7 +7,7 @@ Simple deployment using Docker and Docker Compose on a single droplet.
 ## What you need
 
 - A **DigitalOcean account**
-- Your app’s **RAILS_MASTER_KEY** (from `config/master.key` or your credentials)
+- A **SECRET_KEY_BASE**
 - **Git** (to clone the repo on the droplet, or another way to copy the app files)
 
 ---
@@ -78,8 +78,8 @@ nano .env
 Add (replace with your real values):
 
 ```env
-# Required: from config/master.key or your Rails credentials
-RAILS_MASTER_KEY=your_master_key_here
+# Required:
+SECRET_KEY_BASE=your_secret_key_here
 
 # Required: strong password for PostgreSQL (no spaces)
 POSTGRES_PASSWORD=your_secure_random_password_here
@@ -94,7 +94,7 @@ REDIS_URL=redis://redis:6379/0
 REDIS_CACHE_URL=redis://redis:6379/1
 ```
 
-The Compose file already sets `DATABASE_URL` and `REDIS_URL` for the app; you only need `RAILS_MASTER_KEY` and `POSTGRES_PASSWORD` in `.env` for this setup.
+The Compose file already sets `DATABASE_URL` and `REDIS_URL` for the app. You must set `SECRET_KEY_BASE` and `POSTGRES_PASSWORD` in `.env` for this setup.
 
 ---
 
@@ -178,7 +178,7 @@ The React frontend is deployed at **https://geckolink.vercel.app**. CORS is conf
 - [ ] SSH access works
 - [ ] Docker and Docker Compose installed
 - [ ] App code at `/geckolink` (clone or rsync)
-- [ ] `.env` with `RAILS_MASTER_KEY` and `POSTGRES_PASSWORD`
+- [ ] `.env` with `SECRET_KEY_BASE` and `POSTGRES_PASSWORD`
 - [ ] `docker compose up -d` run
 - [ ] Port 80 allowed (firewall)
 - [ ] App loads at `http://YOUR_DROPLET_IP`

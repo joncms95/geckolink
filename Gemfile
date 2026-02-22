@@ -6,8 +6,6 @@ gem "rails", "~> 7.2.3"
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-# gem "jbuilder"
 gem "redis", ">= 5.0"
 gem "connection_pool", "~> 2.4"
 gem "sidekiq", ">= 7.0", "< 8"

@@ -29,18 +29,18 @@ We utilize a modern, reliable stack aligned with high-throughput requirements:
 We utilize **Service Objects** and **Query Objects** to keep controllers skinny and business logic testable.
 
 - `Shortener::CreateService`: Handles the generation logic and initial record creation.
-- `Analytics::ReportQuery`: specialized query object to aggregate click data, ensuring the database handles the heavy lifting for reports.
+- `Analytics::ReportQuery`: Specialized query object to aggregate click data, ensuring the database handles the heavy lifting for reports.
 
 ### 2. Async Processing
 
 To ensure low latency for the user:
 
 1.  **URL Title Fetching**: When a user submits a link, we return the short URL immediately. A Sidekiq job (`TitleFetcherJob`) runs in the background to scrape the HTML `<title>` tag and update the record.
-2.  **Geolocation**: Click analytics are processed asynchronously. When a link is visited, we log the raw event and process IP-to-Location (using GeoIP) in a background worker to avoid slowing down the redirect.
+2.  **Geolocation**: Click analytics are processed asynchronously. When a link is visited, we log the raw event and process IP-to-location (via Geocoder, e.g. ipinfo.io) in a background worker to avoid slowing down the redirect.
 
 ### 3. Scalability
 
-- **Redirect lookups**: Short code → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, set `config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"] }` so the cache is shared across instances.
+- **Redirect lookups**: Short code → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, the cache uses Redis (`REDIS_URL` or optional `REDIS_CACHE_URL`) so it is shared across instances.
 - **Write Strategy**: We utilize unique indexes on the `short_code` column to prevent race conditions at the database level.
 - **Health checks**: The `/up` endpoint reports app boot status. For HA, configure your platform to also check DB connectivity (e.g. a custom endpoint that runs `ActiveRecord::Base.connection.execute("SELECT 1")`) or rely on the default `/up` and platform health checks.
 
@@ -60,7 +60,7 @@ To ensure low latency for the user:
 1.  **Clone and Install Dependencies**
 
     ```bash
-    git clone [https://github.com/your-username/geckolink.git](https://github.com/your-username/geckolink.git)
+    git clone https://github.com/your-username/geckolink.git
     cd geckolink
     bundle install
     npm install --prefix client
@@ -92,10 +92,10 @@ The app is not deployed by default. To deploy (e.g. Render, Heroku):
 
 - **Web**: Run `bin/rails server` (or the platform’s Rails command). Set `PORT` and `RAILS_ENV=production`.
 - **Worker**: Run `bundle exec sidekiq` for background jobs (title fetching, geolocation).
-- **Env**: Set `DATABASE_URL`, `REDIS_URL`, and `RAILS_MASTER_KEY` (for credentials). See `.env.example`.
-- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately and set CORS (see `config/initializers/cors.rb`).
+- **Env**: Set `DATABASE_URL`, `REDIS_URL`, and `RAILS_MASTER_KEY`. For Docker Compose you also need `POSTGRES_PASSWORD` (see `docs/DEPLOY.md`). Optional: `REDIS_CACHE_URL`, `CORS_ORIGINS`. See `.env.example`.
+- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately (e.g. frontend on Vercel) and configure CORS via `CORS_ORIGINS` or the defaults in `config/initializers/cors.rb`.
 
-The repo includes a production Dockerfile; use it with your orchestrator or a platform that supports Docker.
+The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server.
 
 ---
 
