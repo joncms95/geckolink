@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react"
 import {
   AUTH_CACHE_KEY,
   getCachedUser,
+  setCachedUser,
   login as apiLogin,
   logout as apiLogout,
   signup as apiSignup,
@@ -34,11 +35,17 @@ export function useAuth() {
     setUser(null)
   }, [])
 
+  /** Clear auth state locally without calling API (e.g. when session invalidated by 401). */
+  const clearSessionLocally = useCallback(() => {
+    setCachedUser(null)
+    setUser(null)
+  }, [])
+
   const signup = useCallback(async (email, password, passwordConfirmation) => {
     const u = await apiSignup(email, password, passwordConfirmation)
     setUser(u)
     return u
   }, [])
 
-  return { user, authLoading, login, logout, signup }
+  return { user, authLoading, login, logout, clearSessionLocally, signup }
 }

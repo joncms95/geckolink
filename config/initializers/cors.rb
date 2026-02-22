@@ -1,8 +1,8 @@
 # Be sure to restart your server when you modify this file.
 
-# Avoid CORS issues when API is called from the frontend app.
-# Handle Cross-Origin Resource Sharing (CORS) in order to accept cross-origin Ajax requests.
+# Avoid CORS issues when API is called from the frontend app (PC, phone, etc.).
 # Set CORS_ORIGINS to a comma-separated list of allowed origins (no spaces).
+# Include every origin where the frontend is loaded (e.g. same Vercel URL from any device).
 # Read more: https://github.com/cyu/rack-cors
 
 default_origins = %w[

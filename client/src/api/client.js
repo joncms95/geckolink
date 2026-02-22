@@ -23,8 +23,16 @@ function normalizeErrors(data) {
   return ["Request failed"]
 }
 
+import { getOnSessionInvalidated } from "../sessionInvalidation"
+
 export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, errors: normalizeErrors(data) }
+  if (!res.ok) {
+    if (res.status === 401) {
+      const fn = getOnSessionInvalidated()
+      if (fn) setTimeout(fn, 0)
+    }
+    throw { status: res.status, errors: normalizeErrors(data) }
+  }
   return data
 }

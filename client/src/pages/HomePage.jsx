@@ -17,7 +17,7 @@ export default function HomePage({
         <span className="text-gecko-green">Track Everything.</span>
       </h1>
       <p className="mt-3 sm:mt-4 text-gecko-slate text-sm sm:text-base max-w-xl mx-auto">
-        Create short, memorable links and get detailed analytics on every click. Know your audience better.
+        Create short links and get detailed analytics on every click. Know your audience better.
       </p>
       <div className="mt-8 sm:mt-12">
         <HeroForm onSubmit={onSubmit} isLoading={loading} />

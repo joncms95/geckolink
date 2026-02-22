@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom"
 import { createLink, getLink } from "./api/links"
 import Header from "./components/Header"
@@ -10,12 +10,14 @@ import { useAuth } from "./hooks/useAuth"
 import { useLinksList } from "./hooks/useLinksList"
 import { useErrorDismiss } from "./hooks/useErrorDismiss"
 import { parseShortCode } from "./utils/shortCode"
+import { setOnSessionInvalidated } from "./sessionInvalidation"
 import { BTN_PRIMARY, INPUT_BASE } from "./constants/classes"
+import { SESSION_INVALIDATED_TOAST_MS } from "./constants"
 
 function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, login, logout, signup } = useAuth()
+  const { user, login, logout, clearSessionLocally, signup } = useAuth()
   const isDashboard =
     location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
 
@@ -44,12 +46,12 @@ function AppContent() {
   useErrorDismiss(lookupError, setLookupError)
   useErrorDismiss(submitError, setSubmitError)
 
-  const resetToHomeState = useCallback(() => {
+  const resetToHomeState = useCallback((opts = {}) => {
     setAuthModalOpen(false)
     setSubmitError(null)
     setLookupValue("")
     setLookupError(null)
-    setToast(null)
+    if (!opts.preserveToastForSessionInvalidation) setToast(null)
     setCreatedLink(null)
     navigate("/")
   }, [navigate])
@@ -59,6 +61,22 @@ function AppContent() {
     resetAfterAuthChange()
     resetToHomeState()
   }, [logout, resetAfterAuthChange, resetToHomeState])
+
+  const handleSessionInvalidated = useCallback(() => {
+    clearSessionLocally()
+    resetAfterAuthChange()
+    resetToHomeState({ preserveToastForSessionInvalidation: true })
+    setToast({
+      message:
+        "You've been signed out because you signed in on another device. Please log in again to continue.",
+      autoDismissMs: SESSION_INVALIDATED_TOAST_MS,
+    })
+  }, [clearSessionLocally, resetAfterAuthChange, resetToHomeState])
+
+  useEffect(() => {
+    setOnSessionInvalidated(handleSessionInvalidated)
+    return () => setOnSessionInvalidated(null)
+  }, [handleSessionInvalidated])
 
   const handleLogin = useCallback(
     async (email, password) => {
@@ -170,7 +188,12 @@ function AppContent() {
           onSignup={handleSignup}
         />
       )}
-      <Toast message={toast} visible={!!toast} onDismiss={() => setToast(null)} />
+      <Toast
+        message={typeof toast === "string" ? toast : toast?.message}
+        visible={!!toast}
+        onDismiss={() => setToast(null)}
+        autoDismissMs={typeof toast === "object" && toast?.autoDismissMs != null ? toast.autoDismissMs : undefined}
+      />
 
       <Routes>
         <Route

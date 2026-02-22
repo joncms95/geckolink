@@ -11,6 +11,7 @@ module Api
         if user&.authenticate(session_params[:password])
           reset_session
           session[:user_id] = user.id
+          session[:session_token] = user.regenerate_session_token
           render json: { user: user_json(user) }
         else
           render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
