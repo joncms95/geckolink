@@ -3,7 +3,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resource :session, only: %i[show create destroy], controller: "session"
+      resource :session, only: %i[create destroy], controller: "session"
       resources :registrations, only: %i[create], path: "signup"
       resources :links, only: %i[create index show], param: :short_code do
         member { get :analytics }

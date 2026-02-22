@@ -37,4 +37,4 @@ Converting the auto-incrementing Primary Key ID to Base62 (0-9, a-z, A-Z). After
 
 - **Predictability:** Short codes are sequential (id 1 → "1", id 62 → "10"). Anyone can enumerate existing links by guessing the next code. Mitigations: rate limiting on creation and redirect (see Rack::Attack), and optionally requiring authentication for sensitive links in a future iteration.
 
-- **Operational limits:** Title fetching and geolocation depend on external services (target URL availability, GeoIP provider). Failures are handled asynchronously and do not block the user; the link remains usable with a null title or geolocation until the job succeeds or is retried.
+- **Operational limits:** Title fetching and geolocation depend on external services (target URL availability, GeoIP provider). Both run synchronously with timeouts; failures are caught and do not block the user—the link is still created and remains usable with a null title or geolocation.

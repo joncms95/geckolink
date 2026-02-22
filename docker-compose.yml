@@ -2,7 +2,6 @@
 # The app does not bind to port 80 here so Nginx can use it when using the HTTPS stack.
 # Usage:
 #   HTTPS (recommended): docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
-#   HTTP only (by IP):   docker compose -f docker-compose.yml -f docker-compose.http-only.yml up -d
 # Requires .env with SECRET_KEY_BASE, POSTGRES_PASSWORD (see docs/DEPLOY.md).
 
 services:

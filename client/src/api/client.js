@@ -17,8 +17,14 @@ export function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
   )
 }
 
+function normalizeErrors(data) {
+  if (Array.isArray(data?.errors) && data.errors.length > 0) return data.errors
+  if (data?.error != null) return Array.isArray(data.error) ? data.error : [data.error]
+  return ["Request failed"]
+}
+
 export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, errors: data.errors || [data.error] || ["Request failed"] }
+  if (!res.ok) throw { status: res.status, errors: normalizeErrors(data) }
   return data
 }

@@ -1,10 +1,21 @@
 import { getApiBase, defaultFetchOptions, handleResponse } from "./client"
 
-export async function getSession() {
-  const res = await fetch(`${getApiBase()}/session`, { ...defaultFetchOptions })
-  if (res.status === 401) return null
-  const data = await res.json().catch(() => ({}))
-  return data?.user ?? null
+export const AUTH_CACHE_KEY = "geckolink_user"
+
+export function getCachedUser() {
+  try {
+    const raw = localStorage.getItem(AUTH_CACHE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export function setCachedUser(user) {
+  try {
+    if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
+    else localStorage.removeItem(AUTH_CACHE_KEY)
+  } catch {}
 }
 
 export async function login(email, password) {
@@ -16,11 +27,14 @@ export async function login(email, password) {
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw { status: res.status, errors: data.errors || ["Login failed"] }
-  return data?.user ?? null
+  const user = data?.user ?? null
+  setCachedUser(user)
+  return user
 }
 
 export async function logout() {
   await fetch(`${getApiBase()}/session`, { ...defaultFetchOptions, method: "DELETE" })
+  setCachedUser(null)
 }
 
 export async function signup(email, password, passwordConfirmation) {
@@ -34,5 +48,7 @@ export async function signup(email, password, passwordConfirmation) {
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw { status: res.status, errors: data.errors || ["Sign up failed"] }
-  return data?.user ?? null
+  const user = data?.user ?? null
+  setCachedUser(user)
+  return user
 }

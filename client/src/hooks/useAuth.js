@@ -1,15 +1,26 @@
 import { useState, useCallback, useEffect } from "react"
-import { getSession, login as apiLogin, logout as apiLogout, signup as apiSignup } from "../api/auth"
+import {
+  AUTH_CACHE_KEY,
+  getCachedUser,
+  login as apiLogin,
+  logout as apiLogout,
+  signup as apiSignup,
+} from "../api/auth"
 
 export function useAuth() {
-  const [user, setUser] = useState(null)
-  const [authLoading, setAuthLoading] = useState(true)
+  const [user, setUser] = useState(getCachedUser)
+  const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
-    getSession()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setAuthLoading(false))
+    setUser(getCachedUser())
+  }, [])
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === AUTH_CACHE_KEY) setUser(getCachedUser())
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
   }, [])
 
   const login = useCallback(async (email, password) => {

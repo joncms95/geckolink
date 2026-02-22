@@ -62,7 +62,7 @@ We utilize **Service Objects** and **Query Objects** to keep controllers skinny 
 1.  **Clone and Install Dependencies**
 
     ```bash
-    git clone https://github.com/your-username/geckolink.git
+    git clone https://github.com/joncms95/geckolink.git
     cd geckolink
     bundle install
     npm install --prefix client
@@ -96,14 +96,14 @@ The app is not deployed by default. To deploy (e.g. Render, Heroku):
 - **Env**: **Local:** optional `DATABASE_URL`, `REDIS_URL` (see `.env.example`). **Production/Docker:** required `SECRET_KEY_BASE`, `POSTGRES_PASSWORD`; optional `DISABLE_SSL_REDIRECT`, `CORS_ORIGINS`, `VITE_API_BASE`. See `.env.example` and `docs/DEPLOY.md`.
 - **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately (e.g. frontend on Vercel) and set `VITE_API_BASE` and CORS via `CORS_ORIGINS` or the defaults in `config/initializers/cors.rb`.
 
-The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server. Requirements mapping for the assignment is in `docs/REQUIREMENTS_COMPLIANCE.md`.
+The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server.
 
 ---
 
 ## 🛡 Security
 
 - **Input Sanitization**: All target URLs are validated against a strict regex scheme to prevent Javascript injection (`javascript:`) or local network scanning.
-- **Rate Limiting**: `Rack::Attack` throttles requests per IP for link creation and redirects to limit abuse.
+- **Rate Limiting**: `Rack::Attack` throttles requests per IP: link creation, redirects, signup, and session (login) to limit abuse and brute force.
 
 ## 📝 License
 

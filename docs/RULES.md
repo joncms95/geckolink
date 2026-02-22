@@ -12,7 +12,7 @@ You are acting as a Senior Ruby on Rails Engineer. Follow these rules strictly w
 ## 2. Architectural Patterns
 
 - **Service Objects**: ALL complex business logic goes into `app/services`.
-  - _Naming_: `Namespace::ActionService` (e.g., `Links::ShortenService`).
+  - _Naming_: `Namespace::ActionService` (e.g., `Shortener::CreateService` in this project).
   - _Interface_: Use a standard `call` method. Return a `Result` object (Success/Failure), do not raise exceptions for expected flow control.
 - **Query Objects**: Complex SQL queries or aggregations go into `app/queries`.
 - **Slim Controllers**: Controllers should only handle parameter parsing, calling a service, and rendering the response.
