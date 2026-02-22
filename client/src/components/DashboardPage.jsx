@@ -290,14 +290,12 @@ export default function DashboardPage({
             <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4">
               <p className="text-xs sm:text-sm text-gecko-slate mb-3">Already have a short link? Paste it below to load its analytics.</p>
               {lookupForm}
+
+              <p className="mt-3 text-gecko-slate text-xs sm:text-sm">
+                Click <strong className="text-white">View Stats →</strong> on a short link below to see detailed analytics, including clicks over time, top locations, and a usage report (timestamp and geolocation per visit).
+              </p>
             </div>
           )}
-
-          <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6">
-            <p className="text-gecko-slate text-xs sm:text-sm">
-              Click <strong className="text-white">View Stats →</strong> on a short link below to see detailed analytics, including clicks over time, top locations, and a usage report (timestamp and geolocation per visit).
-            </p>
-          </div>
         </>
       )}
 

@@ -36,9 +36,15 @@ export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewD
       </p>
       <p className="text-gecko-slate text-xs sm:text-sm font-medium mb-2">Short URL</p>
       <div className="flex flex-col gap-3">
-        <p className="text-gecko-green font-medium text-sm break-all" title={createdLink.short_url}>
+        <a
+          href={createdLink.short_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gecko-green font-medium text-sm break-all hover:text-gecko-green-light focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+          title={createdLink.short_url}
+        >
           {createdLink.short_url}
-        </p>
+        </a>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             type="button"

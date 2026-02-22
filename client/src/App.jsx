@@ -114,7 +114,7 @@ function AppContent() {
       const shortCode = parseShortCode(lookupValue)
       if (!shortCode) {
         setLookupError(
-          "Paste a short link or enter its code (e.g. l or http://localhost:3000/l)"
+          "Paste a short link or enter its code (e.g. TJTRrCl or http://localhost:3000/TJTRrCl)"
         )
         return
       }

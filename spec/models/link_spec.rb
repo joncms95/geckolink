@@ -40,11 +40,4 @@ RSpec.describe Link, type: :model do
       expect(link.url).to eq("https://example.com")
     end
   end
-
-  describe "after_create" do
-    it "assigns short_code from Base62 of id" do
-      link = Link.create!(url: "https://example.com")
-      expect(link.short_code).to eq(Shortener::Base62.encode(link.id))
-    end
-  end
 end

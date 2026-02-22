@@ -43,10 +43,22 @@ RSpec.describe Shortener::CreateService do
         expect(result.value.clicks_count).to eq(0)
       end
 
-      it "assigns short_code from Base62 of id" do
+      it "assigns a random 7-character short_code (alphanumeric)" do
         result = service.call(original_url: url)
         link = result.value
-        expect(Shortener::Base62.decode(link.short_code)).to eq(link.id)
+        expect(link.short_code).to match(/\A[0-9a-zA-Z]{7}\z/)
+        expect(link.short_code).to be_present
+      end
+
+      it "retries on short_code collision and succeeds with new code" do
+        existing = create(:link, short_code: "abc1234")
+        allow(Shortener::RandomCode).to receive(:generate).and_return(
+          existing.short_code,
+          "xyz9876"
+        )
+        result = service.call(original_url: url)
+        expect(result).to be_success
+        expect(result.value.short_code).to eq("xyz9876")
       end
     end
 
