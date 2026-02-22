@@ -164,14 +164,14 @@ docker compose logs -f app
 
 ---
 
-## Setting up the domain (api.geckolink.click)
+## Setting up the domain (geckolink.click)
 
-To use **api.geckolink.click** for your API with HTTPS:
+To use **geckolink.click** for your API with HTTPS:
 
 1. **Register or use a domain** you control (e.g. **geckolink.click**) at any registrar (Namecheap, Cloudflare, Porkbun, etc.).
-2. **Add a DNS A record** in your registrar's DNS settings: **Type** `A`, **Name** `api`, **Value** `188.166.235.241` (your droplet IP).
-3. **Wait for DNS** (minutes to a few hours). Check with `dig api.geckolink.click +short` — you should see the IP. Or use [whatsmydns.net](https://www.whatsmydns.net/).
-4. Then follow **"Setting up HTTPS with Nginx"** below. The Nginx configs are already set for **api.geckolink.click**.
+2. **Add a DNS A record** in your registrar's DNS settings: **Type** `A`, **Name** `@` (or leave blank for root), **Value** `188.166.235.241` (your droplet IP). For a subdomain like **api.geckolink.click**, use **Name** `api` instead.
+3. **Wait for DNS** (minutes to a few hours). Check with `dig geckolink.click +short` — you should see the IP. Or use [whatsmydns.net](https://www.whatsmydns.net/).
+4. Then follow **"Setting up HTTPS with Nginx"** below. The Nginx configs are set for **geckolink.click** (root domain).
 
 ---
 
@@ -179,7 +179,7 @@ To use **api.geckolink.click** for your API with HTTPS:
 
 The repo includes Nginx and Certbot so you can serve the app over HTTPS with a Let’s Encrypt certificate. Use the HTTPS compose override and the configs in `nginx/`.
 
-**Prerequisites:** A domain whose A record points to your droplet IP (e.g. `api.geckolink.click` → `188.166.235.241`). The Nginx configs are set for **api.geckolink.click**; for another domain, replace it in the Nginx files.
+**Prerequisites:** A domain whose A record points to your droplet IP (e.g. `geckolink.click` → `188.166.235.241`). The Nginx configs are set for **geckolink.click**; for another domain (e.g. api.geckolink.click), replace it in the Nginx files.
 
 ### 1. Allow HTTPS in the firewall
 
@@ -192,7 +192,16 @@ ufw reload
 
 ### 2. Nginx config
 
-The repo’s `nginx/nginx.conf` and `nginx/nginx-https.conf` are set for **api.geckolink.click**. If you use a different domain, replace `api.geckolink.click` in both files.
+The repo’s `nginx/nginx.conf` and `nginx/nginx-https.conf` are set for **geckolink.click**. If you use a different domain (e.g. api.geckolink.click), replace `geckolink.click` in both files.
+
+**Clean reset (if you get "network not found" or other compose errors):** From the app directory, tear down both stacks, prune networks, then start fresh with the HTTPS override:
+
+```bash
+docker compose down
+docker compose -f docker-compose.yml -f docker-compose.https.yml down
+docker network prune -f
+docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+```
 
 ### 3. Start the stack with the HTTPS override
 
@@ -211,7 +220,7 @@ Run Certbot once (use your real email for `--email`):
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.https.yml run --rm certbot certonly \
   --webroot -w /var/www/certbot \
-  -d api.geckolink.click \
+  -d geckolink.click \
   --email you@example.com \
   --agree-tos --no-eff-email
 ```
@@ -252,7 +261,7 @@ Add a cron job or systemd timer to run that periodically (e.g. monthly).
 
 - [ ] Domain A record points to droplet IP
 - [ ] Port 443 allowed (firewall)
-- [ ] `YOUR_DOMAIN` replaced in `nginx/nginx.conf` and `nginx/nginx-https.conf`
+- [ ] Domain in `nginx/nginx.conf` and `nginx/nginx-https.conf` is correct (default: geckolink.click)
 - [ ] Stack started with `-f docker-compose.https.yml`
 - [ ] Certbot run once for your domain
 - [ ] `nginx/nginx.conf` replaced with `nginx-https.conf`, nginx restarted
@@ -262,7 +271,7 @@ Add a cron job or systemd timer to run that periodically (e.g. monthly).
 
 ## Frontend (Vercel)
 
-The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL with no trailing slash so the app can call the backend. For HTTPS: **`https://api.geckolink.click`** (or your domain). For HTTP-only: `http://YOUR_DROPLET_IP`.
+The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL with no trailing slash so the app can call the backend. For HTTPS: **`https://geckolink.click`** (or your domain, e.g. https://api.geckolink.click). For HTTP-only: `http://YOUR_DROPLET_IP`.
 
 ---
 
