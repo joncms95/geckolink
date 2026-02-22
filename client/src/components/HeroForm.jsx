@@ -1,23 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback } from "react"
+import { normalizeUrl, hasValidHost } from "../utils/url"
+import { useErrorDismiss } from "../hooks/useErrorDismiss"
 
 const URL_PLACEHOLDER = "Enter your long URL here..."
-
-function normalizeUrl(input) {
-  const trimmed = input.trim()
-  if (!trimmed) return ""
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
-
-function hasValidHost(urlString) {
-  try {
-    const url = new URL(urlString)
-    const host = url.hostname
-    return host === "localhost" || host.includes(".")
-  } catch {
-    return false
-  }
-}
 
 export default function HeroForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("")
@@ -33,25 +18,7 @@ export default function HeroForm({ onSubmit, isLoading }) {
     setTouched(false)
   }, [])
 
-  useEffect(() => {
-    if (!showError) return
-    const t = setTimeout(clearError, 5000)
-    return () => clearTimeout(t)
-  }, [showError, clearError])
-
-  const formRef = useRef(null)
-  useEffect(() => {
-    if (!showError) return
-    const onInteraction = (e) => {
-      if (formRef.current && !formRef.current.contains(e.target)) clearError()
-    }
-    document.addEventListener("mousedown", onInteraction)
-    document.addEventListener("touchstart", onInteraction, { passive: true })
-    return () => {
-      document.removeEventListener("mousedown", onInteraction)
-      document.removeEventListener("touchstart", onInteraction)
-    }
-  }, [showError, clearError])
+  useErrorDismiss(showError, clearError)
 
   const handleSubmit = useCallback(
     (e) => {
@@ -78,7 +45,7 @@ export default function HeroForm({ onSubmit, isLoading }) {
   )
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 sm:gap-6">
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 sm:gap-6">
       <div className="w-full flex flex-col gap-2 sm:gap-4">
         <label className="sr-only" htmlFor="hero-url-input">
           Long URL to shorten

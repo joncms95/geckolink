@@ -45,6 +45,9 @@ Rails.application.configure do
   # Set DISABLE_SSL_REDIRECT=1 when running locally (e.g. Docker at localhost:3000) to allow HTTP.
   config.force_ssl = ENV["DISABLE_SSL_REDIRECT"] != "1"
 
+  # Session cookie must be sent cross-origin when frontend is on another domain (e.g. Vercel).
+  config.action_dispatch.cookies_same_site_protection = :none
+
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 

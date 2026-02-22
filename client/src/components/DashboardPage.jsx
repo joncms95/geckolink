@@ -39,7 +39,15 @@ function ShortUrlCard({ link, onViewStats, onCopy }) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-gecko-green font-medium text-sm sm:text-base truncate break-all sm:break-normal">{shortUrl}</p>
+          <a
+            href={shortUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gecko-green font-medium text-sm sm:text-base truncate break-all sm:break-normal block hover:text-gecko-green-light focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+            title={shortUrl}
+          >
+            {shortUrl}
+          </a>
           {title && (
             <p className="text-white text-sm truncate mt-0.5" title={title}>
               {title}
@@ -86,6 +94,10 @@ export default function DashboardPage({
   const { shortCode: shortCodeFromUrl } = useParams()
   const [report, setReport] = useState(null)
   const [reportLoading, setReportLoading] = useState(false)
+
+  useEffect(() => {
+    if (shortCodeFromUrl) window.scrollTo(0, 0)
+  }, [shortCodeFromUrl])
 
   useEffect(() => {
     if (!shortCodeFromUrl) return
@@ -176,9 +188,22 @@ export default function DashboardPage({
                 <i className="fa-solid fa-arrow-left" aria-hidden /> Back to dashboard
               </button>
             )}
-            <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
-              {selectedLink?.title ? `${selectedLink.title} — Stats` : `Stats for /${shortCodeFromUrl}`}
-            </h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
+                {selectedLink?.title ? `${selectedLink.title} — Stats` : `Stats for /${shortCodeFromUrl}`}
+              </h1>
+              {selectedLink?.short_url && (
+                <a
+                  href={selectedLink.short_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gecko-green text-sm sm:text-base font-medium mt-1 block truncate hover:text-gecko-green-light focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+                  title={selectedLink.short_url}
+                >
+                  {selectedLink.short_url}
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

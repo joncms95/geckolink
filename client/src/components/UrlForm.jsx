@@ -1,23 +1,7 @@
 import { useState, useCallback } from "react"
+import { normalizeUrl, hasValidHost } from "../utils/url"
 
 const INPUT_PLACEHOLDER = "Paste your long URL here"
-
-function normalizeUrl(input) {
-  const trimmed = input.trim()
-  if (!trimmed) return ""
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
-
-function hasValidHost(urlString) {
-  try {
-    const url = new URL(urlString)
-    const host = url.hostname
-    return host === "localhost" || host.includes(".")
-  } catch {
-    return false
-  }
-}
 
 export default function UrlForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("")

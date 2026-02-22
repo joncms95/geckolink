@@ -57,12 +57,27 @@ RSpec.describe "Api::V1::Links", type: :request do
 
   describe "GET /api/v1/links (index)" do
     context "when not authenticated" do
-      it "returns empty list (no dashboard for anonymous; like TinyURL)" do
-        create(:link, url: "https://anon.com", user_id: nil)
+      it "returns empty list when no short_codes" do
         get api_v1_links_path, params: { page: 1, per_page: 10 }
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body["links"]).to eq([])
         expect(response.parsed_body["total"]).to eq(0)
+      end
+
+      it "returns links by short_codes with page and per_page (e.g. 10 per page)" do
+        a = create(:link, url: "https://a.com", user_id: nil)
+        b = create(:link, url: "https://b.com", user_id: nil)
+        c = create(:link, url: "https://c.com", user_id: nil)
+        codes = [ a, b, c ].map(&:short_code).join(",")
+        get api_v1_links_path, params: { short_codes: codes, page: 1, per_page: 10 }
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json["total"]).to eq(3)
+        expect(json["links"].size).to eq(3)
+        get api_v1_links_path, params: { short_codes: codes, page: 1, per_page: 2 }
+        json2 = response.parsed_body
+        expect(json2["total"]).to eq(3)
+        expect(json2["links"].size).to eq(2)
       end
     end
 

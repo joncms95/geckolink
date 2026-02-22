@@ -1,18 +1,15 @@
-const API_BASE =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE
-    ? String(import.meta.env.VITE_API_BASE).replace(/\/$/, "")
-    : "") + "/api/v1"
+import { getApiBase, defaultFetchOptions, handleResponse } from "./client"
 
 export async function getSession() {
-  const res = await fetch(`${API_BASE}/session`, { credentials: "include" })
+  const res = await fetch(`${getApiBase()}/session`, { ...defaultFetchOptions })
   if (res.status === 401) return null
   const data = await res.json().catch(() => ({}))
   return data?.user ?? null
 }
 
 export async function login(email, password) {
-  const res = await fetch(`${API_BASE}/session`, {
-    credentials: "include",
+  const res = await fetch(`${getApiBase()}/session`, {
+    ...defaultFetchOptions,
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ session: { email: email?.trim()?.toLowerCase(), password } }),
@@ -23,12 +20,12 @@ export async function login(email, password) {
 }
 
 export async function logout() {
-  await fetch(`${API_BASE}/session`, { credentials: "include", method: "DELETE" })
+  await fetch(`${getApiBase()}/session`, { ...defaultFetchOptions, method: "DELETE" })
 }
 
 export async function signup(email, password, passwordConfirmation) {
-  const res = await fetch(`${API_BASE}/signup`, {
-    credentials: "include",
+  const res = await fetch(`${getApiBase()}/signup`, {
+    ...defaultFetchOptions,
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({

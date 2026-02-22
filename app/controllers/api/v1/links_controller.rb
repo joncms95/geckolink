@@ -5,6 +5,7 @@ module Api
     class LinksController < ApplicationController
       DEFAULT_PER_PAGE = 10
       MAX_PER_PAGE = 50
+      BATCH_MAX = 100
 
       def create
         result = Shortener::CreateService.new.call(
@@ -19,17 +20,26 @@ module Api
       end
 
       def index
-        unless signed_in?
-          return render json: { links: [], total: 0 }
-        end
-
         page = [ params[:page].to_i, 1 ].max
         per_page = [ [ params[:per_page].to_i, 1 ].max, MAX_PER_PAGE ].min
         per_page = DEFAULT_PER_PAGE if per_page.zero?
 
-        scope = Link.where(user_id: current_user.id).order(created_at: :desc)
-        total = scope.count
-        links = scope.offset((page - 1) * per_page).limit(per_page)
+        if signed_in?
+          scope = Link.where(user_id: current_user.id).order(created_at: :desc)
+          total = scope.count
+          links = scope.offset((page - 1) * per_page).limit(per_page)
+        else
+          codes = params[:short_codes].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
+          total = codes.size
+          slice = codes[(page - 1) * per_page, per_page]
+          if slice.blank?
+            links = []
+          else
+            by_code = Link.where(short_code: slice, user_id: nil).index_by(&:short_code)
+            links = slice.filter_map { |c| by_code[c] }
+          end
+        end
+
         render json: { links: links.map { |l| link_json(l) }, total: total }
       end
 
