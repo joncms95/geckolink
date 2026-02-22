@@ -83,6 +83,9 @@ SECRET_KEY_BASE=your_secret_key_here
 
 # Required: strong password for PostgreSQL (no spaces)
 POSTGRES_PASSWORD=your_secure_random_password_here
+
+# Required when using the droplet IP (no domain/HTTPS): allow HTTP so the app doesn't redirect to broken HTTPS
+DISABLE_SSL_REDIRECT=1
 ```
 
 Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
@@ -136,7 +139,9 @@ In a browser:
 http://YOUR_DROPLET_IP
 ```
 
-You should see your Rails app. If something fails, check logs:
+You should see your Rails app. If the page redirects to `https://...` and then fails to load, add `DISABLE_SSL_REDIRECT=1` to your `.env`, then run `docker compose up -d` again (Rails only redirects to HTTPS when you have a real SSL setup in front).
+
+If something else fails, check logs:
 
 ```bash
 docker compose logs -f app
@@ -155,20 +160,109 @@ docker compose logs -f app
 | Run Rails console         | `docker compose exec app bin/rails console`            |
 | Run migrations by hand    | `docker compose exec app bin/rails db:migrate`         |
 
+**If you use HTTPS** (Nginx override), add `-f docker-compose.yml -f docker-compose.https.yml` to every `docker compose` command (e.g. `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`).
+
 ---
 
-## Optional: domain and HTTPS
+## Setting up the domain (api.geckolink.click)
 
-1. Point a domain’s A record to your droplet IP.
-2. On the droplet, install a reverse proxy (e.g. Caddy or Nginx) in front of the app, or add a Caddy/Nginx service to `docker-compose.yml` that listens on 80/443 and proxies to `app:3000`, and get a certificate (e.g. Let’s Encrypt).
+To use **api.geckolink.click** for your API with HTTPS:
 
-For a “simple” first deploy, using the droplet IP on port 80 is enough; you can add a domain and HTTPS later.
+1. **Register or use a domain** you control (e.g. **geckolink.click**) at any registrar (Namecheap, Cloudflare, Porkbun, etc.).
+2. **Add a DNS A record** in your registrar's DNS settings: **Type** `A`, **Name** `api`, **Value** `188.166.235.241` (your droplet IP).
+3. **Wait for DNS** (minutes to a few hours). Check with `dig api.geckolink.click +short` — you should see the IP. Or use [whatsmydns.net](https://www.whatsmydns.net/).
+4. Then follow **"Setting up HTTPS with Nginx"** below. The Nginx configs are already set for **api.geckolink.click**.
+
+---
+
+## Setting up HTTPS with Nginx
+
+The repo includes Nginx and Certbot so you can serve the app over HTTPS with a Let’s Encrypt certificate. Use the HTTPS compose override and the configs in `nginx/`.
+
+**Prerequisites:** A domain whose A record points to your droplet IP (e.g. `api.geckolink.click` → `188.166.235.241`). The Nginx configs are set for **api.geckolink.click**; for another domain, replace it in the Nginx files.
+
+### 1. Allow HTTPS in the firewall
+
+On the droplet:
+
+```bash
+ufw allow 443/tcp
+ufw reload
+```
+
+### 2. Nginx config
+
+The repo’s `nginx/nginx.conf` and `nginx/nginx-https.conf` are set for **api.geckolink.click**. If you use a different domain, replace `api.geckolink.click` in both files.
+
+### 3. Start the stack with the HTTPS override
+
+From the app directory on the droplet:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+```
+
+This starts the app, db, redis, and Nginx. The app is no longer on port 80; Nginx listens on 80 and 443 and proxies to the app.
+
+### 4. Get a Let’s Encrypt certificate
+
+Run Certbot once (use your real email for `--email`):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.https.yml run --rm certbot certonly \
+  --webroot -w /var/www/certbot \
+  -d api.geckolink.click \
+  --email you@example.com \
+  --agree-tos --no-eff-email
+```
+
+If that succeeds, Certbot has written the certificate into the `certbot_conf` volume.
+
+### 5. Switch Nginx to HTTPS and restart
+
+On the droplet:
+
+```bash
+cp nginx/nginx-https.conf nginx/nginx.conf
+docker compose -f docker-compose.yml -f docker-compose.https.yml restart nginx
+```
+
+Nginx will now redirect HTTP to HTTPS and serve the app over TLS.
+
+### 6. Turn on Rails SSL redirect (optional)
+
+In your `.env` on the server, remove `DISABLE_SSL_REDIRECT` or set it to `0`. Then restart the app so Rails uses `force_ssl` again (HSTS, secure cookies):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.https.yml up -d app
+```
+
+### 7. Renewing the certificate
+
+Let’s Encrypt certs expire after 90 days. Renew with:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.https.yml run --rm certbot renew
+docker compose -f docker-compose.yml -f docker-compose.https.yml restart nginx
+```
+
+Add a cron job or systemd timer to run that periodically (e.g. monthly).
+
+### Summary (HTTPS)
+
+- [ ] Domain A record points to droplet IP
+- [ ] Port 443 allowed (firewall)
+- [ ] `YOUR_DOMAIN` replaced in `nginx/nginx.conf` and `nginx/nginx-https.conf`
+- [ ] Stack started with `-f docker-compose.https.yml`
+- [ ] Certbot run once for your domain
+- [ ] `nginx/nginx.conf` replaced with `nginx-https.conf`, nginx restarted
+- [ ] `DISABLE_SSL_REDIRECT` removed or set to 0 in `.env`, app restarted
 
 ---
 
 ## Frontend (Vercel)
 
-The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL (e.g. `http://YOUR_DROPLET_IP` or `https://api.yourdomain.com`) with no trailing slash so the app can call the backend.
+The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL with no trailing slash so the app can call the backend. For HTTPS: **`https://api.geckolink.click`** (or your domain). For HTTP-only: `http://YOUR_DROPLET_IP`.
 
 ---
 
@@ -178,7 +272,8 @@ The React frontend is deployed at **https://geckolink.vercel.app**. CORS is conf
 - [ ] SSH access works
 - [ ] Docker and Docker Compose installed
 - [ ] App code at `/geckolink` (clone or rsync)
-- [ ] `.env` with `SECRET_KEY_BASE` and `POSTGRES_PASSWORD`
+- [ ] `.env` with `SECRET_KEY_BASE`, `POSTGRES_PASSWORD`, and `DISABLE_SSL_REDIRECT=1` (when using IP without HTTPS)
 - [ ] `docker compose up -d` run
 - [ ] Port 80 allowed (firewall)
 - [ ] App loads at `http://YOUR_DROPLET_IP`
+- [ ] (Optional) HTTPS: see "Setting up HTTPS with Nginx" above

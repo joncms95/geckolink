@@ -1,0 +1,33 @@
+# Use with base compose for HTTPS (Nginx + Let's Encrypt).
+# See docs/DEPLOY.md "Setting up HTTPS with Nginx" for the full procedure.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+
+services:
+  app:
+    ports: []  # Nginx binds 80/443; app is only reached via Nginx
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - app
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    # One-off usage: see docs/DEPLOY.md "Setting up HTTPS with Nginx"
+
+volumes:
+  certbot_www:
+  certbot_conf:
