@@ -30,7 +30,6 @@ export default function DashboardPage() {
     selectedLink,
     setSelectedLink,
     loadMoreLinks,
-    addToDisplayedLinks,
   } = useLinksList(user)
 
   useEffect(() => {
@@ -50,7 +49,6 @@ export default function DashboardPage() {
     getLink(keyFromUrl)
       .then((link) => {
         setSelectedLink(link)
-        addToDisplayedLinks(link)
       })
       .catch(() => {})
   }, [keyFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -70,11 +68,10 @@ export default function DashboardPage() {
 
   const handleLookupResult = useCallback(
     (link) => {
-      addToDisplayedLinks(link)
       setSelectedLink(link)
       navigate(`/dashboard/${link.key}`)
     },
-    [addToDisplayedLinks, setSelectedLink, navigate]
+    [setSelectedLink, navigate]
   )
 
   const isDetailView = Boolean(keyFromUrl)

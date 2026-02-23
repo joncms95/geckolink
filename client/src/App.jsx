@@ -9,18 +9,20 @@ import DashboardPage from "./components/DashboardPage"
 
 function AppContent() {
   const { user, login, logout, signup } = useAuth()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState(null)
 
   return (
     <div className="min-h-screen bg-gecko-dark text-white font-sans antialiased bg-pattern">
       <Header
         user={user}
         onLogout={logout}
-        onOpenAuth={() => setAuthModalOpen(true)}
+        onOpenAuth={() => setAuthModalMode("login")}
+        onOpenSignup={() => setAuthModalMode("signup")}
       />
-      {authModalOpen && (
+      {authModalMode && (
         <AuthModal
-          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onClose={() => setAuthModalMode(null)}
           onLogin={login}
           onSignup={signup}
         />

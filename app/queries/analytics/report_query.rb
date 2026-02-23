@@ -36,12 +36,13 @@ module Analytics
       @link.clicks
         .order(clicked_at: :desc)
         .limit(MAX_CLICKS_IN_REPORT)
-        .pluck(:clicked_at, :country, :geolocation)
-        .map { |clicked_at, country, geolocation|
+        .pluck(:clicked_at, :country, :geolocation, :user_agent)
+        .map { |clicked_at, country, geolocation, user_agent|
           {
             clicked_at: format_time_iso8601(clicked_at),
             country: country.to_s.presence,
-            geolocation: geolocation.to_s.presence
+            geolocation: geolocation.to_s.presence,
+            user_agent: user_agent.to_s.presence
           }
         }
     end

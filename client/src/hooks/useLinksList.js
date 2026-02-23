@@ -42,15 +42,6 @@ export function useLinksList(user) {
       .finally(() => setDisplayedLinksLoading(false))
   }, [user])
 
-  const addToDisplayedLinks = useCallback((link) => {
-    setDisplayedLinks((prev) => {
-      const exists = prev.some((l) => l.key === link.key)
-      if (exists) return prev.map((l) => (l.key === link.key ? { ...link } : l))
-      return [{ ...link }, ...prev]
-    })
-    setLinksTotal((prev) => prev + 1)
-  }, [])
-
   const loadMoreLinks = useCallback(() => {
     if (!user || displayedLinks.length >= linksTotal) return
     setDisplayedLinksLoading(true)
@@ -80,7 +71,6 @@ export function useLinksList(user) {
     selectedLink,
     setSelectedLink,
     loadMoreLinks,
-    addToDisplayedLinks,
     updateLinkInList,
   }
 }

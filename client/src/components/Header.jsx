@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 
-export default function Header({ user, onLogout, onOpenAuth }) {
+export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
   const location = useLocation()
   const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
 
@@ -47,13 +47,22 @@ export default function Header({ user, onLogout, onOpenAuth }) {
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={onOpenAuth}
-              className="px-3 sm:px-4 py-2.5 rounded-lg font-medium border border-gecko-dark-border text-gecko-slate hover:text-white hover:bg-gecko-dark-border min-h-[44px] flex items-center justify-center touch-manipulation"
-            >
-              Log in
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onOpenAuth}
+                className="px-3 sm:px-4 py-2.5 rounded-lg font-medium border border-gecko-dark-border text-gecko-slate hover:text-white hover:bg-gecko-dark-border min-h-[44px] flex items-center justify-center touch-manipulation"
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                onClick={onOpenSignup}
+                className="px-3 sm:px-4 py-2.5 rounded-lg font-medium bg-gecko-green text-gecko-dark hover:bg-gecko-green-light min-h-[44px] flex items-center justify-center touch-manipulation"
+              >
+                Sign up
+              </button>
+            </>
           )}
         </nav>
       </div>

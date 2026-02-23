@@ -17,11 +17,9 @@ export default function ShortUrlCard({ link, onViewStats, onCopy }) {
           >
             {shortUrl}
           </a>
-          {title && (
-            <p className="text-white text-sm truncate mt-0.5" title={title}>
-              {title}
-            </p>
-          )}
+          <p className={`text-sm truncate mt-0.5 ${title ? "text-white" : "text-gecko-slate"}`} title={title || undefined}>
+            {title || "—"}
+          </p>
           <p className="text-gecko-slate text-xs sm:text-sm truncate mt-0.5" title={targetUrl}>{targetUrl}</p>
           <p className="text-gecko-slate text-xs mt-1">{clicks} clicks</p>
         </div>

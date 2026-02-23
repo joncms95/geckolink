@@ -2,8 +2,8 @@ import { useState } from "react"
 import { formatApiError } from "../utils/error"
 import Button from "./ui/Button"
 
-export default function AuthModal({ onClose, onLogin, onSignup }) {
-  const [mode, setMode] = useState("login")
+export default function AuthModal({ initialMode = "login", onClose, onLogin, onSignup }) {
+  const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")

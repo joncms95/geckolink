@@ -74,7 +74,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
 
   return (
     <>
-      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+      <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-between">
         <button
           type="button"
           onClick={onBack}
@@ -82,9 +82,9 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         >
           <i className="fa-solid fa-arrow-left" aria-hidden /> Back to dashboard
         </button>
-        <div className="min-w-0">
+        <div className="min-w-0 text-left sm:text-right">
           <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
-            {link?.title ? `${link.title} — Stats` : `Stats for /${keyFromUrl}`}
+            {link?.title ? `${link.title} — Stats` : `Stats for ${link?.target_url}`}
           </h1>
           {link?.short_url && (
             <a
@@ -148,7 +148,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
       <section className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 overflow-hidden">
         <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Usage report</h2>
         <p className="text-gecko-slate text-xs sm:text-sm mb-4">
-          Clicks, originating geolocation and timestamp of each click on this short URL.
+          Clicks, geolocation, user agent and timestamp of each click on this short URL.
         </p>
         {loading ? (
           <div className="py-8 text-center text-gecko-slate text-sm animate-pulse">Loading…</div>
@@ -162,6 +162,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
                   <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">#</th>
                   <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Timestamp</th>
                   <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Geolocation</th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">User Agent</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,6 +171,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
                     <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-gecko-slate tabular-nums">{i + 1}</td>
                     <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white whitespace-nowrap">{formatTimestamp(v.clicked_at)}</td>
                     <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white">{clickGeolocation(v)}</td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white max-w-[200px] sm:max-w-[280px] truncate" title={v.user_agent || undefined}>{v.user_agent || "—"}</td>
                   </tr>
                 ))}
               </tbody>
