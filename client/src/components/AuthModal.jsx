@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { formatApiError } from "../utils/error"
 import Button from "./ui/Button"
+import Input from "./ui/Input"
 
 export default function AuthModal({ initialMode = "login", onClose, onLogin, onSignup }) {
   const [mode, setMode] = useState(initialMode)
@@ -34,9 +35,6 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
     }
   }
 
-  const inputClass =
-    "w-full px-4 py-3 rounded-lg border border-gecko-dark-border bg-gecko-dark text-white focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none min-h-[48px] touch-manipulation text-base"
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60" onClick={onClose}>
       <div
@@ -61,21 +59,22 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
             <label htmlFor="auth-email" className="block text-sm font-medium text-gecko-slate mb-1">
               Email
             </label>
-            <input
+            <Input
               id="auth-email"
               type="email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={inputClass}
+              variant="modal"
+              className="w-full"
             />
           </div>
           <div>
             <label htmlFor="auth-password" className="block text-sm font-medium text-gecko-slate mb-1">
               Password
             </label>
-            <input
+            <Input
               id="auth-password"
               type="password"
               autoComplete={isSignup ? "new-password" : "current-password"}
@@ -83,7 +82,8 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className={inputClass}
+              variant="modal"
+              className="w-full"
             />
             {isSignup && (
               <p className="mt-1 text-xs text-gecko-slate">At least 8 characters</p>
@@ -94,7 +94,7 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               <label htmlFor="auth-password-confirm" className="block text-sm font-medium text-gecko-slate mb-1">
                 Confirm password
               </label>
-              <input
+              <Input
                 id="auth-password-confirm"
                 type="password"
                 autoComplete="new-password"
@@ -102,7 +102,8 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                 required
                 minLength={8}
-                className={inputClass}
+                variant="modal"
+                className="w-full"
               />
             </div>
           )}

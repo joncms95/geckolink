@@ -4,10 +4,8 @@ module Api
   module V1
     class LinksController < ApplicationController
       DEFAULT_PER_PAGE = 10
-      MAX_PER_PAGE = 50
-      BATCH_MAX = 100
 
-      before_action :require_authentication!, only: :my_index
+      before_action :require_authentication!, only: :index
 
       def create
         if stale_auth?
@@ -26,27 +24,14 @@ module Api
         end
       end
 
-      def my_index
-        page, per_page = pagination_params
+      def index
+        page = [ params[:page].to_i, 1 ].max
+        per_page = DEFAULT_PER_PAGE
         scope = current_user.links.order(created_at: :desc, id: :desc)
         total = scope.count
         links = scope.offset((page - 1) * per_page).limit(per_page).to_a
 
-        render json: { links: links.map { |link| link_json(link) }, total: total }
-      end
-
-      def index
-        keys = params[:keys].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
-        return render(json: { links: [], total: 0 }) if keys.empty?
-
-        page, per_page = pagination_params
-        all_links = Link.where(key: keys, user_id: nil).to_a
-        key_order = keys.each_with_index.to_h
-        sorted = all_links.sort_by { |link| key_order[link.key] || keys.size }
-        total = sorted.size
-        links = sorted[(page - 1) * per_page, per_page] || []
-
-        render json: { links: links.map { |link| link_json(link) }, total: total }
+        render json: { links: links.map { |link| link_json(link) }, total: total, per_page: per_page }
       end
 
       def show
@@ -71,13 +56,6 @@ module Api
 
         head :forbidden
         false
-      end
-
-      def pagination_params
-        page = [ params[:page].to_i, 1 ].max
-        per_page = [ [ params[:per_page].to_i, 1 ].max, MAX_PER_PAGE ].min
-        per_page = DEFAULT_PER_PAGE if per_page.zero?
-        [ page, per_page ]
       end
 
       def link_params

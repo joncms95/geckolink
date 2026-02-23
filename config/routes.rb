@@ -5,7 +5,6 @@ Rails.application.routes.draw do
     namespace :v1 do
       resource :session, only: %i[create destroy], controller: "session"
       resources :registrations, only: %i[create], path: "signup"
-      get "me/links", to: "links#my_index"
       resources :links, only: %i[create index show], param: :key do
         member { get :analytics }
       end

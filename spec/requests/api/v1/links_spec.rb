@@ -56,33 +56,8 @@ RSpec.describe "Api::V1::Links", type: :request do
   end
 
   describe "GET /api/v1/links (index)" do
-    it "returns empty list when no keys" do
-      get api_v1_links_path, params: { page: 1, per_page: 10 }
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["links"]).to eq([])
-      expect(response.parsed_body["total"]).to eq(0)
-    end
-
-    it "returns links by keys with page and per_page" do
-      a = create(:link, target_url: "https://a.com", user_id: nil)
-      b = create(:link, target_url: "https://b.com", user_id: nil)
-      c = create(:link, target_url: "https://c.com", user_id: nil)
-      keys = [ a, b, c ].map(&:key).join(",")
-      get api_v1_links_path, params: { keys: keys, page: 1, per_page: 10 }
-      expect(response).to have_http_status(:ok)
-      json = response.parsed_body
-      expect(json["total"]).to eq(3)
-      expect(json["links"].size).to eq(3)
-      get api_v1_links_path, params: { keys: keys, page: 1, per_page: 2 }
-      json2 = response.parsed_body
-      expect(json2["total"]).to eq(3)
-      expect(json2["links"].size).to eq(2)
-    end
-  end
-
-  describe "GET /api/v1/me/links (my_index)" do
     it "returns 401 when not authenticated" do
-      get "/api/v1/me/links", params: { page: 1, per_page: 10 }
+      get api_v1_links_path, params: { page: 1 }
       expect(response).to have_http_status(:unauthorized)
     end
 
@@ -101,7 +76,7 @@ RSpec.describe "Api::V1::Links", type: :request do
         my_older = create(:link, target_url: "https://my-older.com", user_id: user.id)
         create(:link, target_url: "https://other.com", user_id: other_user.id)
 
-        get "/api/v1/me/links", params: { page: 1, per_page: 10 }, headers: auth_headers
+        get api_v1_links_path, params: { page: 1 }, headers: auth_headers
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json["total"]).to eq(2)
@@ -109,7 +84,7 @@ RSpec.describe "Api::V1::Links", type: :request do
       end
 
       it "returns empty list when user has no links" do
-        get "/api/v1/me/links", headers: auth_headers
+        get api_v1_links_path, headers: auth_headers
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body["links"]).to eq([])
         expect(response.parsed_body["total"]).to eq(0)
@@ -118,7 +93,7 @@ RSpec.describe "Api::V1::Links", type: :request do
       it "returns user links (token-only auth for mobile/cross-origin)" do
         create(:link, target_url: "https://my-link.com", user_id: user.id)
 
-        get "/api/v1/me/links", headers: auth_headers
+        get api_v1_links_path, headers: auth_headers
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json["total"]).to eq(1)

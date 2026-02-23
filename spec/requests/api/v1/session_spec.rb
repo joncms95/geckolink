@@ -46,12 +46,12 @@ RSpec.describe "Api::V1::Session", type: :request do
 
       reset!
 
-      get "/api/v1/me/links", headers: { "Authorization" => "Bearer #{token}" }
+      get "/api/v1/links", headers: { "Authorization" => "Bearer #{token}" }
       expect(response).to have_http_status(:ok)
     end
 
     it "returns 401 for invalid Bearer token on protected routes" do
-      get "/api/v1/me/links", headers: { "Authorization" => "Bearer invalid_token" }
+      get "/api/v1/links", headers: { "Authorization" => "Bearer invalid_token" }
       expect(response).to have_http_status(:unauthorized)
     end
   end

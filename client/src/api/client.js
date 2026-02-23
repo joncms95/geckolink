@@ -55,7 +55,7 @@ function normalizeErrors(data) {
   return ["Request failed"]
 }
 
-// Throws UnauthorizedError on 401 — callers (useApiCall) handle session invalidation in React.
+// Throws UnauthorizedError on 401.
 export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {

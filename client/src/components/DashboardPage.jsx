@@ -26,10 +26,11 @@ export default function DashboardPage() {
     displayedLinks,
     displayedLinksLoading,
     linksTotal,
-    hasMoreLinks,
+    currentPage,
+    totalPages,
+    goToPage,
     selectedLink,
     setSelectedLink,
-    loadMoreLinks,
   } = useLinksList(user)
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function DashboardPage() {
   )
 
   const isDetailView = Boolean(keyFromUrl)
-  const totalLinks = displayedLinks.length
+  const totalLinks = linksTotal
   const totalClicks = displayedLinks.reduce((s, l) => s + (l.clicks_count || 0), 0)
   const avgClicks = totalLinks ? (totalClicks / totalLinks).toFixed(1) : "0.0"
 
@@ -104,8 +105,9 @@ export default function DashboardPage() {
         links={displayedLinks}
         linksTotal={linksTotal}
         loading={displayedLinksLoading}
-        hasMore={hasMoreLinks}
-        onLoadMore={loadMoreLinks}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
         onViewStats={handleViewStats}
         onCopy={handleCopy}
       />

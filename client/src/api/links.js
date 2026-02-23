@@ -16,9 +16,9 @@ export async function getLink(key) {
   return handleResponse(res)
 }
 
-export async function getMyLinks(page = 1, perPage = 10) {
-  const q = new URLSearchParams({ page: String(page), per_page: String(perPage) })
-  const res = await fetchWithTimeout(`${getApiBase()}/me/links?${q}`, {
+export async function getMyLinks(page = 1) {
+  const q = new URLSearchParams({ page: String(page) })
+  const res = await fetchWithTimeout(`${getApiBase()}/links?${q}`, {
     headers: { Accept: "application/json" },
   })
   const data = await handleResponse(res)
