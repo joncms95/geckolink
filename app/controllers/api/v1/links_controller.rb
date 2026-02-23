@@ -4,6 +4,8 @@ module Api
   module V1
     class LinksController < ApplicationController
       DEFAULT_PER_PAGE = 10
+      ALLOWED_SORTS = { "clicks_count" => { clicks_count: :desc, id: :desc } }.freeze
+      DEFAULT_ORDER = { created_at: :desc, id: :desc }.freeze
 
       before_action :require_authentication!, only: :index
 
@@ -18,6 +20,7 @@ module Api
         )
 
         if result.success?
+          Dashboard::StatsQuery.invalidate_for_user(current_user&.id)
           render json: link_json(result.value), status: :created
         else
           render json: { errors: result.error }, status: :unprocessable_content
@@ -27,11 +30,15 @@ module Api
       def index
         page = [ params[:page].to_i, 1 ].max
         per_page = DEFAULT_PER_PAGE
-        scope = current_user.links.order(created_at: :desc, id: :desc)
+        scope = current_user.links.order(links_scope_order)
         total = scope.count
         links = scope.offset((page - 1) * per_page).limit(per_page).to_a
 
-        render json: { links: links.map { |link| link_json(link) }, total: total, per_page: per_page }
+        render json: {
+          links: links.map { |link| link_json(link) },
+          total: total,
+          per_page: per_page
+        }
       end
 
       def show
@@ -54,7 +61,7 @@ module Api
         return true if link.user_id.nil?
         return true if link.user_id == current_user&.id
 
-        head :forbidden
+        render json: { errors: [ "You don't have permission to view this link." ] }, status: :forbidden
         false
       end
 
@@ -75,6 +82,10 @@ module Api
 
       def short_url_for(link)
         "#{request.base_url}/#{link.key}"
+      end
+
+      def links_scope_order
+        ALLOWED_SORTS.fetch(params[:sort].to_s, DEFAULT_ORDER)
       end
     end
   end

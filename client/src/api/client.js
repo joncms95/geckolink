@@ -49,9 +49,11 @@ export class UnauthorizedError extends Error {
   }
 }
 
-function normalizeErrors(data) {
+function normalizeErrors(data, status) {
   if (Array.isArray(data?.errors) && data.errors.length > 0) return data.errors
   if (data?.error != null) return Array.isArray(data.error) ? data.error : [data.error]
+  if (status === 403) return ["You don't have permission to access this resource."]
+  if (status === 404) return ["Not found."]
   return ["Request failed"]
 }
 
@@ -60,7 +62,7 @@ export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     if (res.status === 401) throw new UnauthorizedError()
-    throw { status: res.status, errors: normalizeErrors(data) }
+    throw { status: res.status, errors: normalizeErrors(data, res.status) }
   }
   return data
 }

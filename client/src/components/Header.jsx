@@ -1,11 +1,59 @@
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Link, useLocation } from "react-router-dom"
+
+const SCROLL_THRESHOLD = 100
+const TOP_HOVER_ZONE = 80
+const MOUSEMOVE_THROTTLE_MS = 100
 
 export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
   const location = useLocation()
   const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
+  const [visible, setVisible] = useState(true)
+  const lastScrollY = useRef(0)
+  const lastMouseMoveTime = useRef(0)
+
+  const updateVisibility = useCallback(() => {
+    const scrollY = window.scrollY
+    if (scrollY <= SCROLL_THRESHOLD) {
+      setVisible(true)
+    } else if (scrollY > lastScrollY.current) {
+      setVisible(false)
+    } else {
+      setVisible(true)
+    }
+    lastScrollY.current = scrollY
+  }, [])
+
+  useEffect(() => {
+    let ticking = false
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateVisibility()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    const onMouseMove = (e) => {
+      const now = Date.now()
+      if (now - lastMouseMoveTime.current < MOUSEMOVE_THROTTLE_MS) return
+      lastMouseMoveTime.current = now
+      if (e.clientY < TOP_HOVER_ZONE) setVisible(true)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("mousemove", onMouseMove)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("mousemove", onMouseMove)
+    }
+  }, [updateVisibility])
 
   return (
-    <header className="border-b border-gecko-dark-border/80 bg-gecko-dark/80 backdrop-blur-sm sticky top-0 z-10 safe-area-padding">
+    <header
+      className="border-b border-gecko-dark-border/80 bg-gecko-dark/80 backdrop-blur-sm fixed left-0 right-0 top-0 z-10 safe-area-padding transition-transform duration-200 ease-out"
+      style={{ transform: visible ? "translateY(0)" : "translateY(-100%)" }}
+    >
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 min-h-[52px] sm:min-h-0">
         <Link
           to="/"

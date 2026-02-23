@@ -39,13 +39,14 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  const effectiveKey = keyFromUrl || link?.key
+
   const fetchReport = useCallback(() => {
-    const code = keyFromUrl || link?.key
-    if (!code) return
+    if (!effectiveKey) return
 
     setLoading(true)
     setError(null)
-    getAnalytics(code)
+    getAnalytics(effectiveKey)
       .then((data) => {
         setReport(
           data && typeof data === "object"
@@ -62,15 +63,22 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         setError(err?.errors?.[0] || "Failed to load analytics")
       })
       .finally(() => setLoading(false))
-  }, [keyFromUrl, link?.key])
+  }, [effectiveKey])
 
   useEffect(() => {
+    if (!effectiveKey) return
     fetchReport()
   }, [fetchReport])
 
   const topLocation = getTopCountry(report?.by_country)
   const clicks = link?.clicks_count ?? 0
   const clicksList = report?.clicks ?? []
+
+  const heading = link?.title
+    ? `${link.title} — Stats`
+    : link?.target_url
+      ? `Stats for ${link.target_url}`
+      : `Stats for /${effectiveKey}`
 
   return (
     <>
@@ -84,7 +92,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         </button>
         <div className="min-w-0 text-left sm:text-right">
           <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
-            {link?.title ? `${link.title} — Stats` : `Stats for ${link?.target_url}`}
+            {heading}
           </h1>
           {link?.short_url && (
             <a

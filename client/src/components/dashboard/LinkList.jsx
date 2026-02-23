@@ -1,5 +1,5 @@
 import ShortUrlCard from "./ShortUrlCard"
-import { LINKS_PER_PAGE } from "../../constants"
+import { LINKS_PER_PAGE, SORT_OPTIONS } from "../../constants"
 
 // Build pagination items: [1, "...", 4, 5, 6, "...", 20] etc.
 function paginationItems(currentPage, totalPages) {
@@ -33,6 +33,8 @@ export default function LinkList({
   loading,
   currentPage,
   totalPages,
+  sort,
+  onSortChange,
   onPageChange,
   onViewStats,
   onCopy,
@@ -45,14 +47,31 @@ export default function LinkList({
 
   return (
     <section className="min-w-0">
-      <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
-        Short URLs
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-white">
+          Short URLs
+          {linksTotal > 0 && (
+            <span className="ml-2 text-gecko-slate font-normal text-sm sm:text-base">
+              Showing {start} to {end} of {linksTotal} results
+            </span>
+          )}
+        </h2>
         {linksTotal > 0 && (
-          <span className="ml-2 text-gecko-slate font-normal text-sm sm:text-base">
-            Showing {start} to {end} of {linksTotal} results
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-gecko-slate text-sm">Sort by</span>
+            <select
+              value={sort}
+              onChange={(e) => onSortChange(e.target.value)}
+              disabled={loading}
+              aria-label="Sort links by"
+              className="rounded-lg border border-gecko-dark-border bg-gecko-dark-card text-white text-sm px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark"
+            >
+              <option value={SORT_OPTIONS.NEWEST}>Newest first</option>
+              <option value={SORT_OPTIONS.MOST_CLICKS}>Most clicks</option>
+            </select>
+          </div>
         )}
-      </h2>
+      </div>
 
       {loading && links.length === 0 ? (
         <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-8 text-center text-gecko-slate text-sm">

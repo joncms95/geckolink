@@ -22,5 +22,32 @@ RSpec.describe Analytics::RecordClick do
     it "does nothing when link does not exist" do
       expect(described_class.call(link_id: -1, ip_address: "1.2.3.4", user_agent: nil)).to be_nil
     end
+
+    it "invalidates dashboard stats cache for the link owner when link has user_id" do
+      user = create(:user)
+      user_link = create(:link, user_id: user.id)
+      allow(Geocoder).to receive(:search).and_return([])
+
+      expect(Dashboard::StatsQuery).to receive(:invalidate_for_user).with(user.id)
+
+      described_class.call(
+        link_id: user_link.id,
+        ip_address: "1.2.3.4",
+        user_agent: nil
+      )
+    end
+
+    it "does not call dashboard invalidation for anonymous links" do
+      anon_link = create(:link, user_id: nil)
+      allow(Geocoder).to receive(:search).and_return([])
+
+      expect(Dashboard::StatsQuery).not_to receive(:invalidate_for_user)
+
+      described_class.call(
+        link_id: anon_link.id,
+        ip_address: "1.2.3.4",
+        user_agent: nil
+      )
+    end
   end
 end

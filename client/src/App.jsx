@@ -6,6 +6,7 @@ import Header from "./components/Header"
 import AuthModal from "./components/AuthModal"
 import HomePage from "./pages/HomePage"
 import DashboardPage from "./components/DashboardPage"
+import NotFoundPage from "./pages/NotFoundPage"
 
 function AppContent() {
   const { user, login, logout, signup } = useAuth()
@@ -19,6 +20,8 @@ function AppContent() {
         onOpenAuth={() => setAuthModalMode("login")}
         onOpenSignup={() => setAuthModalMode("signup")}
       />
+      {/* Spacer: must match the fixed header height (~76px on mobile, ~80px on sm+) */}
+      <div className="h-20 shrink-0" aria-hidden />
       {authModalMode && (
         <AuthModal
           initialMode={authModalMode}
@@ -37,6 +40,7 @@ function AppContent() {
           path="/dashboard/:key?"
           element={user ? <DashboardPage /> : <Navigate to="/" replace />}
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
       <footer className="border-t border-gecko-dark-border/80 mt-auto">

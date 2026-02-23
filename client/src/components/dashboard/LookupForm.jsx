@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react"
 import { getLink } from "../../api/links"
 import { parseShortCode } from "../../utils/shortCode"
+import { SCROLL_TARGETS } from "../../constants"
 import Button from "../ui/Button"
 import Input from "../ui/Input"
 
@@ -24,7 +25,12 @@ export default function LookupForm({ onResult }) {
         setValue("")
         onResult(link)
       } catch (err) {
-        setError(err?.errors?.[0] || "Short link not found. Check the URL or code and try again.")
+        const fallback = err?.errors?.[0] ?? "Request failed"
+        const message =
+          err?.status === 404
+            ? "Short link not found. Check the URL or code and try again."
+            : fallback
+        setError(message)
       } finally {
         setLoading(false)
       }
@@ -33,7 +39,7 @@ export default function LookupForm({ onResult }) {
   )
 
   return (
-    <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4">
+    <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4" data-scroll-target={SCROLL_TARGETS.LINK_LIST}>
       <p className="text-xs sm:text-sm text-gecko-slate mb-3">
         Already have a short link? Paste it below to load its analytics.
       </p>

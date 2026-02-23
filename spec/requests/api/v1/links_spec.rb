@@ -116,6 +116,20 @@ RSpec.describe "Api::V1::Links", type: :request do
     it "returns 404 for unknown key" do
       get api_v1_link_path("nonexistent")
       expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body["errors"]).to eq([ "Not found." ])
+    end
+
+    it "returns 403 with message when link belongs to another user" do
+      other_user = create(:user)
+      other_link = create(:link, user_id: other_user.id)
+      me = create(:user)
+      post api_v1_session_path, params: { session: { email: me.email, password: "password123" } }, as: :json
+      token = response.parsed_body["token"]
+      reset!
+
+      get api_v1_link_path(other_link.key), headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:forbidden)
+      expect(response.parsed_body["errors"]).to eq([ "You don't have permission to view this link." ])
     end
   end
 

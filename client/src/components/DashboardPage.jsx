@@ -5,11 +5,12 @@ import { scrollToTop } from "../utils/scroll"
 import { useAuth } from "../hooks/useAuth"
 import { useToast } from "../hooks/useToast"
 import { useLinksList } from "../hooks/useLinksList"
+import { useDashboardStats } from "../hooks/useDashboardStats"
 import useCopyToClipboard from "../hooks/useCopyToClipboard"
-import MetricCard from "./dashboard/MetricCard"
 import LinkList from "./dashboard/LinkList"
 import LinkDetailView from "./dashboard/LinkDetailView"
-import LookupForm from "./dashboard/LookupForm"
+import DashboardListView from "./dashboard/DashboardListView"
+import { SCROLL_TARGETS } from "../constants"
 
 export default function DashboardPage() {
   const { key: keyFromUrl } = useParams()
@@ -24,16 +25,19 @@ export default function DashboardPage() {
     linksTotal,
     currentPage,
     totalPages,
+    sort,
     goToPage,
+    changeSort,
     selectedLink,
     setSelectedLink,
   } = useLinksList(user)
+
+  const stats = useDashboardStats(user)
 
   useEffect(() => {
     if (keyFromUrl) scrollToTop()
   }, [keyFromUrl])
 
-  // Resolve key from URL to a link object
   useEffect(() => {
     if (!keyFromUrl) return
 
@@ -44,9 +48,7 @@ export default function DashboardPage() {
     }
 
     getLink(keyFromUrl)
-      .then((link) => {
-        setSelectedLink(link)
-      })
+      .then((link) => setSelectedLink(link))
       .catch(() => {})
   }, [keyFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -74,19 +76,20 @@ export default function DashboardPage() {
     [setSelectedLink, navigate]
   )
 
+  const handleBackToDashboard = useCallback(() => {
+    navigate("/dashboard")
+    requestAnimationFrame(() => scrollToTop(SCROLL_TARGETS.DASHBOARD))
+  }, [navigate])
+
   const handlePageChange = useCallback(
     (page) => {
-      goToPage(page)
       if (keyFromUrl) navigate("/dashboard")
-      scrollToTop()
+      goToPage({ page, onLoaded: () => scrollToTop(SCROLL_TARGETS.LINK_LIST) })
     },
     [goToPage, navigate, keyFromUrl]
   )
 
   const isDetailView = Boolean(keyFromUrl)
-  const totalLinks = linksTotal
-  const totalClicks = displayedLinks.reduce((s, l) => s + (l.clicks_count || 0), 0)
-  const avgClicks = totalLinks ? (totalClicks / totalLinks).toFixed(1) : "0.0"
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
@@ -94,19 +97,10 @@ export default function DashboardPage() {
         <LinkDetailView
           link={selectedLink}
           keyFromUrl={keyFromUrl}
-          onBack={() => navigate("/dashboard")}
+          onBack={handleBackToDashboard}
         />
       ) : (
-        <>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Analytics Dashboard</h1>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <MetricCard label="Total Links" value={totalLinks} icon="fa-link" />
-            <MetricCard label="Total Clicks" value={totalClicks} icon="fa-chart-line" />
-            <MetricCard label="Avg. Clicks/Link" value={avgClicks} icon="fa-chart-column" />
-            <MetricCard label="Top Location" value="N/A" icon="fa-globe" />
-          </div>
-          <LookupForm onResult={handleLookupResult} />
-        </>
+        <DashboardListView stats={stats} onLookupResult={handleLookupResult} />
       )}
 
       <LinkList
@@ -115,6 +109,8 @@ export default function DashboardPage() {
         loading={displayedLinksLoading}
         currentPage={currentPage}
         totalPages={totalPages}
+        sort={sort}
+        onSortChange={changeSort}
         onPageChange={handlePageChange}
         onViewStats={handleViewStats}
         onCopy={handleCopy}

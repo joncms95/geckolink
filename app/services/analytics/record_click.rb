@@ -19,10 +19,16 @@ module Analytics
         clicked_at: Time.current
       )
       fill_geolocation(click)
+      invalidate_dashboard_cache_for(link)
       click
     end
 
     private
+
+    def invalidate_dashboard_cache_for(link)
+      return if link.user_id.blank?
+      Dashboard::StatsQuery.invalidate_for_user(link.user_id)
+    end
 
     def fill_geolocation(click)
       return if click.ip_address.blank?
