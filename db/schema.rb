@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_22_000003) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_23_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -28,14 +28,22 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_22_000003) do
     t.index ["user_id"], name: "index_links_on_user_id"
   end
 
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "token", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_user_sessions_on_token", unique: true
+    t.index ["user_id", "created_at"], name: "index_user_sessions_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", null: false
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "session_token"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["session_token"], name: "index_users_on_session_token"
   end
 
   create_table "visits", force: :cascade do |t|
@@ -53,5 +61,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_22_000003) do
   end
 
   add_foreign_key "links", "users"
+  add_foreign_key "user_sessions", "users"
   add_foreign_key "visits", "links"
 end

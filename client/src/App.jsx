@@ -67,8 +67,7 @@ function AppContent() {
     resetAfterAuthChange()
     resetToHomeState({ preserveToastForSessionInvalidation: true })
     setToast({
-      message:
-        "You've been signed out because you signed in on another device. Please log in again to continue.",
+      message: "Your session has ended. Please log in again to continue.",
       autoDismissMs: SESSION_INVALIDATED_TOAST_MS,
     })
   }, [clearSessionLocally, resetAfterAuthChange, resetToHomeState])

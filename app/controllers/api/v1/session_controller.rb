@@ -11,7 +11,7 @@ module Api
         if user&.authenticate(session_params[:password])
           reset_session
           session[:user_id] = user.id
-          session[:session_token] = user.regenerate_session_token
+          session[:session_token] = UserSession.create_for_user(user)
           render json: { user: user_json(user) }
         else
           render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
@@ -19,6 +19,9 @@ module Api
       end
 
       def destroy
+        if session[:session_token].present?
+          UserSession.find_by(token: session[:session_token])&.destroy
+        end
         reset_session
         head :no_content
       end

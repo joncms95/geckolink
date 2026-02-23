@@ -8,7 +8,7 @@ module Api
       BATCH_MAX = 100
 
       def create
-        # Had session cookie but it was invalid (e.g. signed in on another device). current_user already cleared session; 401 so client deauths and can create anonymously next request.
+        # Session cookie referred to a session that no longer exists (e.g. logged out elsewhere or session revoked). 401 so client clears auth and can retry (e.g. create link anonymously).
         if session[:user_id].present? && current_user.nil?
           return head :unauthorized
         end

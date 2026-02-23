@@ -7,6 +7,7 @@ module Api
         user = User.new(registration_params)
         if user.save
           session[:user_id] = user.id
+          session[:session_token] = UserSession.create_for_user(user)
           render json: { user: { id: user.id, email: user.email } }, status: :created
         else
           render json: { errors: user.errors.full_messages }, status: :unprocessable_entity

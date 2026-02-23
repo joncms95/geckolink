@@ -1,5 +1,5 @@
 /**
- * Called when the API returns 401 (e.g. session invalidated by login on another device).
+ * Called when the API returns 401 (e.g. session expired or revoked).
  * App registers a handler that clears auth state and redirects to home.
  */
 let handler = null
