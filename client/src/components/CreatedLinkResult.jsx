@@ -1,28 +1,11 @@
-import { useState } from "react"
-import { BTN_PRIMARY, BTN_SECONDARY } from "../constants/classes"
+import LinkIcon from "./ui/LinkIcon"
+import Button from "./ui/Button"
 
 export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewDashboard }) {
-  const [iconError, setIconError] = useState(false)
-  const showIcon = createdLink?.icon_url && !iconError
   return (
     <div className="mt-6 sm:mt-8 max-w-2xl mx-auto rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 text-left shadow-gecko">
       <div className="flex gap-3 sm:gap-4 mb-4">
-        {showIcon ? (
-          <img
-            src={createdLink.icon_url}
-            alt=""
-            className="w-10 h-10 rounded-lg shrink-0 object-cover bg-gecko-dark-border"
-            referrerPolicy="no-referrer"
-            onError={() => setIconError(true)}
-          />
-        ) : (
-          <div
-            className="w-10 h-10 rounded-lg shrink-0 bg-gecko-dark-border flex items-center justify-center"
-            aria-hidden
-          >
-            <i className="fa-solid fa-link text-xl text-gecko-slate" aria-hidden />
-          </div>
-        )}
+        <LinkIcon src={createdLink.icon_url} />
         <div className="flex-1 min-w-0">
           <p className="text-gecko-slate text-xs sm:text-sm font-medium mb-0.5">Target URL</p>
           <p className="text-white text-sm truncate" title={createdLink.url}>
@@ -46,21 +29,13 @@ export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewD
           {createdLink.short_url}
         </a>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => onCopyShortUrl(createdLink.short_url)}
-            className={`w-full sm:w-auto ${BTN_PRIMARY}`}
-          >
+          <Button onClick={() => onCopyShortUrl(createdLink.short_url)} className="w-full sm:w-auto">
             Copy
-          </button>
+          </Button>
           {onViewDashboard && (
-            <button
-              type="button"
-              onClick={onViewDashboard}
-              className={`w-full sm:w-auto ${BTN_SECONDARY}`}
-            >
+            <Button variant="secondary" onClick={onViewDashboard} className="w-full sm:w-auto">
               View analytics
-            </button>
+            </Button>
           )}
         </div>
       </div>

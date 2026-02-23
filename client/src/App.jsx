@@ -1,265 +1,36 @@
-import { useState, useCallback, useEffect } from "react"
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom"
-import { createLink, getLink } from "./api/links"
+import { useState } from "react"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { AuthProvider, useAuth } from "./hooks/useAuth"
+import { ToastProvider } from "./hooks/useToast"
 import Header from "./components/Header"
-import Toast from "./components/Toast"
-import DashboardPage from "./components/DashboardPage"
 import AuthModal from "./components/AuthModal"
 import HomePage from "./pages/HomePage"
-import { useAuth } from "./hooks/useAuth"
-import { useLinksList } from "./hooks/useLinksList"
-import { useErrorDismiss } from "./hooks/useErrorDismiss"
-import { parseShortCode } from "./utils/shortCode"
-import { setOnSessionInvalidated } from "./sessionInvalidation"
-import { BTN_PRIMARY, INPUT_BASE } from "./constants/classes"
-import { SESSION_INVALIDATED_TOAST_MS } from "./constants"
+import DashboardPage from "./components/DashboardPage"
 
 function AppContent() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { user, login, logout, clearSessionLocally, signup } = useAuth()
-  const isDashboard =
-    location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
-
-  const {
-    displayedLinks,
-    displayedLinksLoading,
-    linksTotal,
-    hasMoreLinks,
-    selectedLink,
-    setSelectedLink,
-    loadMoreLinks,
-    addToDisplayedLinks,
-    updateLinkInList,
-    resetAfterAuthChange,
-  } = useLinksList(user, isDashboard)
-
+  const { user, login, logout, signup } = useAuth()
   const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [submitError, setSubmitError] = useState(null)
-  const [lookupValue, setLookupValue] = useState("")
-  const [lookupError, setLookupError] = useState(null)
-  const [lookupLoading, setLookupLoading] = useState(false)
-  const [toast, setToast] = useState(null)
-  const [createdLink, setCreatedLink] = useState(null)
-
-  useErrorDismiss(lookupError, setLookupError)
-  useErrorDismiss(submitError, setSubmitError)
-
-  const resetToHomeState = useCallback((opts = {}) => {
-    setAuthModalOpen(false)
-    setSubmitError(null)
-    setLookupValue("")
-    setLookupError(null)
-    if (!opts.preserveToastForSessionInvalidation) setToast(null)
-    setCreatedLink(null)
-    navigate("/")
-  }, [navigate])
-
-  const handleLogout = useCallback(async () => {
-    await logout()
-    resetAfterAuthChange()
-    resetToHomeState()
-  }, [logout, resetAfterAuthChange, resetToHomeState])
-
-  const handleSessionInvalidated = useCallback(() => {
-    clearSessionLocally()
-    resetAfterAuthChange()
-    resetToHomeState({ preserveToastForSessionInvalidation: true })
-    setToast({
-      message: "Your session has ended. Please log in again to continue.",
-      autoDismissMs: SESSION_INVALIDATED_TOAST_MS,
-    })
-  }, [clearSessionLocally, resetAfterAuthChange, resetToHomeState])
-
-  useEffect(() => {
-    setOnSessionInvalidated(handleSessionInvalidated)
-    return () => setOnSessionInvalidated(null)
-  }, [handleSessionInvalidated])
-
-  const handleLogin = useCallback(
-    async (email, password) => {
-      await login(email, password)
-      resetAfterAuthChange()
-      resetToHomeState()
-    },
-    [login, resetAfterAuthChange, resetToHomeState]
-  )
-
-  const handleSignup = useCallback(
-    async (email, password, passwordConfirmation) => {
-      await signup(email, password, passwordConfirmation)
-      resetAfterAuthChange()
-      resetToHomeState()
-    },
-    [signup, resetAfterAuthChange, resetToHomeState]
-  )
-
-  const handleSubmit = useCallback(
-    async (url) => {
-      setLoading(true)
-      setSubmitError(null)
-      setCreatedLink(null)
-      try {
-        const data = await createLink(url)
-        if (user) addToDisplayedLinks(data)
-        setToast("Short URL created!")
-        setCreatedLink(data)
-      } catch (err) {
-        const messages = Array.isArray(err?.errors)
-          ? err.errors
-          : [err?.errors || "Something went wrong"]
-        setSubmitError(messages.join(". "))
-      } finally {
-        setLoading(false)
-      }
-    },
-    [user, addToDisplayedLinks]
-  )
-
-  const handleLookup = useCallback(
-    async (e) => {
-      e.preventDefault()
-      const shortCode = parseShortCode(lookupValue)
-      if (!shortCode) {
-        setLookupError(
-          "Paste a short link or enter its code (e.g. TJTRrCl or http://localhost:3000/TJTRrCl)"
-        )
-        return
-      }
-      setLookupLoading(true)
-      setLookupError(null)
-      try {
-        const data = await getLink(shortCode)
-        addToDisplayedLinks(data)
-        setSelectedLink(data)
-        setLookupValue("")
-        navigate(`/dashboard/${data.short_code}`)
-      } catch (err) {
-        setLookupError(
-          err?.errors?.[0] ||
-            "Short link not found. Check the URL or code and try again."
-        )
-      } finally {
-        setLookupLoading(false)
-      }
-    },
-    [lookupValue, addToDisplayedLinks, setSelectedLink, navigate]
-  )
-
-  const lookupForm = (
-    <form onSubmit={handleLookup} className="flex flex-col gap-3">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          placeholder="Paste short link or code to view analytics"
-          value={lookupValue}
-          onChange={(e) => {
-            setLookupValue(e.target.value)
-            setLookupError(null)
-          }}
-          disabled={lookupLoading}
-          className={`flex-1 min-w-0 ${INPUT_BASE}`}
-        />
-        <button
-          type="submit"
-          disabled={lookupLoading}
-          className={`shrink-0 px-5 py-3 rounded-xl font-medium ${BTN_PRIMARY}`}
-        >
-          {lookupLoading ? "Loading…" : "View analytics"}
-        </button>
-      </div>
-      {lookupError && <p className="text-sm text-red-400">{lookupError}</p>}
-    </form>
-  )
 
   return (
     <div className="min-h-screen bg-gecko-dark text-white font-sans antialiased bg-pattern">
       <Header
         user={user}
-        onLogout={handleLogout}
+        onLogout={logout}
         onOpenAuth={() => setAuthModalOpen(true)}
       />
       {authModalOpen && (
         <AuthModal
           onClose={() => setAuthModalOpen(false)}
-          onLogin={handleLogin}
-          onSignup={handleSignup}
+          onLogin={login}
+          onSignup={signup}
         />
       )}
-      <Toast
-        message={typeof toast === "string" ? toast : toast?.message}
-        visible={!!toast}
-        onDismiss={() => setToast(null)}
-        autoDismissMs={typeof toast === "object" && toast?.autoDismissMs != null ? toast.autoDismissMs : undefined}
-      />
 
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route
-          path="/"
-          element={
-            <HomePage
-              user={user}
-              onSubmit={handleSubmit}
-              loading={loading}
-              submitError={submitError}
-              createdLink={createdLink}
-              onCopyShortUrl={async (text) => {
-                try {
-                  await navigator.clipboard.writeText(text)
-                  setToast("Copied to clipboard!")
-                } catch (_) {}
-              }}
-              onViewDashboard={() => {
-                if (createdLink?.short_code)
-                  navigate(`/dashboard/${createdLink.short_code}`)
-              }}
-            />
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            user ? (
-              <DashboardPage
-                displayedLinks={displayedLinks}
-                displayedLinksLoading={displayedLinksLoading}
-                linksTotal={linksTotal}
-                hasMoreLinks={hasMoreLinks}
-                onLoadMore={loadMoreLinks}
-                selectedLink={selectedLink}
-                onSelectLink={setSelectedLink}
-                onAddToDisplayedLinks={addToDisplayedLinks}
-                onUpdateLinkInList={updateLinkInList}
-                onNavigateToStats={navigate}
-                lookupForm={lookupForm}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route
-          path="/dashboard/:shortCode"
-          element={
-            user ? (
-              <DashboardPage
-                displayedLinks={displayedLinks}
-                displayedLinksLoading={displayedLinksLoading}
-                linksTotal={linksTotal}
-                hasMoreLinks={hasMoreLinks}
-                onLoadMore={loadMoreLinks}
-                selectedLink={selectedLink}
-                onSelectLink={setSelectedLink}
-                onAddToDisplayedLinks={addToDisplayedLinks}
-                onUpdateLinkInList={updateLinkInList}
-                onNavigateToStats={navigate}
-                lookupForm={lookupForm}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
+          path="/dashboard/:shortCode?"
+          element={user ? <DashboardPage /> : <Navigate to="/" replace />}
         />
       </Routes>
 
@@ -275,7 +46,11 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <AuthProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

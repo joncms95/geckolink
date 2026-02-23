@@ -7,8 +7,10 @@ module Api
       MAX_PER_PAGE = 50
       BATCH_MAX = 100
 
+      before_action :require_authentication!, only: :my_index
+
       def create
-        # Session cookie referred to a session that no longer exists (e.g. logged out elsewhere or session revoked). 401 so client clears auth and can retry (e.g. create link anonymously).
+        # Stale session cookie (e.g. logged out elsewhere) → 401 so client clears auth state.
         if session[:user_id].present? && current_user.nil?
           return head :unauthorized
         end
@@ -17,6 +19,7 @@ module Api
           original_url: link_params[:url],
           user_id: current_user&.id
         )
+
         if result.success?
           render json: link_json(result.value), status: :created
         else
@@ -24,23 +27,18 @@ module Api
         end
       end
 
-      # Logged-in user only: list links for current user, ordered by created_at desc.
       def my_index
-        return head :unauthorized unless signed_in?
-
         page, per_page = pagination_params
         scope = current_user.links.order(created_at: :desc, id: :desc)
         total = scope.count
         links = scope.offset((page - 1) * per_page).limit(per_page).to_a
+
         render json: { links: links.map { |l| link_json(l) }, total: total }
       end
 
-      # Anonymous lookup by short_codes (e.g. other clients). Dashboard for non-login uses localStorage only.
       def index
         codes = params[:short_codes].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
-        if codes.empty?
-          return render json: { links: [], total: 0 }
-        end
+        return render(json: { links: [], total: 0 }) if codes.empty?
 
         page, per_page = pagination_params
         all_links = Link.where(short_code: codes, user_id: nil).to_a
@@ -48,21 +46,34 @@ module Api
         sorted = all_links.sort_by { |l| code_order[l.short_code] || codes.size }
         total = sorted.size
         links = sorted[(page - 1) * per_page, per_page] || []
+
         render json: { links: links.map { |l| link_json(l) }, total: total }
       end
 
       def show
         link = Link.find_by!(short_code: params[:short_code])
+        authorize_link_access!(link) or return
         render json: link_json(link)
       end
 
       def analytics
         link = Link.find_by!(short_code: params[:short_code])
+        authorize_link_access!(link) or return
+
         report = Analytics::ReportQuery.new(link: link).call
         render json: report
       end
 
       private
+
+      # Anonymous links (no user_id) are public; owned links require the owner.
+      def authorize_link_access!(link)
+        return true if link.user_id.nil?
+        return true if link.user_id == current_user&.id
+
+        head :forbidden
+        false
+      end
 
       def pagination_params
         page = [ params[:page].to_i, 1 ].max
@@ -77,7 +88,6 @@ module Api
 
       def link_json(link)
         {
-          id: link.id,
           url: link.url,
           short_code: link.short_code,
           title: link.title,

@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { formatApiError } from "../utils/error"
+import Button from "./ui/Button"
 
 export default function AuthModal({ onClose, onLogin, onSignup }) {
   const [mode, setMode] = useState("login")
@@ -26,11 +28,14 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
       }
       onClose()
     } catch (err) {
-      setError(Array.isArray(err?.errors) ? err.errors.join(". ") : err?.errors || "Something went wrong")
+      setError(formatApiError(err))
     } finally {
       setLoading(false)
     }
   }
+
+  const inputClass =
+    "w-full px-4 py-3 rounded-lg border border-gecko-dark-border bg-gecko-dark text-white focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none min-h-[48px] touch-manipulation text-base"
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60" onClick={onClose}>
@@ -39,7 +44,9 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-white">{isSignup ? "Sign up" : "Log in"}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-white">
+            {isSignup ? "Sign up" : "Log in"}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -61,7 +68,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-lg border border-gecko-dark-border bg-gecko-dark text-white focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none min-h-[48px] touch-manipulation text-base"
+              className={inputClass}
             />
           </div>
           <div>
@@ -76,7 +83,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-4 py-3 rounded-lg border border-gecko-dark-border bg-gecko-dark text-white focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none min-h-[48px] touch-manipulation text-base"
+              className={inputClass}
             />
             {isSignup && (
               <p className="mt-1 text-xs text-gecko-slate">At least 8 characters</p>
@@ -95,7 +102,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 rounded-lg border border-gecko-dark-border bg-gecko-dark text-white focus:border-gecko-green focus:ring-2 focus:ring-gecko-green/30 outline-none min-h-[48px] touch-manipulation text-base"
+                className={inputClass}
               />
             </div>
           )}
@@ -105,23 +112,20 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
             </p>
           )}
           <div className="flex gap-2 pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-3 rounded-lg font-medium bg-gecko-green text-gecko-dark hover:bg-gecko-green-light focus:ring-2 focus:ring-gecko-green focus:ring-offset-2 focus:ring-offset-gecko-dark disabled:opacity-60 min-h-[48px] touch-manipulation"
-            >
+            <Button type="submit" disabled={loading} className="flex-1 py-3 min-h-[48px]">
               {loading ? "…" : isSignup ? "Sign up" : "Log in"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => {
                 setMode(isSignup ? "login" : "signup")
                 setError(null)
               }}
-              className="py-3 px-4 rounded-lg font-medium border border-gecko-dark-border text-gecko-slate hover:text-white hover:bg-gecko-dark-border min-h-[48px] touch-manipulation"
+              className="py-3 px-4 min-h-[48px]"
             >
               {isSignup ? "Log in" : "Sign up"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

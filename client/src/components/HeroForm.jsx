@@ -1,8 +1,6 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { normalizeUrl, hasValidHost } from "../utils/url"
-import { useErrorDismiss } from "../hooks/useErrorDismiss"
-
-const URL_PLACEHOLDER = "Enter your long URL here..."
+import { ERROR_DISMISS_MS } from "../constants"
 
 export default function HeroForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("")
@@ -13,12 +11,15 @@ export default function HeroForm({ onSubmit, isLoading }) {
   const isValid = /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized)
   const showError = touched && (error || (url.trim() && !isValid))
 
-  const clearError = useCallback(() => {
-    setError(null)
-    setTouched(false)
-  }, [])
-
-  useErrorDismiss(showError, clearError)
+  // Auto-dismiss error after timeout
+  useEffect(() => {
+    if (!showError) return
+    const t = setTimeout(() => {
+      setError(null)
+      setTouched(false)
+    }, ERROR_DISMISS_MS)
+    return () => clearTimeout(t)
+  }, [showError])
 
   const handleSubmit = useCallback(
     (e) => {
@@ -56,7 +57,7 @@ export default function HeroForm({ onSubmit, isLoading }) {
           inputMode="url"
           autoCorrect="off"
           spellCheck="false"
-          placeholder={URL_PLACEHOLDER}
+          placeholder="Enter your long URL here..."
           value={url}
           onChange={(e) => { setUrl(e.target.value); setError(null) }}
           onBlur={() => setTouched(true)}

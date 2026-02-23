@@ -2,7 +2,6 @@
 
 module Shortener
   class CreateService
-    # Synchronous title/icon fetch with timeout. If fetch fails or times out, link is returned with null title/icon.
     FETCH_TIMEOUT_SEC = 5
     MAX_COLLISION_RETRIES = 3
     DEFAULT_CODE_LENGTH = 7
@@ -15,14 +14,17 @@ module Shortener
       link = Link.new(url: url, user_id: user_id)
       return Result.failure(link.errors.full_messages) unless link.valid?
 
-      save_with_unique_short_code!(link)
-      fetch_title_and_icon(link)
+      persist_with_unique_code!(link)
+      backfill_metadata(link)
       Result.success(link.reload)
     rescue ActiveRecord::RecordInvalid => e
       Result.failure(e.record.errors.full_messages)
     end
 
-    def save_with_unique_short_code!(link)
+    private
+
+    # Retries with progressively longer codes on collision.
+    def persist_with_unique_code!(link)
       (MAX_COLLISION_RETRIES + 1).times do |attempt|
         length = attempt < MAX_COLLISION_RETRIES ? DEFAULT_CODE_LENGTH : FALLBACK_CODE_LENGTH
         link.short_code = RandomCode.generate(length: length)
@@ -35,11 +37,12 @@ module Shortener
         link.short_code = nil
         link.errors.clear
       end
+
+      raise ActiveRecord::RecordInvalid, link
     end
 
-    private
-
-    def fetch_title_and_icon(link)
+    # Best-effort fetch of page title + icon. Never blocks the response for long.
+    def backfill_metadata(link)
       result = Timeout.timeout(FETCH_TIMEOUT_SEC) do
         Metadata::TitleAndIconFetcher.call(link.url, timeout_sec: FETCH_TIMEOUT_SEC)
       end
@@ -50,7 +53,7 @@ module Shortener
       updates[:icon_url] = result[:icon_url] if result[:icon_url].present?
       link.update_columns(updates) if updates.any?
     rescue Timeout::Error
-      # Leave title/icon null
+      # Leave title/icon null — the link is still usable
     end
   end
 end

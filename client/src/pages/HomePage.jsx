@@ -1,15 +1,49 @@
+import { useState, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
+import { createLink } from "../api/links"
+import { useAuth } from "../hooks/useAuth"
+import { useToast } from "../hooks/useToast"
+import useCopyToClipboard from "../hooks/useCopyToClipboard"
+import { formatApiError } from "../utils/error"
 import HeroForm from "../components/HeroForm"
 import CreatedLinkResult from "../components/CreatedLinkResult"
 
-export default function HomePage({
-  user,
-  onSubmit,
-  loading,
-  submitError,
-  createdLink,
-  onCopyShortUrl,
-  onViewDashboard,
-}) {
+export default function HomePage() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { showToast } = useToast()
+  const { copy } = useCopyToClipboard()
+
+  const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [createdLink, setCreatedLink] = useState(null)
+
+  const handleSubmit = useCallback(
+    async (url) => {
+      setLoading(true)
+      setSubmitError(null)
+      setCreatedLink(null)
+      try {
+        const data = await createLink(url)
+        showToast("Short URL created!")
+        setCreatedLink(data)
+      } catch (err) {
+        setSubmitError(formatApiError(err))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [showToast]
+  )
+
+  const handleCopyShortUrl = useCallback(
+    async (text) => {
+      const ok = await copy(text)
+      if (ok) showToast("Copied to clipboard!")
+    },
+    [copy, showToast]
+  )
+
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-16 sm:pb-24 text-center">
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-balance">
@@ -20,7 +54,7 @@ export default function HomePage({
         Create short links and get detailed analytics on every click. Know your audience better.
       </p>
       <div className="mt-8 sm:mt-12">
-        <HeroForm onSubmit={onSubmit} isLoading={loading} />
+        <HeroForm onSubmit={handleSubmit} isLoading={loading} />
       </div>
       {submitError && (
         <div
@@ -33,8 +67,10 @@ export default function HomePage({
       {createdLink && (
         <CreatedLinkResult
           createdLink={createdLink}
-          onCopyShortUrl={onCopyShortUrl}
-          onViewDashboard={user ? onViewDashboard : undefined}
+          onCopyShortUrl={handleCopyShortUrl}
+          onViewDashboard={
+            user ? () => navigate(`/dashboard/${createdLink.short_code}`) : undefined
+          }
         />
       )}
     </main>

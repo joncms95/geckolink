@@ -1,8 +1,7 @@
-import { getApiBase, defaultFetchOptions, fetchWithTimeout, handleResponse } from "./client"
+import { getApiBase, fetchWithTimeout, handleResponse } from "./client"
 
 export async function createLink(url) {
-  const res = await fetch(`${getApiBase()}/links`, {
-    ...defaultFetchOptions,
+  const res = await fetchWithTimeout(`${getApiBase()}/links`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ link: { url } }),
@@ -11,18 +10,15 @@ export async function createLink(url) {
 }
 
 export async function getLink(shortCode) {
-  const res = await fetch(`${getApiBase()}/links/${shortCode}`, {
-    ...defaultFetchOptions,
+  const res = await fetchWithTimeout(`${getApiBase()}/links/${encodeURIComponent(shortCode)}`, {
     headers: { Accept: "application/json" },
   })
   return handleResponse(res)
 }
 
-/** Logged-in user: fetch current user's links from API (ordered by created_at desc). */
 export async function getMyLinks(page = 1, perPage = 10) {
   const q = new URLSearchParams({ page: String(page), per_page: String(perPage) })
-  const res = await fetch(`${getApiBase()}/me/links?${q}`, {
-    ...defaultFetchOptions,
+  const res = await fetchWithTimeout(`${getApiBase()}/me/links?${q}`, {
     headers: { Accept: "application/json" },
   })
   const data = await handleResponse(res)
@@ -33,10 +29,9 @@ export async function getMyLinks(page = 1, perPage = 10) {
 }
 
 export async function getAnalytics(shortCode) {
-  const url = `${getApiBase()}/links/${encodeURIComponent(shortCode)}/analytics`
-  const res = await fetchWithTimeout(url, {
-    ...defaultFetchOptions,
-    headers: { Accept: "application/json" },
-  })
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/links/${encodeURIComponent(shortCode)}/analytics`,
+    { headers: { Accept: "application/json" } }
+  )
   return handleResponse(res)
 }

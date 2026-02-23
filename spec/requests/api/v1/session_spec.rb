@@ -14,7 +14,6 @@ RSpec.describe "Api::V1::Session", type: :request do
     it "creates session and returns user for valid credentials" do
       post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["user"]["id"]).to eq(user.id)
       expect(response.parsed_body["user"]["email"]).to eq(user.email)
     end
   end

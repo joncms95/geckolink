@@ -1,28 +1,21 @@
 # frozen_string_literal: true
 
-# Session is created only on login (create) and cleared only on logout (destroy).
-# The user stays logged in for the lifetime of the session cookie until they log out.
-# No "check session" endpoint — auth is inferred from the cookie on each request.
 module Api
   module V1
     class SessionController < ApplicationController
       def create
         user = User.find_by(email: session_params[:email]&.downcase&.strip)
-        if user&.authenticate(session_params[:password])
-          reset_session
-          session[:user_id] = user.id
-          session[:session_token] = UserSession.create_for_user(user)
-          render json: { user: user_json(user) }
-        else
-          render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
+
+        unless user&.authenticate(session_params[:password])
+          return render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
         end
+
+        start_session(user)
+        render json: { user: user_json(user) }
       end
 
       def destroy
-        if session[:session_token].present?
-          UserSession.find_by(token: session[:session_token])&.destroy
-        end
-        reset_session
+        end_session
         head :no_content
       end
 
@@ -33,7 +26,7 @@ module Api
       end
 
       def user_json(user)
-        { id: user.id, email: user.email }
+        { email: user.email }
       end
     end
   end

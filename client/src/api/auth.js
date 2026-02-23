@@ -1,54 +1,31 @@
-import { getApiBase, defaultFetchOptions } from "./client"
-
-export const AUTH_CACHE_KEY = "geckolink_user"
-
-export function getCachedUser() {
-  try {
-    const raw = localStorage.getItem(AUTH_CACHE_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
-}
-
-export function setCachedUser(user) {
-  try {
-    if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
-    else localStorage.removeItem(AUTH_CACHE_KEY)
-  } catch {}
-}
+import { getApiBase, fetchWithTimeout, handleResponse } from "./client"
 
 export async function login(email, password) {
-  const res = await fetch(`${getApiBase()}/session`, {
-    ...defaultFetchOptions,
+  const res = await fetchWithTimeout(`${getApiBase()}/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ session: { email: email?.trim()?.toLowerCase(), password } }),
   })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, errors: data.errors || ["Login failed"] }
-  const user = data?.user ?? null
-  setCachedUser(user)
-  return user
+  const data = await handleResponse(res)
+  return data?.user ?? null
 }
 
 export async function logout() {
-  await fetch(`${getApiBase()}/session`, { ...defaultFetchOptions, method: "DELETE" })
-  setCachedUser(null)
+  try {
+    await fetchWithTimeout(`${getApiBase()}/session`, { method: "DELETE" })
+  } catch {
+    // Best-effort — clear local state regardless
+  }
 }
 
 export async function signup(email, password, passwordConfirmation) {
-  const res = await fetch(`${getApiBase()}/signup`, {
-    ...defaultFetchOptions,
+  const res = await fetchWithTimeout(`${getApiBase()}/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
       user: { email: email?.trim()?.toLowerCase(), password, password_confirmation: passwordConfirmation },
     }),
   })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, errors: data.errors || ["Sign up failed"] }
-  const user = data?.user ?? null
-  setCachedUser(user)
-  return user
+  const data = await handleResponse(res)
+  return data?.user ?? null
 }
