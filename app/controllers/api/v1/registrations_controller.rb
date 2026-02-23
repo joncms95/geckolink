@@ -10,7 +10,7 @@ module Api
           session[:session_token] = UserSession.create_for_user(user)
           render json: { user: { id: user.id, email: user.email } }, status: :created
         else
-          render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: user.errors.full_messages }, status: :unprocessable_content
         end
       end
 

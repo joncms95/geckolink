@@ -2,7 +2,7 @@ class ApplicationController < ActionController::API
   include ActionController::Cookies
 
   rescue_from ActionController::ParameterMissing do |e|
-    render json: { errors: [ e.message ] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_content
   end
 
   def current_user

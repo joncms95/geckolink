@@ -17,7 +17,7 @@ RSpec.describe "Api::V1::Registrations", type: :request do
       post api_v1_registrations_path, params: {
         user: { email: "invalid", password: "password123", password_confirmation: "password123" }
       }, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["errors"]).to be_present
     end
 
@@ -25,7 +25,7 @@ RSpec.describe "Api::V1::Registrations", type: :request do
       post api_v1_registrations_path, params: {
         user: { email: "new@example.com", password: "password123", password_confirmation: "other" }
       }, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 end
