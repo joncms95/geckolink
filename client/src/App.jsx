@@ -29,7 +29,10 @@ function AppContent() {
       )}
 
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={<HomePage onOpenSignup={() => setAuthModalMode("signup")} />}
+        />
         <Route
           path="/dashboard/:key?"
           element={user ? <DashboardPage /> : <Navigate to="/" replace />}

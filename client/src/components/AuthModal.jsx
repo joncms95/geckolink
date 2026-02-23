@@ -10,6 +10,8 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
   const isSignup = mode === "signup"
 
@@ -74,17 +76,27 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
             <label htmlFor="auth-password" className="block text-sm font-medium text-gecko-slate mb-1">
               Password
             </label>
-            <Input
-              id="auth-password"
-              type="password"
-              autoComplete={isSignup ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              variant="modal"
-              className="w-full"
-            />
+            <div className="relative">
+              <Input
+                id="auth-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                variant="modal"
+                className="w-full pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gecko-slate hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden />
+              </button>
+            </div>
             {isSignup && (
               <p className="mt-1 text-xs text-gecko-slate">At least 8 characters</p>
             )}
@@ -94,17 +106,27 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               <label htmlFor="auth-password-confirm" className="block text-sm font-medium text-gecko-slate mb-1">
                 Confirm password
               </label>
-              <Input
-                id="auth-password-confirm"
-                type="password"
-                autoComplete="new-password"
-                value={passwordConfirmation}
-                onChange={(e) => setPasswordConfirmation(e.target.value)}
-                required
-                minLength={8}
-                variant="modal"
-                className="w-full"
-              />
+              <div className="relative">
+                <Input
+                  id="auth-password-confirm"
+                  type={showPasswordConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  required
+                  minLength={8}
+                  variant="modal"
+                  className="w-full pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gecko-slate hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+                  aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
+                >
+                  <i className={`fa-solid ${showPasswordConfirm ? "fa-eye-slash" : "fa-eye"}`} aria-hidden />
+                </button>
+              </div>
             </div>
           )}
           {error && (

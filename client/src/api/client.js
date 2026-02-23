@@ -9,7 +9,7 @@ export function getApiBase() {
 
 const TOKEN_KEY = "geckolink_token"
 
-export function getAuthToken() {
+function getAuthToken() {
   try {
     return localStorage.getItem(TOKEN_KEY)
   } catch {

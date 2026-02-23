@@ -8,7 +8,7 @@ import { formatApiError } from "../utils/error"
 import HeroForm from "../components/HeroForm"
 import CreatedLinkResult from "../components/CreatedLinkResult"
 
-export default function HomePage() {
+export default function HomePage({ onOpenSignup }) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -53,6 +53,18 @@ export default function HomePage() {
       <p className="mt-3 sm:mt-4 text-gecko-slate text-sm sm:text-base max-w-xl mx-auto">
         Create short links and get detailed analytics on every click. Know your audience better.
       </p>
+      {!user && onOpenSignup && (
+        <p className="mt-4 sm:mt-5">
+          <button
+            type="button"
+            onClick={onOpenSignup}
+            className="animate-blink-soft inline-flex items-center gap-2 rounded-lg border border-gecko-green/50 bg-gecko-green/10 px-4 py-2.5 text-sm font-medium text-gecko-green hover:bg-gecko-green/20 hover:border-gecko-green transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark"
+          >
+            <i className="fa-solid fa-chart-column" aria-hidden />
+            Sign up and login to view your link analytics
+          </button>
+        </p>
+      )}
       <div className="mt-8 sm:mt-12">
         <HeroForm onSubmit={handleSubmit} isLoading={loading} />
       </div>

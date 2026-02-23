@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getLink } from "../api/links"
+import { scrollToTop } from "../utils/scroll"
 import { useAuth } from "../hooks/useAuth"
 import { useToast } from "../hooks/useToast"
 import { useLinksList } from "../hooks/useLinksList"
@@ -9,11 +10,6 @@ import MetricCard from "./dashboard/MetricCard"
 import LinkList from "./dashboard/LinkList"
 import LinkDetailView from "./dashboard/LinkDetailView"
 import LookupForm from "./dashboard/LookupForm"
-
-function getTopCountry(byCountry) {
-  if (!byCountry || Object.keys(byCountry).length === 0) return "N/A"
-  return Object.entries(byCountry).sort((a, b) => b[1] - a[1])[0][0]
-}
 
 export default function DashboardPage() {
   const { key: keyFromUrl } = useParams()
@@ -34,7 +30,7 @@ export default function DashboardPage() {
   } = useLinksList(user)
 
   useEffect(() => {
-    if (keyFromUrl) window.scrollTo(0, 0)
+    if (keyFromUrl) scrollToTop()
   }, [keyFromUrl])
 
   // Resolve key from URL to a link object
@@ -63,8 +59,11 @@ export default function DashboardPage() {
   )
 
   const handleViewStats = useCallback(
-    (link) => navigate(`/dashboard/${link.key}`),
-    [navigate]
+    (link) => {
+      if (link.key === keyFromUrl) scrollToTop()
+      navigate(`/dashboard/${link.key}`)
+    },
+    [navigate, keyFromUrl]
   )
 
   const handleLookupResult = useCallback(
@@ -73,6 +72,15 @@ export default function DashboardPage() {
       navigate(`/dashboard/${link.key}`)
     },
     [setSelectedLink, navigate]
+  )
+
+  const handlePageChange = useCallback(
+    (page) => {
+      goToPage(page)
+      if (keyFromUrl) navigate("/dashboard")
+      scrollToTop()
+    },
+    [goToPage, navigate, keyFromUrl]
   )
 
   const isDetailView = Boolean(keyFromUrl)
@@ -107,7 +115,7 @@ export default function DashboardPage() {
         loading={displayedLinksLoading}
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={goToPage}
+        onPageChange={handlePageChange}
         onViewStats={handleViewStats}
         onCopy={handleCopy}
       />

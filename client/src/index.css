@@ -21,4 +21,11 @@
       linear-gradient(90deg, rgba(141, 198, 71, 0.03) 1px, transparent 1px);
     background-size: 48px 48px;
   }
+  @keyframes blink-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .animate-blink-soft {
+    animation: blink-soft 2s ease-in-out infinite;
+  }
 }

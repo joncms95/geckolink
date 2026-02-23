@@ -5,10 +5,6 @@
 module Authentication
   extend ActiveSupport::Concern
 
-  included do
-    helper_method :current_user, :signed_in? if respond_to?(:helper_method)
-  end
-
   private
 
   def current_user
