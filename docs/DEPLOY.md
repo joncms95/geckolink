@@ -81,12 +81,7 @@ DISABLE_SSL_REDIRECT=1
 
 Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
 
-Optional: set Redis URLs (Compose already sets `DATABASE_URL` and `REDIS_URL` for the app):
-
-```env
-REDIS_URL=redis://redis:6379/0
-REDIS_CACHE_URL=redis://redis:6379/1
-```
+The Compose file already sets `DATABASE_URL` and `REDIS_URL` for the app. Override `REDIS_URL` in `.env` only if you use a different Redis instance.
 
 ### 6. Build and start the stack
 

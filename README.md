@@ -1,10 +1,17 @@
 # GeckoLink
 
-GeckoLink is a robust, scalable microservice for URL shortening, featuring real-time analytics and geolocation tracking.
+GeckoLink is a URL shortener with real-time analytics and geolocation tracking. Paste a long URL to get a short link, share it anywhere, and see click counts and locations in a simple dashboard. You can use it without an account or sign up to keep all your links in one place.
 
 ## Live Demo
 
-[GeckoLink](https://geckolink.vercel.app)
+**[GeckoLink](https://geckolink.vercel.app)** — shorten URLs and try the dashboard.
+
+A test account is available for trying the app:
+
+- **Email:** test@hotmail.com
+- **Password:** 12345678
+
+Log in to see the analytics dashboard with sample links.
 
 ---
 

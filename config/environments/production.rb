@@ -54,9 +54,8 @@ Rails.application.configure do
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   # Redis cache store: shared across app instances (redirects, Rack::Attack).
-  # Use REDIS_CACHE_URL for a dedicated cache instance, or leave unset to use REDIS_URL.
   config.cache_store = :redis_cache_store, config.x.redis_cache_options.merge(
-    url: ENV.fetch("REDIS_CACHE_URL", ENV["REDIS_URL"]).presence || "redis://localhost:6379/1"
+    url: ENV["REDIS_URL"].presence || "redis://localhost:6379"
   )
 
   config.active_job.queue_adapter = :inline

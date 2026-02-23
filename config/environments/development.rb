@@ -20,7 +20,7 @@ Rails.application.configure do
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
-    redis_url = ENV["REDIS_CACHE_URL"].presence || ENV["REDIS_URL"].presence
+    redis_url = ENV["REDIS_URL"].presence || "redis://localhost:6379"
     if redis_url
       config.cache_store = :redis_cache_store, config.x.redis_cache_options.merge(url: redis_url)
     else

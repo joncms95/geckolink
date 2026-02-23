@@ -13,7 +13,7 @@ services:
       RAILS_ENV: production
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/geckolink_production
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: redis://redis:6379
     depends_on:
       db:
         condition: service_healthy
