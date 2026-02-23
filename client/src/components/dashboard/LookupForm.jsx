@@ -12,15 +12,15 @@ export default function LookupForm({ onResult }) {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault()
-      const shortCode = parseShortCode(value)
-      if (!shortCode) {
-        setError("Paste a short link or enter its code (e.g. TJTRrCl)")
+      const key = parseShortCode(value)
+      if (!key) {
+        setError("Paste a short link or enter its key (e.g. TJTRrCl)")
         return
       }
       setLoading(true)
       setError(null)
       try {
-        const link = await getLink(shortCode)
+        const link = await getLink(key)
         setValue("")
         onResult(link)
       } catch (err) {

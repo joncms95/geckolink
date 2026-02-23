@@ -32,18 +32,18 @@ We utilize **Service Objects** and **Query Objects** to keep controllers skinny 
 
 ### 2. User-specific short URL list
 
-- **Not logged in**: Short URLs are stored in the browser’s localStorage. The dashboard shows links from localStorage (fetched by short codes from the API; only anonymous links are returned).
+- **Not logged in**: Short URLs are stored in the browser’s localStorage. The dashboard shows links from localStorage (fetched by keys from the API; only anonymous links are returned).
 - **Logged in**: Links are associated with the user. The dashboard shows only that user’s links from the database (paginated). Sign up and log in return a Bearer token; the client stores it and sends it in the `Authorization` header so auth works cross-origin and on mobile.
 
 ### 3. Synchronous Processing
 
 1.  **URL Title Fetching**: When a user submits a link, we fetch the page title (and favicon) synchronously with a 5s timeout and return the short URL plus title/icon in the same response. If the fetch fails or times out, the link is still created with null title/icon.
-2.  **Geolocation**: On each redirect we record the visit and resolve IP to location (Geocoder, e.g. ipinfo.io) synchronously with a 2s timeout so analytics have geolocation without running a background worker.
+2.  **Geolocation**: On each redirect we record the click and resolve IP to location (Geocoder, e.g. ipinfo.io) synchronously with a 2s timeout so analytics have geolocation without running a background worker.
 
 ### 4. Scalability
 
-- **Redirect lookups**: Short code → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, the cache uses Redis (`REDIS_URL` or optional `REDIS_CACHE_URL`) so it is shared across instances.
-- **Write Strategy**: We utilize unique indexes on the `short_code` column to prevent race conditions at the database level.
+- **Redirect lookups**: Key → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, the cache uses Redis (`REDIS_URL` or optional `REDIS_CACHE_URL`) so it is shared across instances.
+- **Write Strategy**: We utilize unique indexes on the `key` column to prevent race conditions at the database level.
 - **Health checks**: The `/up` endpoint reports app boot status. For HA, configure your platform to also check DB connectivity (e.g. a custom endpoint that runs `ActiveRecord::Base.connection.execute("SELECT 1")`) or rely on the default `/up` and platform health checks.
 
 ---

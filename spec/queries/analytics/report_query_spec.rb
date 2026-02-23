@@ -7,9 +7,9 @@ RSpec.describe Analytics::ReportQuery do
 
   describe "#call" do
     it "returns by_country and by_hour" do
-      create(:visit, link: link, country: "Germany")
-      create(:visit, link: link, country: "Germany")
-      create(:visit, link: link, country: "France")
+      create(:click, link: link, country: "Germany")
+      create(:click, link: link, country: "Germany")
+      create(:click, link: link, country: "France")
 
       report = described_class.new(link: link).call
 
@@ -19,9 +19,9 @@ RSpec.describe Analytics::ReportQuery do
   end
 
   describe "#by_country" do
-    it "excludes visits with nil country" do
-      create(:visit, link: link, country: "US")
-      create(:visit, link: link, country: nil)
+    it "excludes clicks with nil country" do
+      create(:click, link: link, country: "US")
+      create(:click, link: link, country: nil)
 
       result = described_class.new(link: link).by_country
       expect(result).to eq("US" => 1)

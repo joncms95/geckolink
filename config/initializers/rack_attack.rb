@@ -2,7 +2,7 @@
 
 Rack::Attack.cache.store = Rails.cache
 
-# Must match route constraint in config/routes.rb (short_code: /[0-9a-zA-Z]+/)
+# Must match route constraint in config/routes.rb (key: /[0-9a-zA-Z]+/)
 REDIRECT_PATH_REGEX = %r{\A/[0-9a-zA-Z]+\z}
 
 Rack::Attack.throttle("links/create", limit: 30, period: 1.minute) do |req|

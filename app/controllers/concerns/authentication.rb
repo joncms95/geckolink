@@ -30,20 +30,20 @@ module Authentication
     bearer_present? && current_user.nil?
   end
 
-  # Create a new UserSession for the user and return the token for the client.
+  # Create a new Session for the user and return the token for the client.
   def start_session(user)
-    UserSession.create_for_user(user)
+    Session.create_for_user(user)
   end
 
-  # Destroy the UserSession for the token in the request (if any).
+  # Destroy the Session for the token in the request (if any).
   def end_session
-    UserSession.find_by(token: bearer_token)&.destroy if bearer_present?
+    Session.find_by(token: bearer_token)&.destroy if bearer_present?
   end
 
   def authenticate_from_token
     return unless bearer_present?
 
-    UserSession.find_by(token: bearer_token)&.user
+    Session.find_by(token: bearer_token)&.user
   end
 
   def bearer_present?

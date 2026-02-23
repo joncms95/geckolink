@@ -8,8 +8,8 @@ export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewD
         <LinkIcon src={createdLink.icon_url} />
         <div className="flex-1 min-w-0">
           <p className="text-gecko-slate text-xs sm:text-sm font-medium mb-0.5">Target URL</p>
-          <p className="text-white text-sm truncate" title={createdLink.url}>
-            {createdLink.url}
+          <p className="text-white text-sm truncate" title={createdLink.target_url}>
+            {createdLink.target_url}
           </p>
         </div>
       </div>

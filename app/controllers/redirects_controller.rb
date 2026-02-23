@@ -2,13 +2,13 @@
 
 class RedirectsController < ApplicationController
   def show
-    result = Redirect::ResolveService.new.call(short_code: params[:short_code])
+    result = Redirect::ResolveService.new.call(key: params[:key])
 
     unless result.success?
       return head :not_found
     end
 
-    record_visit(result.value[:link_id])
+    record_click(result.value[:link_id])
     redirect_url = safe_redirect_url(result.value[:url])
 
     if redirect_url
@@ -20,9 +20,9 @@ class RedirectsController < ApplicationController
 
   private
 
-  def record_visit(link_id)
+  def record_click(link_id)
     Link.increment_counter(:clicks_count, link_id)
-    Analytics::RecordVisit.call(
+    Analytics::RecordClick.call(
       link_id: link_id,
       ip_address: request.remote_ip,
       user_agent: request.user_agent

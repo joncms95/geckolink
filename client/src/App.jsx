@@ -29,7 +29,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
-          path="/dashboard/:shortCode?"
+          path="/dashboard/:key?"
           element={user ? <DashboardPage /> : <Navigate to="/" replace />}
         />
       </Routes>

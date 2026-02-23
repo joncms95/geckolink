@@ -20,7 +20,7 @@ function formatTimestamp(iso) {
   }
 }
 
-function visitGeolocation(v) {
+function clickGeolocation(v) {
   if (v?.geolocation?.trim()) return v.geolocation.trim()
   if (v?.country?.trim()) return v.country.trim()
   return "—"
@@ -34,13 +34,13 @@ function LoadingSkeleton() {
   )
 }
 
-export default function LinkDetailView({ link, shortCode, onBack }) {
+export default function LinkDetailView({ link, keyFromUrl, onBack }) {
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   const fetchReport = useCallback(() => {
-    const code = shortCode || link?.short_code
+    const code = keyFromUrl || link?.key
     if (!code) return
 
     setLoading(true)
@@ -52,7 +52,7 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
             ? {
                 by_country: data.by_country ?? data.byCountry ?? {},
                 by_hour: data.by_hour ?? data.byHour ?? {},
-                visits: Array.isArray(data.visits) ? data.visits : [],
+                clicks: Array.isArray(data.clicks) ? data.clicks : [],
               }
             : {}
         )
@@ -62,7 +62,7 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
         setError(err?.errors?.[0] || "Failed to load analytics")
       })
       .finally(() => setLoading(false))
-  }, [shortCode, link?.short_code])
+  }, [keyFromUrl, link?.key])
 
   useEffect(() => {
     fetchReport()
@@ -70,7 +70,7 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
 
   const topLocation = getTopCountry(report?.by_country)
   const clicks = link?.clicks_count ?? 0
-  const visits = report?.visits ?? []
+  const clicksList = report?.clicks ?? []
 
   return (
     <>
@@ -84,7 +84,7 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
         </button>
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
-            {link?.title ? `${link.title} — Stats` : `Stats for /${shortCode}`}
+            {link?.title ? `${link.title} — Stats` : `Stats for /${keyFromUrl}`}
           </h1>
           {link?.short_url && (
             <a
@@ -148,12 +148,12 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
       <section className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 overflow-hidden">
         <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Usage report</h2>
         <p className="text-gecko-slate text-xs sm:text-sm mb-4">
-          Clicks, originating geolocation and timestamp of each visit to this short URL.
+          Clicks, originating geolocation and timestamp of each click on this short URL.
         </p>
         {loading ? (
           <div className="py-8 text-center text-gecko-slate text-sm animate-pulse">Loading…</div>
-        ) : visits.length === 0 ? (
-          <div className="py-8 text-center text-gecko-slate text-sm">No visits yet</div>
+        ) : clicksList.length === 0 ? (
+          <div className="py-8 text-center text-gecko-slate text-sm">No clicks yet</div>
         ) : (
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <table className="w-full text-xs sm:text-sm min-w-[320px]">
@@ -165,11 +165,11 @@ export default function LinkDetailView({ link, shortCode, onBack }) {
                 </tr>
               </thead>
               <tbody>
-                {visits.map((v, i) => (
+                {clicksList.map((v, i) => (
                   <tr key={i} className="border-b border-gecko-dark-border/50 last:border-0">
                     <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-gecko-slate tabular-nums">{i + 1}</td>
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white whitespace-nowrap">{formatTimestamp(v.visited_at)}</td>
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white">{visitGeolocation(v)}</td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white whitespace-nowrap">{formatTimestamp(v.clicked_at)}</td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white">{clickGeolocation(v)}</td>
                   </tr>
                 ))}
               </tbody>

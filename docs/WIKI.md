@@ -34,6 +34,8 @@ We define the alphabet as `[A-Z, a-z, 0-9]`.
 2.  Attempt to insert into DB.
 3.  If a collision occurs, retry up to 3 times.
 
+**In the codebase:** This is implemented by `Shortener::RandomKey`; the link’s path segment is the `key` column (e.g. `/TJTRrCl` → `key` = `"TJTRrCl"`).
+
 **Why 7 characters?**
 With 62 characters, a length of 7 gives us $62^7$ combinations (~3.5 trillion).
 

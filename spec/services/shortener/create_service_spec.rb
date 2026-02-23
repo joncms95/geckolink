@@ -38,27 +38,28 @@ RSpec.describe Shortener::CreateService do
         result = service.call(original_url: url)
         expect(result).to be_success
         expect(result.value).to be_a(Link)
-        expect(result.value.url).to eq(url)
-        expect(result.value.short_code).to be_present
+        expect(result.value.target_url).to eq(url)
+        expect(result.value.key).to be_present
         expect(result.value.clicks_count).to eq(0)
       end
 
-      it "assigns a random 7-character short_code (alphanumeric)" do
+      it "assigns a random 7-character key (alphanumeric)" do
         result = service.call(original_url: url)
         link = result.value
-        expect(link.short_code).to match(/\A[0-9a-zA-Z]{7}\z/)
-        expect(link.short_code).to be_present
+        expect(link.key).to match(/\A[0-9a-zA-Z]{7}\z/)
+        expect(link.key).to be_present
       end
 
-      it "retries on short_code collision and succeeds with new code" do
-        existing = create(:link, short_code: "abc1234")
-        allow(Shortener::RandomCode).to receive(:generate).and_return(
-          existing.short_code,
+      it "retries on key collision and succeeds with new key" do
+        existing = create(:link)
+        existing.update_column(:key, "abc1234")
+        allow(Shortener::RandomKey).to receive(:generate).and_return(
+          "abc1234",
           "xyz9876"
         )
         result = service.call(original_url: url)
         expect(result).to be_success
-        expect(result.value.short_code).to eq("xyz9876")
+        expect(result.value.key).to eq("xyz9876")
       end
     end
 
@@ -66,7 +67,7 @@ RSpec.describe Shortener::CreateService do
       it "returns success" do
         result = service.call(original_url: "https://secure.example.com")
         expect(result).to be_success
-        expect(result.value.url).to eq("https://secure.example.com")
+        expect(result.value.target_url).to eq("https://secure.example.com")
       end
     end
   end

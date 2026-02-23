@@ -16,7 +16,7 @@ function getTopCountry(byCountry) {
 }
 
 export default function DashboardPage() {
-  const { shortCode: shortCodeFromUrl } = useParams()
+  const { key: keyFromUrl } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -34,26 +34,26 @@ export default function DashboardPage() {
   } = useLinksList(user)
 
   useEffect(() => {
-    if (shortCodeFromUrl) window.scrollTo(0, 0)
-  }, [shortCodeFromUrl])
+    if (keyFromUrl) window.scrollTo(0, 0)
+  }, [keyFromUrl])
 
-  // Resolve short code from URL to a link object
+  // Resolve key from URL to a link object
   useEffect(() => {
-    if (!shortCodeFromUrl) return
+    if (!keyFromUrl) return
 
-    const inList = displayedLinks.find((l) => l.short_code === shortCodeFromUrl)
+    const inList = displayedLinks.find((l) => l.key === keyFromUrl)
     if (inList) {
       setSelectedLink(inList)
       return
     }
 
-    getLink(shortCodeFromUrl)
+    getLink(keyFromUrl)
       .then((link) => {
         setSelectedLink(link)
         addToDisplayedLinks(link)
       })
       .catch(() => {})
-  }, [shortCodeFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [keyFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = useCallback(
     async (text) => {
@@ -64,7 +64,7 @@ export default function DashboardPage() {
   )
 
   const handleViewStats = useCallback(
-    (link) => navigate(`/dashboard/${link.short_code}`),
+    (link) => navigate(`/dashboard/${link.key}`),
     [navigate]
   )
 
@@ -72,12 +72,12 @@ export default function DashboardPage() {
     (link) => {
       addToDisplayedLinks(link)
       setSelectedLink(link)
-      navigate(`/dashboard/${link.short_code}`)
+      navigate(`/dashboard/${link.key}`)
     },
     [addToDisplayedLinks, setSelectedLink, navigate]
   )
 
-  const isDetailView = Boolean(shortCodeFromUrl)
+  const isDetailView = Boolean(keyFromUrl)
   const totalLinks = displayedLinks.length
   const totalClicks = displayedLinks.reduce((s, l) => s + (l.clicks_count || 0), 0)
   const avgClicks = totalLinks ? (totalClicks / totalLinks).toFixed(1) : "0.0"
@@ -87,7 +87,7 @@ export default function DashboardPage() {
       {isDetailView ? (
         <LinkDetailView
           link={selectedLink}
-          shortCode={shortCodeFromUrl}
+          keyFromUrl={keyFromUrl}
           onBack={() => navigate("/dashboard")}
         />
       ) : (

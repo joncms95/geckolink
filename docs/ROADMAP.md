@@ -8,13 +8,13 @@
 
 ## Phase 2: Core Backend Logic (The Shortener)
 
-- [x] **Model**: Create `Link` model (columns: `url`, `short_code`, `title`, `clicks_count`).
-- [x] **Migration**: Add unique index on `short_code`.
+- [x] **Model**: Create `Link` model (columns: `target_url`, `key`, `title`, `icon_url`, `clicks_count`).
+- [x] **Migration**: Add unique index on `key`.
 - [x] **Service**: Implement `Shortener::CreateService`.
   - Input: `original_url`
-  - Logic: Insert record, then set `short_code` from Base62 encoding of new ID, handle URL validation.
+  - Logic: Insert record, assign random key via `Shortener::RandomKey` (CSPRNG), retry on collision; handle URL validation.
 - [x] **Controller**: Create `Api::V1::LinksController` (create, show).
-- [x] **Route**: specific route for `/:short_code` redirection.
+- [x] **Route**: specific route for `/:key` redirection.
 - [x] **Spec**: Unit tests for URL validation.
 
 ## Phase 3: Background Jobs & Metadata
@@ -23,8 +23,8 @@
 
 ## Phase 4: Analytics & Tracking
 
-- [x] **Model**: Create `Visit` model (columns: `link_id`, `ip_address`, `user_agent`, `geolocation`, `timestamp`).
-- [x] **Visit recording**: `Analytics::RecordVisit` creates visit and fills geolocation synchronously (Geocoder, 2s timeout).
+- [x] **Model**: Create `Click` model (columns: `link_id`, `clicked_at`, `ip_address`, `user_agent`, `geolocation`, `country`).
+- [x] **Click recording**: `Analytics::RecordClick` creates click and fills geolocation synchronously (Geocoder, 2s timeout).
 - [x] **Query Object**: `Analytics::ReportQuery` to aggregate clicks by country and hour.
 
 ## Phase 5: Frontend (React)

@@ -2,14 +2,14 @@
 
 module Analytics
   class ReportQuery
-    MAX_VISITS_IN_REPORT = 200
+    MAX_CLICKS_IN_REPORT = 200
 
     def initialize(link:)
       @link = link
     end
 
     def by_country
-      @link.visits
+      @link.clicks
         .where.not(country: nil)
         .group(:country)
         .count
@@ -17,9 +17,9 @@ module Analytics
     end
 
     def by_hour
-      @link.visits
-        .group(Arel.sql("date_trunc('hour', visited_at)"))
-        .order(Arel.sql("date_trunc('hour', visited_at)"))
+      @link.clicks
+        .group(Arel.sql("date_trunc('hour', clicked_at)"))
+        .order(Arel.sql("date_trunc('hour', clicked_at)"))
         .count
         .transform_keys { |k| format_time_iso8601(k) }
     end
@@ -28,18 +28,18 @@ module Analytics
       {
         by_country: by_country,
         by_hour: by_hour,
-        visits: visits_for_report
+        clicks: clicks_for_report
       }
     end
 
-    def visits_for_report
-      @link.visits
-        .order(visited_at: :desc)
-        .limit(MAX_VISITS_IN_REPORT)
-        .pluck(:visited_at, :country, :geolocation)
-        .map { |visited_at, country, geolocation|
+    def clicks_for_report
+      @link.clicks
+        .order(clicked_at: :desc)
+        .limit(MAX_CLICKS_IN_REPORT)
+        .pluck(:clicked_at, :country, :geolocation)
+        .map { |clicked_at, country, geolocation|
           {
-            visited_at: format_time_iso8601(visited_at),
+            clicked_at: format_time_iso8601(clicked_at),
             country: country.to_s.presence,
             geolocation: geolocation.to_s.presence
           }

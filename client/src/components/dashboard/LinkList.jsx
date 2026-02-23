@@ -33,7 +33,7 @@ export default function LinkList({
         <>
           <ul className="space-y-3">
             {links.map((link) => (
-              <li key={link.short_code}>
+              <li key={link.key}>
                 <ShortUrlCard link={link} onViewStats={onViewStats} onCopy={onCopy} />
               </li>
             ))}

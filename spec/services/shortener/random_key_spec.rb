@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Shortener::RandomCode do
+RSpec.describe Shortener::RandomKey do
   describe ".generate" do
     it "returns a string of default length 7" do
       code = described_class.generate

@@ -69,7 +69,7 @@ export default function HomePage() {
           createdLink={createdLink}
           onCopyShortUrl={handleCopyShortUrl}
           onViewDashboard={
-            user ? () => navigate(`/dashboard/${createdLink.short_code}`) : undefined
+            user ? () => navigate(`/dashboard/${createdLink.key}`) : undefined
           }
         />
       )}

@@ -31,8 +31,8 @@ export function useLinksList(user) {
         setLinksTotal(total)
         setLinksPage(1)
         setSelectedLink((prev) => {
-          if (!prev?.short_code) return prev
-          return links.find((l) => l.short_code === prev.short_code) || prev
+          if (!prev?.key) return prev
+          return links.find((l) => l.key === prev.key) || prev
         })
       })
       .catch(() => {
@@ -44,8 +44,8 @@ export function useLinksList(user) {
 
   const addToDisplayedLinks = useCallback((link) => {
     setDisplayedLinks((prev) => {
-      const exists = prev.some((l) => l.short_code === link.short_code)
-      if (exists) return prev.map((l) => (l.short_code === link.short_code ? { ...link } : l))
+      const exists = prev.some((l) => l.key === link.key)
+      if (exists) return prev.map((l) => (l.key === link.key ? { ...link } : l))
       return [{ ...link }, ...prev]
     })
     setLinksTotal((prev) => prev + 1)
@@ -63,12 +63,12 @@ export function useLinksList(user) {
       .finally(() => setDisplayedLinksLoading(false))
   }, [user, displayedLinks.length, linksTotal, linksPage])
 
-  const updateLinkInList = useCallback((shortCode, updatedLink) => {
+  const updateLinkInList = useCallback((key, updatedLink) => {
     setSelectedLink((current) =>
-      current?.short_code === shortCode ? { ...current, ...updatedLink } : current
+      current?.key === key ? { ...current, ...updatedLink } : current
     )
     setDisplayedLinks((prev) =>
-      prev.map((l) => (l.short_code === shortCode ? { ...l, ...updatedLink } : l))
+      prev.map((l) => (l.key === key ? { ...l, ...updatedLink } : l))
     )
   }, [])
 

@@ -10,13 +10,12 @@ module Api
       before_action :require_authentication!, only: :my_index
 
       def create
-        # Stale credential (revoked token or cookie) → 401 so client clears auth state.
         if stale_auth?
           return head :unauthorized
         end
 
         result = Shortener::CreateService.new.call(
-          original_url: link_params[:url],
+          original_url: link_params[:target_url],
           user_id: current_user&.id
         )
 
@@ -33,31 +32,31 @@ module Api
         total = scope.count
         links = scope.offset((page - 1) * per_page).limit(per_page).to_a
 
-        render json: { links: links.map { |l| link_json(l) }, total: total }
+        render json: { links: links.map { |link| link_json(link) }, total: total }
       end
 
       def index
-        codes = params[:short_codes].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
-        return render(json: { links: [], total: 0 }) if codes.empty?
+        keys = params[:keys].to_s.split(",").map(&:strip).reject(&:empty?).uniq.first(BATCH_MAX)
+        return render(json: { links: [], total: 0 }) if keys.empty?
 
         page, per_page = pagination_params
-        all_links = Link.where(short_code: codes, user_id: nil).to_a
-        code_order = codes.each_with_index.to_h
-        sorted = all_links.sort_by { |l| code_order[l.short_code] || codes.size }
+        all_links = Link.where(key: keys, user_id: nil).to_a
+        key_order = keys.each_with_index.to_h
+        sorted = all_links.sort_by { |link| key_order[link.key] || keys.size }
         total = sorted.size
         links = sorted[(page - 1) * per_page, per_page] || []
 
-        render json: { links: links.map { |l| link_json(l) }, total: total }
+        render json: { links: links.map { |link| link_json(link) }, total: total }
       end
 
       def show
-        link = Link.find_by!(short_code: params[:short_code])
+        link = Link.find_by!(key: params[:key])
         authorize_link_access!(link) or return
         render json: link_json(link)
       end
 
       def analytics
-        link = Link.find_by!(short_code: params[:short_code])
+        link = Link.find_by!(key: params[:key])
         authorize_link_access!(link) or return
 
         report = Analytics::ReportQuery.new(link: link).call
@@ -66,7 +65,6 @@ module Api
 
       private
 
-      # Anonymous links (no user_id) are public; owned links require the owner.
       def authorize_link_access!(link)
         return true if link.user_id.nil?
         return true if link.user_id == current_user&.id
@@ -83,13 +81,13 @@ module Api
       end
 
       def link_params
-        params.require(:link).permit(:url)
+        params.require(:link).permit(:target_url)
       end
 
       def link_json(link)
         {
-          url: link.url,
-          short_code: link.short_code,
+          target_url: link.target_url,
+          key: link.key,
           title: link.title,
           icon_url: link.icon_url,
           clicks_count: link.clicks_count,
@@ -98,7 +96,7 @@ module Api
       end
 
       def short_url_for(link)
-        "#{request.base_url}/#{link.short_code}"
+        "#{request.base_url}/#{link.key}"
       end
     end
   end

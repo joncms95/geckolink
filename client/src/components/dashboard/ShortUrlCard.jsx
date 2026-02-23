@@ -1,7 +1,7 @@
 import LinkIcon from "../ui/LinkIcon"
 
 export default function ShortUrlCard({ link, onViewStats, onCopy }) {
-  const { short_url: shortUrl, url, title, icon_url: iconUrl, clicks_count: clicks } = link
+  const { short_url: shortUrl, target_url: targetUrl, title, icon_url: iconUrl, clicks_count: clicks } = link
 
   return (
     <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 min-w-0">
@@ -22,7 +22,7 @@ export default function ShortUrlCard({ link, onViewStats, onCopy }) {
               {title}
             </p>
           )}
-          <p className="text-gecko-slate text-xs sm:text-sm truncate mt-0.5" title={url}>{url}</p>
+          <p className="text-gecko-slate text-xs sm:text-sm truncate mt-0.5" title={targetUrl}>{targetUrl}</p>
           <p className="text-gecko-slate text-xs mt-1">{clicks} clicks</p>
         </div>
       </div>

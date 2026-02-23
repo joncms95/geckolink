@@ -2,36 +2,36 @@
 
 class Link < ApplicationRecord
   belongs_to :user, optional: true
-  has_many :visits, dependent: :destroy
+  has_many :clicks, dependent: :destroy
 
-  before_validation :normalize_url
+  before_validation :normalize_target_url
 
-  validates :url, presence: true, format: { with: %r{\Ahttps?://[^\s]+\z}i, message: "must be http or https URL" }
-  validate :url_must_have_valid_host
-  validates :short_code, uniqueness: true, allow_nil: true, length: { maximum: 15 }
+  validates :target_url, presence: true, format: { with: %r{\Ahttps?://[^\s]+\z}i, message: "must be http or https URL" }
+  validate :target_url_must_have_valid_host
+  validates :key, uniqueness: true, allow_nil: true, length: { maximum: 15 }
   validates :clicks_count, numericality: { greater_than_or_equal_to: 0 }
 
   private
 
-  def normalize_url
-    return if url.blank?
+  def normalize_target_url
+    return if target_url.blank?
 
-    u = url.to_s.strip
+    u = target_url.to_s.strip
     u = "https://#{u}" if u.present? && !u.match?(%r{\Ahttps?://}i)
-    self.url = u
+    self.target_url = u
   end
 
-  def url_must_have_valid_host
-    return if url.blank? || url !~ %r{\Ahttps?://}i
+  def target_url_must_have_valid_host
+    return if target_url.blank? || target_url !~ %r{\Ahttps?://}i
 
-    uri = URI.parse(url)
+    uri = URI.parse(target_url)
     host = uri.host.presence || uri.opaque.to_s.split("/").first
     return if host.blank?
 
     return if host == "localhost" || host.include?(".")
 
-    errors.add(:url, "must have a valid domain (e.g. example.com)")
+    errors.add(:target_url, "must have a valid domain (e.g. example.com)")
   rescue URI::InvalidURIError
-    errors.add(:url, "is not a valid URL")
+    errors.add(:target_url, "is not a valid URL")
   end
 end

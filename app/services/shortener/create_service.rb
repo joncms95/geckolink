@@ -11,10 +11,10 @@ module Shortener
       url = original_url.to_s.strip
       return Result.failure("URL can't be blank") if url.blank?
 
-      link = Link.new(url: url, user_id: user_id)
+      link = Link.new(target_url: url, user_id: user_id)
       return Result.failure(link.errors.full_messages) unless link.valid?
 
-      persist_with_unique_code!(link)
+      persist_with_unique_key!(link)
       backfill_metadata(link)
       Result.success(link.reload)
     rescue ActiveRecord::RecordInvalid => e
@@ -23,28 +23,26 @@ module Shortener
 
     private
 
-    # Retries with progressively longer codes on collision.
-    def persist_with_unique_code!(link)
+    def persist_with_unique_key!(link)
       (MAX_COLLISION_RETRIES + 1).times do |attempt|
         length = attempt < MAX_COLLISION_RETRIES ? DEFAULT_CODE_LENGTH : FALLBACK_CODE_LENGTH
-        link.short_code = RandomCode.generate(length: length)
+        link.key = RandomKey.generate(length: length)
         link.save!
         return
       rescue ActiveRecord::RecordNotUnique
-        link.short_code = nil
+        link.key = nil
       rescue ActiveRecord::RecordInvalid => e
-        raise unless e.record.errors[:short_code].any?
-        link.short_code = nil
+        raise unless e.record.errors[:key].any?
+        link.key = nil
         link.errors.clear
       end
 
       raise ActiveRecord::RecordInvalid, link
     end
 
-    # Best-effort fetch of page title + icon. Never blocks the response for long.
     def backfill_metadata(link)
       result = Timeout.timeout(FETCH_TIMEOUT_SEC) do
-        Metadata::TitleAndIconFetcher.call(link.url, timeout_sec: FETCH_TIMEOUT_SEC)
+        Metadata::TitleAndIconFetcher.call(link.target_url, timeout_sec: FETCH_TIMEOUT_SEC)
       end
       return if result.blank?
 

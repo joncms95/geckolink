@@ -6,11 +6,11 @@ Rails.application.routes.draw do
       resource :session, only: %i[create destroy], controller: "session"
       resources :registrations, only: %i[create], path: "signup"
       get "me/links", to: "links#my_index"
-      resources :links, only: %i[create index show], param: :short_code do
+      resources :links, only: %i[create index show], param: :key do
         member { get :analytics }
       end
     end
   end
 
-  get ":short_code", to: "redirects#show", constraints: { short_code: /[0-9a-zA-Z]+/ }
+  get ":key", to: "redirects#show", constraints: { key: /[0-9a-zA-Z]+/ }
 end

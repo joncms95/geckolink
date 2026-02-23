@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Links", type: :request do
   describe "POST /api/v1/links" do
     let(:valid_url) { "https://example.com/page" }
-    let(:params) { { link: { url: valid_url } } }
+    let(:params) { { link: { target_url: valid_url } } }
 
     before do
       allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
@@ -15,9 +15,9 @@ RSpec.describe "Api::V1::Links", type: :request do
       post api_v1_links_path, params: params, as: :json
       expect(response).to have_http_status(:created)
       json = response.parsed_body
-      expect(json["url"]).to eq(valid_url)
-      expect(json["short_code"]).to be_present
-      expect(json["short_url"]).to include(json["short_code"])
+      expect(json["target_url"]).to eq(valid_url)
+      expect(json["key"]).to be_present
+      expect(json["short_url"]).to include(json["key"])
       expect(json["clicks_count"]).to eq(0)
     end
 
@@ -40,7 +40,7 @@ RSpec.describe "Api::V1::Links", type: :request do
 
     context "with invalid URL" do
       it "returns 422 with errors" do
-        post api_v1_links_path, params: { link: { url: "javascript:alert(1)" } }, as: :json
+        post api_v1_links_path, params: { link: { target_url: "javascript:alert(1)" } }, as: :json
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.parsed_body["errors"]).to be_present
       end
@@ -56,24 +56,24 @@ RSpec.describe "Api::V1::Links", type: :request do
   end
 
   describe "GET /api/v1/links (index)" do
-    it "returns empty list when no short_codes" do
+    it "returns empty list when no keys" do
       get api_v1_links_path, params: { page: 1, per_page: 10 }
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["links"]).to eq([])
       expect(response.parsed_body["total"]).to eq(0)
     end
 
-    it "returns links by short_codes with page and per_page" do
-      a = create(:link, url: "https://a.com", user_id: nil)
-      b = create(:link, url: "https://b.com", user_id: nil)
-      c = create(:link, url: "https://c.com", user_id: nil)
-      codes = [ a, b, c ].map(&:short_code).join(",")
-      get api_v1_links_path, params: { short_codes: codes, page: 1, per_page: 10 }
+    it "returns links by keys with page and per_page" do
+      a = create(:link, target_url: "https://a.com", user_id: nil)
+      b = create(:link, target_url: "https://b.com", user_id: nil)
+      c = create(:link, target_url: "https://c.com", user_id: nil)
+      keys = [ a, b, c ].map(&:key).join(",")
+      get api_v1_links_path, params: { keys: keys, page: 1, per_page: 10 }
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
       expect(json["total"]).to eq(3)
       expect(json["links"].size).to eq(3)
-      get api_v1_links_path, params: { short_codes: codes, page: 1, per_page: 2 }
+      get api_v1_links_path, params: { keys: keys, page: 1, per_page: 2 }
       json2 = response.parsed_body
       expect(json2["total"]).to eq(3)
       expect(json2["links"].size).to eq(2)
@@ -97,15 +97,15 @@ RSpec.describe "Api::V1::Links", type: :request do
 
       it "returns only current user links ordered by created_at desc" do
         other_user = create(:user)
-        my_newer = create(:link, url: "https://my-newer.com", user_id: user.id)
-        my_older = create(:link, url: "https://my-older.com", user_id: user.id)
-        create(:link, url: "https://other.com", user_id: other_user.id)
+        my_newer = create(:link, target_url: "https://my-newer.com", user_id: user.id)
+        my_older = create(:link, target_url: "https://my-older.com", user_id: user.id)
+        create(:link, target_url: "https://other.com", user_id: other_user.id)
 
         get "/api/v1/me/links", params: { page: 1, per_page: 10 }, headers: auth_headers
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json["total"]).to eq(2)
-        expect(json["links"].map { |l| l["short_code"] }).to contain_exactly(my_newer.short_code, my_older.short_code)
+        expect(json["links"].map { |l| l["key"] }).to contain_exactly(my_newer.key, my_older.key)
       end
 
       it "returns empty list when user has no links" do
@@ -116,40 +116,40 @@ RSpec.describe "Api::V1::Links", type: :request do
       end
 
       it "returns user links (token-only auth for mobile/cross-origin)" do
-        create(:link, url: "https://my-link.com", user_id: user.id)
+        create(:link, target_url: "https://my-link.com", user_id: user.id)
 
         get "/api/v1/me/links", headers: auth_headers
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json["total"]).to eq(1)
-        expect(json["links"].first["url"]).to eq("https://my-link.com")
+        expect(json["links"].first["target_url"]).to eq("https://my-link.com")
       end
     end
   end
 
-  describe "GET /api/v1/links/:short_code" do
+  describe "GET /api/v1/links/:key" do
     let(:link) { create(:link) }
 
     it "returns the link" do
-      get api_v1_link_path(link.short_code)
+      get api_v1_link_path(link.key)
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
-      expect(json["short_code"]).to eq(link.short_code)
-      expect(json["url"]).to eq(link.url)
+      expect(json["key"]).to eq(link.key)
+      expect(json["target_url"]).to eq(link.target_url)
     end
 
-    it "returns 404 for unknown short_code" do
+    it "returns 404 for unknown key" do
       get api_v1_link_path("nonexistent")
       expect(response).to have_http_status(:not_found)
     end
   end
 
-  describe "GET /api/v1/links/:short_code/analytics" do
+  describe "GET /api/v1/links/:key/analytics" do
     let(:link) { create(:link) }
 
     it "returns report with by_country and by_hour" do
-      create(:visit, link: link, country: "US")
-      get analytics_api_v1_link_path(link.short_code)
+      create(:click, link: link, country: "US")
+      get analytics_api_v1_link_path(link.key)
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
       expect(json).to have_key("by_country")
@@ -157,7 +157,7 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(json["by_country"]).to eq("US" => 1)
     end
 
-    it "returns 404 for unknown short_code" do
+    it "returns 404 for unknown key" do
       get analytics_api_v1_link_path("nonexistent")
       expect(response).to have_http_status(:not_found)
     end
