@@ -7,7 +7,7 @@ module Api
         user = User.find_by(email: session_params[:email]&.downcase&.strip)
 
         unless user&.authenticate(session_params[:password])
-          return render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
+          return render json: { errors: [ "Invalid email or password" ] }, status: :unprocessable_content
         end
 
         token = start_session(user)

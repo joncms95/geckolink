@@ -6,9 +6,10 @@ RSpec.describe "Api::V1::Session", type: :request do
   let(:user) { create(:user, email: "auth@example.com", password: "password123", password_confirmation: "password123") }
 
   describe "POST /api/v1/session (login)" do
-    it "returns 401 for wrong password" do
+    it "returns 422 for wrong password" do
       post api_v1_session_path, params: { session: { email: user.email, password: "wrong" } }, as: :json
-      expect(response).to have_http_status(:unauthorized)
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["errors"]).to be_present
     end
 
     it "creates session and returns user with token for valid credentials" do
