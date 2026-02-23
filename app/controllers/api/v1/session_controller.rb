@@ -10,8 +10,8 @@ module Api
           return render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
         end
 
-        start_session(user)
-        render json: { user: user_json(user) }
+        token = start_session(user)
+        render json: { user: user_json(user), token: token }
       end
 
       def destroy

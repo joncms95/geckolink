@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::API
-  include ActionController::Cookies
   include Authentication
 
   rescue_from ActionController::ParameterMissing do |e|

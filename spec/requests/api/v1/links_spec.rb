@@ -86,11 +86,13 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    context "when authenticated" do
+    context "when authenticated via Bearer token" do
       let(:user) { create(:user) }
-
-      before do
+      let(:auth_headers) do
         post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+        token = response.parsed_body["token"]
+        reset!
+        { "Authorization" => "Bearer #{token}" }
       end
 
       it "returns only current user links ordered by created_at desc" do
@@ -99,7 +101,7 @@ RSpec.describe "Api::V1::Links", type: :request do
         my_older = create(:link, url: "https://my-older.com", user_id: user.id)
         create(:link, url: "https://other.com", user_id: other_user.id)
 
-        get "/api/v1/me/links", params: { page: 1, per_page: 10 }
+        get "/api/v1/me/links", params: { page: 1, per_page: 10 }, headers: auth_headers
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json["total"]).to eq(2)
@@ -107,10 +109,20 @@ RSpec.describe "Api::V1::Links", type: :request do
       end
 
       it "returns empty list when user has no links" do
-        get "/api/v1/me/links"
+        get "/api/v1/me/links", headers: auth_headers
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body["links"]).to eq([])
         expect(response.parsed_body["total"]).to eq(0)
+      end
+
+      it "returns user links (token-only auth for mobile/cross-origin)" do
+        create(:link, url: "https://my-link.com", user_id: user.id)
+
+        get "/api/v1/me/links", headers: auth_headers
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json["total"]).to eq(1)
+        expect(json["links"].first["url"]).to eq("https://my-link.com")
       end
     end
   end

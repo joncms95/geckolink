@@ -1,4 +1,4 @@
-import { getApiBase, fetchWithTimeout, handleResponse } from "./client"
+import { getApiBase, fetchWithTimeout, handleResponse, setAuthToken } from "./client"
 
 export async function login(email, password) {
   const res = await fetchWithTimeout(`${getApiBase()}/session`, {
@@ -7,6 +7,7 @@ export async function login(email, password) {
     body: JSON.stringify({ session: { email: email?.trim()?.toLowerCase(), password } }),
   })
   const data = await handleResponse(res)
+  if (data?.token) setAuthToken(data.token)
   return data?.user ?? null
 }
 
@@ -16,6 +17,7 @@ export async function logout() {
   } catch {
     // Best-effort — clear local state regardless
   }
+  setAuthToken(null)
 }
 
 export async function signup(email, password, passwordConfirmation) {
@@ -27,5 +29,6 @@ export async function signup(email, password, passwordConfirmation) {
     }),
   })
   const data = await handleResponse(res)
+  if (data?.token) setAuthToken(data.token)
   return data?.user ?? null
 }

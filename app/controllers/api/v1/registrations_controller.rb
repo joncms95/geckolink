@@ -10,8 +10,8 @@ module Api
           return render json: { errors: user.errors.full_messages }, status: :unprocessable_content
         end
 
-        start_session(user)
-        render json: { user: { email: user.email } }, status: :created
+        token = start_session(user)
+        render json: { user: { email: user.email }, token: token }, status: :created
       end
 
       private

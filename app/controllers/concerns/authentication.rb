@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Shared session-based authentication for all controllers.
-# Relies on UserSession token stored in the encrypted cookie session.
+# Shared authentication for all controllers.
+# Uses only Authorization: Bearer <token> — no cookies. Works cross-origin and on mobile.
 module Authentication
   extend ActiveSupport::Concern
 
@@ -14,20 +14,7 @@ module Authentication
   def current_user
     return @current_user if defined?(@current_user)
 
-    token = session[:session_token]
-    unless token.present?
-      @current_user = nil
-      return nil
-    end
-
-    user_session = UserSession.find_by(token: token)
-    unless user_session
-      reset_session
-      @current_user = nil
-      return nil
-    end
-
-    @current_user = user_session.user
+    @current_user = authenticate_from_token
   end
 
   def signed_in?
@@ -38,19 +25,32 @@ module Authentication
     head :unauthorized unless signed_in?
   end
 
-  # Start a new session for the given user.
-  # Resets the existing session first to prevent session fixation.
-  def start_session(user)
-    reset_session
-    session[:user_id] = user.id
-    session[:session_token] = UserSession.create_for_user(user)
+  # True when the request sends a Bearer token but it resolved to no user (stale/revoked).
+  def stale_auth?
+    bearer_present? && current_user.nil?
   end
 
-  # End the current session — destroys the server-side UserSession record.
+  # Create a new UserSession for the user and return the token for the client.
+  def start_session(user)
+    UserSession.create_for_user(user)
+  end
+
+  # Destroy the UserSession for the token in the request (if any).
   def end_session
-    if session[:session_token].present?
-      UserSession.find_by(token: session[:session_token])&.destroy
-    end
-    reset_session
+    UserSession.find_by(token: bearer_token)&.destroy if bearer_present?
+  end
+
+  def authenticate_from_token
+    return unless bearer_present?
+
+    UserSession.find_by(token: bearer_token)&.user
+  end
+
+  def bearer_present?
+    request.headers["Authorization"]&.start_with?("Bearer ")
+  end
+
+  def bearer_token
+    request.headers["Authorization"]&.split(" ", 2)&.last
   end
 end

@@ -33,7 +33,7 @@ We utilize **Service Objects** and **Query Objects** to keep controllers skinny 
 ### 2. User-specific short URL list
 
 - **Not logged in**: Short URLs are stored in the browser’s localStorage. The dashboard shows links from localStorage (fetched by short codes from the API; only anonymous links are returned).
-- **Logged in**: Links are associated with the user. The dashboard shows only that user’s links from the database (paginated). Sign up and log in use session cookies (credentials: true with CORS).
+- **Logged in**: Links are associated with the user. The dashboard shows only that user’s links from the database (paginated). Sign up and log in return a Bearer token; the client stores it and sends it in the `Authorization` header so auth works cross-origin and on mobile.
 
 ### 3. Synchronous Processing
 

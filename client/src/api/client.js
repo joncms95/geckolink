@@ -7,12 +7,37 @@ export function getApiBase() {
   return API_BASE
 }
 
-export const defaultFetchOptions = { credentials: "include" }
+const TOKEN_KEY = "geckolink_token"
+
+export function getAuthToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setAuthToken(token) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token)
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export const defaultFetchOptions = {}
+
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 export function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeoutMs)
-  return fetch(url, { ...defaultFetchOptions, ...options, signal: controller.signal }).finally(() =>
+  const headers = { ...authHeaders(), ...options.headers }
+  return fetch(url, { ...defaultFetchOptions, ...options, headers, signal: controller.signal }).finally(() =>
     clearTimeout(id)
   )
 }

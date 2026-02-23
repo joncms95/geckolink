@@ -273,7 +273,7 @@ Add a cron job or systemd timer to run that periodically (e.g. monthly).
 
 The React frontend is deployed at **https://geckolink.vercel.app**. CORS is configured in `config/initializers/cors.rb` to allow that origin. In Vercel, set the environment variable **`VITE_API_BASE`** to your API URL with no trailing slash so the app can call the backend. For HTTPS: **`https://geckolink.click`** (or your domain, e.g. https://api.geckolink.click). For HTTP-only: `http://YOUR_DROPLET_IP`.
 
-For **logged-in users** on Vercel to see their link list, the API must send the session cookie with `SameSite=None` (set in `config/environments/production.rb`). Redeploy or restart the API after pulling that config so the cookie is sent cross-origin.
+Logged-in users authenticate with a Bearer token (returned from login/signup and sent in the `Authorization` header), so no session cookies or cross-origin cookie config are required.
 
 **Reload / direct URLs:** `client/vercel.json` rewrites all routes to `index.html` so that reloading or opening `/dashboard` (or any client route) works instead of returning 404. If the Vercel project root is the repo root, move `vercel.json` to the repo root or set Vercel’s “Root Directory” to `client`.
 

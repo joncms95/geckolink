@@ -10,8 +10,8 @@ module Api
       before_action :require_authentication!, only: :my_index
 
       def create
-        # Stale session cookie (e.g. logged out elsewhere) → 401 so client clears auth state.
-        if session[:user_id].present? && current_user.nil?
+        # Stale credential (revoked token or cookie) → 401 so client clears auth state.
+        if stale_auth?
           return head :unauthorized
         end
 
