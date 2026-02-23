@@ -10,7 +10,6 @@ import {
 
 export function useAuth() {
   const [user, setUser] = useState(getCachedUser)
-  const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
     setUser(getCachedUser())
@@ -47,5 +46,5 @@ export function useAuth() {
     return u
   }, [])
 
-  return { user, authLoading, login, logout, clearSessionLocally, signup }
+  return { user, login, logout, clearSessionLocally, signup }
 }

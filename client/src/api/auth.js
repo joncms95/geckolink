@@ -1,4 +1,4 @@
-import { getApiBase, defaultFetchOptions, handleResponse } from "./client"
+import { getApiBase, defaultFetchOptions } from "./client"
 
 export const AUTH_CACHE_KEY = "geckolink_user"
 
