@@ -4,35 +4,45 @@ You are acting as a Senior Ruby on Rails Engineer. Follow these rules strictly w
 
 ## 1. Tech Stack Constraints
 
-- **Ruby**: v3.4.8 (Use modern syntax: pattern matching, endless methods where appropriate).
-- **Rails**: v7.2.3 (Leverage ActiveRecord improvements).
-- **Frontend**: React + Tailwind CSS.
-- **Testing**: RSpec, FactoryBot, Faker.
+- **Ruby**: v3.4.8 (use modern syntax: pattern matching, endless methods where appropriate).
+- **Rails**: v7.2.3, API-only mode.
+- **Frontend**: React 18 (Vite) + Tailwind CSS + React Router 7.
+- **Testing**: RSpec, FactoryBot, Faker, WebMock.
 
 ## 2. Architectural Patterns
 
-- **Service Objects**: ALL complex business logic goes into `app/services`.
-  - _Naming_: `Namespace::ActionService` (e.g., `Shortener::CreateService` in this project).
-  - _Interface_: Use a standard `call` method. Return a `Result` object (Success/Failure), do not raise exceptions for expected flow control.
-- **Query Objects**: Complex SQL queries or aggregations go into `app/queries`.
-- **Slim Controllers**: Controllers should only handle parameter parsing, calling a service, and rendering the response.
-- **Fat Models**: Avoid them. Keep models strictly for associations, scopes, and simple validations.
+- **Service Objects**: All complex business logic goes into `app/services/`.
+  - _Naming_: `Namespace::ActionService` (e.g., `Shortener::CreateService`).
+  - _Interface_: A single `call` method. Return a `Result` object (`Result.success(value)` / `Result.failure(error)`) — never raise exceptions for expected flow control.
+- **Query Objects**: Complex SQL aggregations go into `app/queries/` (e.g., `Analytics::ReportQuery`).
+- **Concerns**: Shared controller behaviour in `app/controllers/concerns/` (e.g., `Authentication` for token-based auth).
+- **Slim Controllers**: Controllers handle parameter parsing, call a service or query, and render the response. No business logic in controllers.
+- **Lean Models**: Keep models to associations, scopes, simple validations, and callbacks. Move multi-step logic to services.
 
-## 3. Testing Guidelines
+## 3. Authentication
 
-- **TDD**: Write the spec _before_ the implementation.
-- **Integration**: Request specs (`spec/requests`) are preferred over controller specs.
+- Bearer-token auth via the `Authentication` concern (included in `ApplicationController`).
+- Tokens are stored in the `sessions` table; validate on each authenticated request.
+- Use `require_authentication!` as a `before_action` for endpoints that require a logged-in user.
+- Use `current_user` and `signed_in?` for optional auth.
+
+## 4. Testing Guidelines
+
+- **TDD**: Write the spec before the implementation.
+- **Integration**: Request specs (`spec/requests/`) are preferred over controller specs.
 - **Factories**: Use FactoryBot for all test data. Never hardcode data in tests.
-- **Coverage**: 100% coverage on Service Objects is mandatory.
+- **Coverage**: 100% coverage on service objects and query objects is mandatory.
+- **External HTTP**: Stub all outbound HTTP with WebMock.
 
-## 4. Coding Style
+## 5. Coding Style
 
-- **Rubocop**: Adhere to standard Rails style guide.
+- **Rubocop**: Adhere to Rails Omakase style guide (`.rubocop.yml`).
 - **Tailwind**: Use utility classes. Do not create custom CSS files unless absolutely necessary.
-- **React**: Functional components with Hooks only.
+- **React**: Functional components with hooks only. Custom hooks in `client/src/hooks/`.
 
-## 5. Security & Robustness
+## 6. Security & Robustness
 
 - **Strong Parameters**: Always use strong params in controllers.
-- **N+1 Queries**: Detect and fix them proactively using `includes`.
-- **Validations**: validate strict URL patterns (must include scheme http/https).
+- **N+1 Queries**: Detect and fix proactively using `includes`.
+- **URL Validation**: Strict scheme check (`http`/`https` only), private-host blocking.
+- **Rate Limiting**: `Rack::Attack` throttles per IP for all public endpoints.

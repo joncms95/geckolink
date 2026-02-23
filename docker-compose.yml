@@ -1,14 +1,13 @@
 # For deployment (e.g. DigitalOcean). Local development: use bin/dev.
-# The app does not bind to port 80 here so Nginx can use it when using the HTTPS stack.
-# Usage:
-#   HTTPS (recommended): docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+# HTTPS:     docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+#            (HTTPS override removes the app's port 80 binding; Nginx handles 80/443)
 # Requires .env with SECRET_KEY_BASE, POSTGRES_PASSWORD (see docs/DEPLOY.md).
 
 services:
   app:
     build: .
     restart: unless-stopped
-    # No ports here; docker-compose.https.yml adds Nginx on 80/443, or use docker-compose.http-only.yml for app on 80
+    # No ports here; docker-compose.https.yml adds Nginx on 80/443
     env_file: .env
     environment:
       RAILS_ENV: production

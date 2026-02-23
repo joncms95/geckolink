@@ -59,15 +59,6 @@ export function useLinksList(user) {
     [fetchPage, totalPages]
   )
 
-  const updateLinkInList = useCallback((key, updatedLink) => {
-    setSelectedLink((current) =>
-      current?.key === key ? { ...current, ...updatedLink } : current
-    )
-    setDisplayedLinks((prev) =>
-      prev.map((l) => (l.key === key ? { ...l, ...updatedLink } : l))
-    )
-  }, [])
-
   return {
     displayedLinks,
     displayedLinksLoading,
@@ -77,6 +68,5 @@ export function useLinksList(user) {
     goToPage,
     selectedLink,
     setSelectedLink,
-    updateLinkInList,
   }
 }

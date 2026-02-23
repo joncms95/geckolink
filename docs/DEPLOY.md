@@ -151,14 +151,14 @@ docker compose logs -f app
 
 ## Useful commands
 
-| Task                      | Command                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
+| Task                      | Command                                                |
+| ------------------------- | ------------------------------------------------------ |
 | View app logs             | `docker compose logs -f app`                           |
 | Stop stack                | `docker compose down`                                  |
 | Start stack               | `docker compose up -d`                                 |
 | Rebuild after code change | `docker compose build app && docker compose up -d app` |
-| Run Rails console         | `docker compose exec app bin/rails console`                            |
-| Run migrations by hand    | `docker compose exec app bin/rails db:migrate`                         |
+| Run Rails console         | `docker compose exec app bin/rails console`            |
+| Run migrations by hand    | `docker compose exec app bin/rails db:migrate`         |
 
 **If you use HTTPS** (Nginx override), add `-f docker-compose.yml -f docker-compose.https.yml` to every `docker compose` command (e.g. `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`).
 
@@ -211,7 +211,7 @@ From the app directory on the droplet:
 docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
 ```
 
-This starts the app, db, redis, and Nginx. The app is no longer on port 80; Nginx listens on 80 and 443 and proxies to the app.
+This starts the app, db, redis, and Nginx. Nginx listens on 80 and 443 and proxies to the app internally.
 
 ### 4. Get a Let’s Encrypt certificate
 

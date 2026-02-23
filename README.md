@@ -2,109 +2,164 @@
 
 GeckoLink is a robust, scalable microservice for URL shortening, featuring real-time analytics and geolocation tracking.
 
-## 🚀 Live Demo
+## Live Demo
 
-**[https://geckolink-demo.com](https://geckolink-demo.com)** _(Placeholder)_
+[GeckoLink](https://geckolink.vercel.app)
 
 ---
 
-## 🛠 Tech Stack
-
-We utilize a modern, reliable stack aligned with high-throughput requirements:
+## Tech Stack
 
 - **Backend:** Ruby 3.4.8, Rails 7.2.3 (API Mode)
-- **Database:** PostgreSQL 16 (Primary data store)
-- **Caching:** Redis 7 (Rails cache store for redirects)
-- **Frontend:** React 18 (via Vite), Tailwind CSS
-- **Testing:** RSpec, FactoryBot, Faker
+- **Database:** PostgreSQL 16
+- **Caching:** Redis 7 (redirect lookups)
+- **Frontend:** React 18 (Vite), Tailwind CSS, React Router 7
+- **Auth:** bcrypt + Bearer tokens
+- **Testing:** RSpec, FactoryBot, Faker, WebMock
 - **Containerization:** Docker & Docker Compose
 
 ---
 
-## 🏗 Architecture & Design Decisions
+## Architecture & Design Decisions
 
 ### 1. Domain Design
 
-We utilize **Service Objects** and **Query Objects** to keep controllers skinny and business logic testable.
+**Service Objects** and **Query Objects** keep controllers thin and business logic testable.
 
-- `Shortener::CreateService`: Handles the generation logic and initial record creation.
-- `Analytics::ReportQuery`: Specialized query object to aggregate click data, ensuring the database handles the heavy lifting for reports.
+- `Shortener::CreateService` — generates a unique short key, creates the link, and fetches page metadata.
+- `Redirect::ResolveService` — resolves a short key to a target URL with Redis-backed caching.
+- `Analytics::RecordClick` — records each redirect with IP geolocation (Geocoder).
+- `Analytics::ReportQuery` — aggregates click data by country and hour for the analytics dashboard.
+- `Metadata::TitleAndIconFetcher` — extracts the page `<title>` and favicon from the target URL.
 
-### 2. User-specific short URL list
+All services return a `Result` value object (`success?` / `failure?`) instead of raising exceptions for expected flow control.
 
-- **Not logged in**: Short URLs are stored in the browser’s localStorage. The dashboard shows links from localStorage (fetched by keys from the API; only anonymous links are returned).
-- **Logged in**: Links are associated with the user. The dashboard shows only that user’s links from the database (paginated). Sign up and log in return a Bearer token; the client stores it and sends it in the `Authorization` header so auth works cross-origin and on mobile.
+### 2. Authentication
 
-### 3. Synchronous Processing
+- **Signup / Login** return a Bearer token. The client stores it in `localStorage` and sends it in the `Authorization` header on every request.
+- **Sessions** are stored server-side (`sessions` table) and validated on each authenticated request via the `Authentication` concern.
+- Token-based auth works cross-origin and on mobile without cookies.
 
-1.  **URL Title Fetching**: When a user submits a link, we fetch the page title (and favicon) synchronously with a 5s timeout and return the short URL plus title/icon in the same response. If the fetch fails or times out, the link is still created with null title/icon.
-2.  **Geolocation**: On each redirect we record the click and resolve IP to location (Geocoder, e.g. ipinfo.io) synchronously with a 2s timeout so analytics have geolocation without running a background worker.
+### 3. User-Owned vs. Anonymous Links
 
-### 4. Scalability
+- **Anonymous links** (`user_id` is `NULL`) can be created without an account and are publicly accessible (anyone can view stats via the lookup form or direct URL).
+- **Logged-in users** have links associated with their account. The dashboard (`GET /api/v1/links`) shows only that user's links, paginated. User-owned links are restricted to the owner for `show` and `analytics`.
 
-- **Redirect lookups**: Key → URL is cached (Rails.cache) for 5 minutes to reduce DB load on redirects. In production, the cache uses Redis (`REDIS_URL` or optional `REDIS_CACHE_URL`) so it is shared across instances.
-- **Write Strategy**: We utilize unique indexes on the `key` column to prevent race conditions at the database level.
-- **Health checks**: The `/up` endpoint reports app boot status. For HA, configure your platform to also check DB connectivity (e.g. a custom endpoint that runs `ActiveRecord::Base.connection.execute("SELECT 1")`) or rely on the default `/up` and platform health checks.
+### 4. Synchronous Processing
+
+1. **URL Title Fetching** — when a user submits a link, the page title and favicon are fetched synchronously (5 s timeout). If the fetch fails, the link is still created with `NULL` title/icon.
+2. **Geolocation** — on each redirect, IP-to-location is resolved synchronously via Geocoder (2 s timeout) so analytics have geolocation data without a background worker.
+
+### 5. Scalability
+
+- **Redirect lookups** are cached in Redis for 5 minutes to reduce DB load.
+- **Write Strategy** — a unique index on `links.key` prevents race-condition duplicates; the service retries with a longer key on collision.
+- **Health check** — `GET /up` reports boot status.
 
 ---
 
-## 📦 Installation & Setup
+## API Endpoints
+
+| Method   | Path                           | Auth     | Description               |
+| -------- | ------------------------------ | -------- | ------------------------- |
+| `POST`   | `/api/v1/links`                | Optional | Create a short link       |
+| `GET`    | `/api/v1/links`                | Required | List current user's links |
+| `GET`    | `/api/v1/links/:key`           | Optional | Get link details          |
+| `GET`    | `/api/v1/links/:key/analytics` | Optional | Get click analytics       |
+| `POST`   | `/api/v1/session`              | None     | Log in                    |
+| `DELETE` | `/api/v1/session`              | None     | Log out                   |
+| `POST`   | `/api/v1/signup`               | None     | Register                  |
+| `GET`    | `/:key`                        | None     | Redirect to target URL    |
+
+---
+
+## Installation & Setup
 
 ### Prerequisites
 
 - Ruby 3.4.8
-- Postgres 16
+- PostgreSQL 16
 - Redis
 - Node.js 20+
 
 ### Local Development
 
-1.  **Clone and Install Dependencies**
+1. **Clone and install dependencies**
 
-    ```bash
-    git clone https://github.com/joncms95/geckolink.git
-    cd geckolink
-    bundle install
-    npm install --prefix client
-    ```
+   ```bash
+   git clone https://github.com/joncms95/geckolink.git
+   cd geckolink
+   bundle install
+   npm install --prefix client
+   ```
 
-2.  **Database Setup**
+2. **Database setup**
 
-    ```bash
-    cp .env.example .env
-    bin/rails db:prepare
-    ```
+   ```bash
+   cp .env.example .env
+   bin/rails db:prepare
+   ```
 
-3.  **Start Services**
-    We use `foreman` to run Rails and the Vite dev server.
+3. **Start services** (Rails + Vite dev server via foreman)
 
-    ```bash
-    bin/dev
-    ```
+   ```bash
+   bin/dev
+   ```
 
-4.  **Run Tests**
-    ```bash
-    bundle exec rspec
-    ```
-    Backend is covered by RSpec (unit and request specs). The React frontend is manually tested; add Vitest or Jest for automated frontend tests if desired.
+4. **Run tests**
+
+   ```bash
+   bundle exec rspec
+   ```
 
 ### Deployment
 
-The app is not deployed by default. To deploy (e.g. Render, Heroku):
+The backend is deployed via Docker Compose on a DigitalOcean droplet; the React frontend is deployed on Vercel. See [`docs/DEPLOY.md`](docs/DEPLOY.md) for full instructions.
 
-- **Web**: Run `bin/rails server` (or the platform’s Rails command). Set `PORT` and `RAILS_ENV=production`.
-- **Env**: **Local:** optional `DATABASE_URL`, `REDIS_URL` (see `.env.example`). **Production/Docker:** required `SECRET_KEY_BASE`, `POSTGRES_PASSWORD`; optional `DISABLE_SSL_REDIRECT`, `CORS_ORIGINS`, `VITE_API_BASE`. See `.env.example` and `docs/DEPLOY.md`.
-- **Build**: For a single dyno/instance, build the React client (`npm run build --prefix client`) and serve from `client/dist` or your CDN; or run API and frontend separately (e.g. frontend on Vercel) and set `VITE_API_BASE` and CORS via `CORS_ORIGINS` or the defaults in `config/initializers/cors.rb`.
+**Environment variables:**
 
-The repo includes a production Dockerfile and `docs/DEPLOY.md` for Docker Compose on a single server.
+| Variable               | Required | Description                                         |
+| ---------------------- | -------- | --------------------------------------------------- |
+| `SECRET_KEY_BASE`      | Prod     | Rails secret (generate with `openssl rand -hex 64`) |
+| `POSTGRES_PASSWORD`    | Docker   | PostgreSQL password                                 |
+| `DATABASE_URL`         | Prod     | PostgreSQL connection string                        |
+| `REDIS_URL`            | Prod     | Redis connection string                             |
+| `VITE_API_BASE`        | Frontend | API base URL (no trailing slash)                    |
+| `DISABLE_SSL_REDIRECT` | Optional | Set to `1` when serving over plain HTTP             |
 
 ---
 
-## 🛡 Security
+## Security
 
-- **Input Sanitization**: All target URLs are validated against a strict regex scheme to prevent Javascript injection (`javascript:`) or local network scanning.
-- **Rate Limiting**: `Rack::Attack` throttles requests per IP: link creation, redirects, signup, and session (login) to limit abuse and brute force.
+- **Input Sanitization** — target URLs are validated against a strict scheme to block `javascript:` URIs and private-network hosts.
+- **Rate Limiting** — `Rack::Attack` throttles link creation, redirects, signup, and login per IP.
+- **Authentication** — passwords are hashed with bcrypt; sessions are bearer-token-based with server-side storage.
 
-## 📝 License
+---
+
+## Project Structure
+
+```
+app/
+  controllers/         # Thin API controllers
+    api/v1/            # Links, Session, Registrations
+    concerns/          # Authentication concern
+  models/              # User, Link, Click, Session
+  services/            # Service objects (Shortener, Analytics, Redirect, Metadata)
+  queries/             # Query objects (Analytics::ReportQuery)
+client/
+  src/
+    api/               # API client (fetch wrappers)
+    components/        # React components
+    hooks/             # Custom hooks (useAuth, useToast, useLinksList, useCopyToClipboard)
+    pages/             # Route pages (HomePage)
+    utils/             # Utilities (URL normalization, error formatting, scroll)
+    constants/         # Shared constants
+config/                # Rails configuration
+spec/                  # RSpec tests (models, requests, services, queries)
+docs/                  # DEPLOY, ROADMAP, WIKI, RULES
+```
+
+## License
 
 MIT

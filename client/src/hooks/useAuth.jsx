@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback } from "react"
 import { login as apiLogin, logout as apiLogout, signup as apiSignup } from "../api/auth"
-import { setAuthToken } from "../api/client"
 
 const AUTH_CACHE_KEY = "geckolink_user"
 const AuthContext = createContext(null)
@@ -44,14 +43,8 @@ export function AuthProvider({ children }) {
     return u
   }, [])
 
-  const clearSession = useCallback(() => {
-    setCachedUser(null)
-    setAuthToken(null)
-    setUser(null)
-  }, [])
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup, clearSession }}>
+    <AuthContext.Provider value={{ user, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   )
