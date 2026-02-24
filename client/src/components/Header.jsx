@@ -5,10 +5,19 @@ const SCROLL_THRESHOLD = 100
 const TOP_HOVER_ZONE = 80
 const MOUSEMOVE_THROTTLE_MS = 100
 
+function getInitials(email) {
+  const local = email.split("@")[0]
+  const parts = local.split(/[._-]/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return local.slice(0, 2).toUpperCase()
+}
+
 export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
   const location = useLocation()
   const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
   const [visible, setVisible] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
   const lastScrollY = useRef(0)
   const lastMouseMoveTime = useRef(0)
 
@@ -41,11 +50,18 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
       lastMouseMoveTime.current = now
       if (e.clientY < TOP_HOVER_ZONE) setVisible(true)
     }
+    const onClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
     window.addEventListener("scroll", onScroll, { passive: true })
     window.addEventListener("mousemove", onMouseMove)
+    document.addEventListener("mousedown", onClickOutside)
     return () => {
       window.removeEventListener("scroll", onScroll)
       window.removeEventListener("mousemove", onMouseMove)
+      document.removeEventListener("mousedown", onClickOutside)
     }
   }, [updateVisibility])
 
@@ -64,9 +80,9 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
             alt="GeckoLink Logo"
             className="h-10 w-10"
           />
-          <span className="text-lg sm:text-xl font-semibold tracking-tight truncate">GeckoLink</span>
+          <span className="text-xl sm:text-2xl font-brand font-bold tracking-wide truncate">GECKOLINK</span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2 shrink min-w-0">
+        <nav className="flex items-center gap-3 sm:gap-4 shrink min-w-0">
           {user && (
             <Link
               to="/dashboard"
@@ -81,21 +97,32 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
             </Link>
           )}
           {user ? (
-            <>
-              <span
-                className="hidden sm:inline-block text-gecko-slate text-sm truncate max-w-[90px] md:max-w-[180px]"
-                title={user.email}
-              >
-                {user.email}
-              </span>
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
-                onClick={onLogout}
-                className="px-3 py-2.5 rounded-lg text-gecko-slate hover:text-white hover:bg-gecko-dark-border text-sm font-medium min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
+                className="h-9 w-9 rounded-full bg-gecko-green text-gecko-dark font-bold text-sm flex items-center justify-center hover:ring-2 hover:ring-gecko-green/50 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark touch-manipulation"
               >
-                Log out
+                {getInitials(user.email)}
               </button>
-            </>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gecko-dark-border bg-gecko-dark-card shadow-lg py-2 animate-fade-in z-50">
+                  <div className="px-4 py-2.5 border-b border-gecko-dark-border">
+                    <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); onLogout(); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gecko-slate hover:text-white hover:bg-gecko-dark-border/50 transition-colors flex items-center gap-2"
+                  >
+                    <i className="fa-solid fa-right-from-bracket text-xs" aria-hidden />
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <button

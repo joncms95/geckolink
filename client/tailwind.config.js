@@ -19,6 +19,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        brand: ["JetBrains Mono", "monospace"],
       },
       boxShadow: {
         "gecko": "0 4px 20px rgba(141, 198, 71, 0.15)",
