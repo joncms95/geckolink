@@ -4,8 +4,13 @@ module Api
   module V1
     class LinksController < ApplicationController
       DEFAULT_PER_PAGE = 10
-      ALLOWED_SORTS = { "clicks_count" => { clicks_count: :desc, id: :desc } }.freeze
-      DEFAULT_ORDER = { created_at: :desc, id: :desc }.freeze
+      ALLOWED_SORTS = {
+        "created_at_desc" => { created_at: :desc, id: :desc },
+        "created_at_asc" => { created_at: :asc, id: :asc },
+        "clicks_count_desc" => { clicks_count: :desc, id: :desc },
+        "clicks_count_asc" => { clicks_count: :asc, id: :asc }
+      }.freeze
+      DEFAULT_ORDER = ALLOWED_SORTS["created_at_desc"].freeze
 
       before_action :require_authentication!, only: :index
 

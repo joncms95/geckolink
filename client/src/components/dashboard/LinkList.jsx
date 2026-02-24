@@ -31,7 +31,10 @@ export default function LinkList({
         </h2>
         {linksTotal > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-gecko-slate text-sm">Sort by</span>
+            <span className="text-gecko-slate text-sm flex items-center gap-1.5">
+              <i className="fa-solid fa-arrows-up-down text-xs opacity-70" aria-hidden />
+              Sort by
+            </span>
             <select
               value={sort}
               onChange={(e) => onSortChange(e.target.value)}
@@ -40,7 +43,9 @@ export default function LinkList({
               className="rounded-lg border border-gecko-dark-border bg-gecko-dark-card text-white text-sm px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark"
             >
               <option value={SORT_OPTIONS.NEWEST}>Newest first</option>
+              <option value={SORT_OPTIONS.OLDEST}>Oldest first</option>
               <option value={SORT_OPTIONS.MOST_CLICKS}>Most clicks</option>
+              <option value={SORT_OPTIONS.LEAST_CLICKS}>Least clicks</option>
             </select>
           </div>
         )}
