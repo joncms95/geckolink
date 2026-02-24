@@ -192,6 +192,9 @@ Run Certbot once (use your real email):
 docker compose -f docker-compose.yml -f docker-compose.https.yml run --rm certbot certonly \
   --webroot -w /var/www/certbot \
   -d geckolink.click \
+  -d api.geckolink.click \
+  -d www.geckolink.click \
+  -d www.api.geckolink.click \
   --email you@example.com \
   --agree-tos --no-eff-email
 ```
@@ -246,9 +249,9 @@ The React SPA is deployed on **Vercel** (e.g. **https://geckolink.vercel.app**).
 
 In the Vercel project, set the environment variable **`VITE_API_BASE`** to your API URL **with no trailing slash**:
 
-| Backend setup                | `VITE_API_BASE`           |
-| ---------------------------- | ------------------------- |
-| HTTPS (e.g. geckolink.click) | `https://geckolink.click` |
+| Backend setup                | `VITE_API_BASE`               |
+| ---------------------------- | ----------------------------- |
+| HTTPS (e.g. geckolink.click) | `https://www.geckolink.click` |
 
 Redeploy after changing env vars so the client bundle picks up the new base URL.
 
