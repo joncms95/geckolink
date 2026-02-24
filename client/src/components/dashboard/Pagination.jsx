@@ -51,7 +51,7 @@ export default function Pagination({
             aria-label="Previous page"
             className={`${btnClass} ${btnInactive} px-3`}
           >
-            Previous
+            <i className="fa-solid fa-chevron-left" />
           </button>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {items.map((item, i) =>
@@ -81,7 +81,7 @@ export default function Pagination({
             aria-label="Next page"
             className={`${btnClass} ${btnInactive} px-3`}
           >
-            Next
+           <i className="fa-solid fa-chevron-right" />
           </button>
         </nav>
       )}

@@ -8,7 +8,7 @@ export default function LinkIcon({ src, className = "" }) {
       <img
         src={src}
         alt=""
-        className={`w-10 h-10 rounded-lg shrink-0 object-cover bg-gecko-dark-border ${className}`}
+        className={`w-10 h-10 rounded-lg shrink-0 object-contain bg-gecko-dark-border ${className}`}
         referrerPolicy="no-referrer"
         onError={() => setError(true)}
       />
