@@ -7,7 +7,7 @@ export function getApiBase() {
   return API_BASE
 }
 
-const TOKEN_KEY = "geckolink_token"
+export const TOKEN_KEY = "geckolink_token"
 
 function getAuthToken() {
   try {

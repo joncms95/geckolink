@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback } from "react"
+import { createContext, useContext, useState, useCallback, useEffect } from "react"
 import { login as apiLogin, logout as apiLogout, signup as apiSignup } from "../api/auth"
+import { TOKEN_KEY } from "../api/client"
 
 const AUTH_CACHE_KEY = "geckolink_user"
 const AuthContext = createContext(null)
@@ -22,6 +23,17 @@ function setCachedUser(user) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getCachedUser)
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === TOKEN_KEY && e.newValue === null) {
+        setCachedUser(null)
+        setUser(null)
+      }
+    }
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [])
 
   const login = useCallback(async (email, password) => {
     const u = await apiLogin(email, password)
