@@ -8,8 +8,8 @@ GeckoLink is a URL shortener with real-time analytics and geolocation tracking. 
 
 A test account is available for trying the app:
 
-- **Email:** test@hotmail.com
-- **Password:** 12345678
+- **Email:** testuser@gmail.com
+- **Password:** geckolinkdemo
 
 Log in to see the analytics dashboard with sample links.
 
