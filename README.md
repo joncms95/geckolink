@@ -187,7 +187,7 @@ client/
     constants/         # Shared constants
 config/                # Rails configuration
 spec/                  # RSpec tests (models, requests, services, queries)
-docs/                  # DEPLOY, ROADMAP, WIKI, RULES
+docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
 ```
 
 ## License

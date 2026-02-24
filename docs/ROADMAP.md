@@ -18,7 +18,7 @@
 
 ## Phase 3: Metadata Fetching
 
-- [x] **Service**: `Metadata::TitleAndIconFetcher` — synchronous fetch of page `<title>` and favicon (Nokogiri, 5 s timeout, non-HTML handled).
+- [x] **Service**: `Metadata::TitleAndIconFetcher` — fetch page `<title>` and favicon (Nokogiri, 5 s timeout; DuckDuckGo fallback for favicon when fetch fails or same-origin; no hostname fallback for title).
 
 ## Phase 4: Analytics & Tracking
 
@@ -37,7 +37,7 @@
 ## Phase 6: Frontend (React + Vite + Tailwind)
 
 - [x] Initialize React SPA within the Rails ecosystem (Vite dev server, proxy to Rails API).
-- [x] **Page**: Home — URL submission form with validation, result card (short URL, title, copy to clipboard).
+- [x] **Page**: Home — URL submission form with validation, result card (short URL, title, favicon, copy to clipboard).
 - [x] **Page**: Dashboard — analytics overview (metrics cards), paginated link list, link detail view with clicks-over-time chart and geolocation breakdown.
 - [x] **Auth UI**: Login/signup modal, auth-aware header with logout.
 - [x] **Hooks**: `useAuth`, `useToast`, `useLinksList`, `useCopyToClipboard`.
