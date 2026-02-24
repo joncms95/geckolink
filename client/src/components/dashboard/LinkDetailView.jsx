@@ -1,11 +1,29 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { getAnalytics } from "../../api/links"
+import { slicePage } from "../../utils/pagination"
 import ClicksOverTimeChart from "../ClicksOverTimeChart"
+import LinkIcon from "../ui/LinkIcon"
 import MetricCard from "./MetricCard"
+import MetricsGridLoading from "./MetricsGridLoading"
+import Pagination from "./Pagination"
+import { CLICKS_REPORT_PER_PAGE } from "../../constants"
 
 function getTopCountry(byCountry) {
   if (!byCountry || Object.keys(byCountry).length === 0) return "N/A"
   return Object.entries(byCountry).sort((a, b) => b[1] - a[1])[0][0]
+}
+
+function normalizeAnalyticsReport(data) {
+  if (!data || typeof data !== "object") return null
+  const byCountry = data.by_country ?? data.byCountry ?? {}
+  const topFromApi = data.top_location ?? data.topLocation
+  return {
+    by_country: byCountry,
+    by_hour: data.by_hour ?? data.byHour ?? {},
+    clicks: Array.isArray(data.clicks) ? data.clicks : [],
+    clicks_count: typeof data.clicks_count === "number" ? data.clicks_count : data.clicksCount,
+    top_location: topFromApi != null && String(topFromApi).trim() !== "" ? String(topFromApi).trim() : getTopCountry(byCountry),
+  }
 }
 
 function formatTimestamp(iso) {
@@ -38,6 +56,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [reportPage, setReportPage] = useState(1)
 
   const effectiveKey = keyFromUrl || link?.key
 
@@ -48,15 +67,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
     setError(null)
     getAnalytics(effectiveKey)
       .then((data) => {
-        setReport(
-          data && typeof data === "object"
-            ? {
-                by_country: data.by_country ?? data.byCountry ?? {},
-                by_hour: data.by_hour ?? data.byHour ?? {},
-                clicks: Array.isArray(data.clicks) ? data.clicks : [],
-              }
-            : {}
-        )
+        setReport(normalizeAnalyticsReport(data) ?? {})
       })
       .catch((err) => {
         setReport(null)
@@ -70,9 +81,18 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
     fetchReport()
   }, [fetchReport])
 
-  const topLocation = getTopCountry(report?.by_country)
-  const clicks = link?.clicks_count ?? 0
   const clicksList = report?.clicks ?? []
+  const clicks = report?.clicks_count ?? link?.clicks_count ?? 0
+  const topLocation = report?.top_location ?? "N/A"
+
+  const { pageItems: paginatedClicks, start, totalPages: reportTotalPages, currentPage: reportCurrentPage } = useMemo(
+    () => slicePage(clicksList, reportPage, CLICKS_REPORT_PER_PAGE),
+    [clicksList, reportPage]
+  )
+
+  useEffect(() => {
+    setReportPage(1)
+  }, [effectiveKey])
 
   const heading = link?.title
     ? `${link.title} — Stats`
@@ -90,21 +110,24 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         >
           <i className="fa-solid fa-arrow-left" aria-hidden /> Back to dashboard
         </button>
-        <div className="min-w-0 text-left sm:text-right">
-          <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
-            {heading}
-          </h1>
-          {link?.short_url && (
-            <a
-              href={link.short_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gecko-green text-sm sm:text-base font-medium mt-1 block truncate hover:text-gecko-green-light focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
-              title={link.short_url}
-            >
-              {link.short_url}
-            </a>
-          )}
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0 text-left sm:text-right sm:flex-row-reverse">
+          <LinkIcon src={link?.icon_url} />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
+              {heading}
+            </h1>
+            {link?.short_url && (
+              <a
+                href={link.short_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gecko-green text-sm sm:text-base font-medium mt-1 block truncate hover:text-gecko-green-light focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
+                title={link.short_url}
+              >
+                {link.short_url}
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -122,8 +145,14 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <MetricCard label="Clicks" value={clicks} icon="fa-chart-line" />
-        <MetricCard label="Top Location" value={topLocation} icon="fa-globe" />
+        {loading ? (
+          <MetricsGridLoading colSpan={2} ariaLabel="Loading link stats" />
+        ) : (
+          <>
+            <MetricCard label="Clicks" value={clicks} icon="fa-chart-line" />
+            <MetricCard label="Top Location" value={topLocation} icon="fa-globe" />
+          </>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
@@ -163,28 +192,38 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         ) : clicksList.length === 0 ? (
           <div className="py-8 text-center text-gecko-slate text-sm">No clicks yet</div>
         ) : (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-xs sm:text-sm min-w-[320px]">
-              <thead>
-                <tr className="border-b border-gecko-dark-border">
-                  <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">#</th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Timestamp</th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Geolocation</th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">User Agent</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clicksList.map((v, i) => (
-                  <tr key={i} className="border-b border-gecko-dark-border/50 last:border-0">
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-gecko-slate tabular-nums">{i + 1}</td>
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white whitespace-nowrap">{formatTimestamp(v.clicked_at)}</td>
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white">{clickGeolocation(v)}</td>
-                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white max-w-[200px] sm:max-w-[280px] truncate" title={v.user_agent || undefined}>{v.user_agent || "—"}</td>
+          <>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full text-xs sm:text-sm min-w-[320px]">
+                <thead>
+                  <tr className="border-b border-gecko-dark-border">
+                    <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">#</th>
+                    <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Timestamp</th>
+                    <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">Geolocation</th>
+                    <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 text-gecko-slate font-medium">User Agent</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedClicks.map((v, i) => (
+                    <tr key={(reportCurrentPage - 1) * CLICKS_REPORT_PER_PAGE + i} className="border-b border-gecko-dark-border/50 last:border-0">
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-gecko-slate tabular-nums">{start + i}</td>
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white whitespace-nowrap">{formatTimestamp(v.clicked_at)}</td>
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white">{clickGeolocation(v)}</td>
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 text-white max-w-[200px] sm:max-w-[280px] truncate" title={v.user_agent || undefined}>{v.user_agent || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              currentPage={reportCurrentPage}
+              totalPages={reportTotalPages}
+              onPageChange={setReportPage}
+              disabled={loading}
+              totalItems={clicksList.length}
+              perPage={CLICKS_REPORT_PER_PAGE}
+            />
+          </>
         )}
       </section>
     </>

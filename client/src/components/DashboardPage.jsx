@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getLink } from "../api/links"
 import { scrollToTop } from "../utils/scroll"
@@ -28,15 +28,28 @@ export default function DashboardPage() {
     sort,
     goToPage,
     changeSort,
+    refetch: refetchLinks,
     selectedLink,
     setSelectedLink,
   } = useLinksList(user)
 
   const stats = useDashboardStats(user)
+  const { refetch: refetchStats } = stats
+  const prevKeyFromUrl = useRef(keyFromUrl)
 
   useEffect(() => {
     if (keyFromUrl) scrollToTop()
   }, [keyFromUrl])
+
+  useEffect(() => {
+    const wasDetailView = Boolean(prevKeyFromUrl.current)
+    const isListView = !keyFromUrl
+    prevKeyFromUrl.current = keyFromUrl
+    if (wasDetailView && isListView) {
+      refetchStats()
+      refetchLinks()
+    }
+  }, [keyFromUrl, refetchStats, refetchLinks])
 
   useEffect(() => {
     if (!keyFromUrl) return

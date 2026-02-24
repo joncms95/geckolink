@@ -75,6 +75,10 @@ export function useLinksList(user) {
     [sort, fetchPage]
   )
 
+  const refetch = useCallback(() => {
+    fetchPage({ page: currentPage, sort })
+  }, [fetchPage, currentPage, sort])
+
   return {
     displayedLinks,
     displayedLinksLoading,
@@ -84,6 +88,7 @@ export function useLinksList(user) {
     sort,
     goToPage,
     changeSort,
+    refetch,
     selectedLink,
     setSelectedLink,
   }

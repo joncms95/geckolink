@@ -1,4 +1,5 @@
 import MetricCard from "./MetricCard"
+import MetricsGridLoading from "./MetricsGridLoading"
 import LookupForm from "./LookupForm"
 import { SCROLL_TARGETS } from "../../constants"
 
@@ -17,11 +18,7 @@ export default function DashboardListView({ stats, onLookupResult }) {
       </h1>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
-          <div className="col-span-2 lg:col-span-4 flex items-center justify-center py-8">
-            <span className="text-gecko-slate" aria-label="Loading dashboard stats">
-              <i className="fa-solid fa-spinner fa-spin text-2xl" aria-hidden />
-            </span>
-          </div>
+          <MetricsGridLoading colSpan={4} ariaLabel="Loading dashboard stats" />
         ) : error ? (
           <div className="col-span-2 lg:col-span-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm">
             {error}

@@ -8,6 +8,19 @@ module Analytics
       @link = link
     end
 
+    def call
+      countries = by_country
+      {
+        by_country: countries,
+        by_hour: by_hour,
+        clicks: clicks_for_report,
+        clicks_count: @link.clicks_count,
+        top_location: top_location(countries)
+      }
+    end
+
+    private
+
     def by_country
       @link.clicks
         .where.not(country: nil)
@@ -24,12 +37,10 @@ module Analytics
         .transform_keys { |k| format_time_iso8601(k) }
     end
 
-    def call
-      {
-        by_country: by_country,
-        by_hour: by_hour,
-        clicks: clicks_for_report
-      }
+    def top_location(countries)
+      return nil if countries.blank?
+
+      countries.max_by { |_country, count| count }&.first
     end
 
     def clicks_for_report
@@ -46,8 +57,6 @@ module Analytics
           }
         }
     end
-
-    private
 
     def format_time_iso8601(value)
       return nil if value.nil?
