@@ -9,16 +9,20 @@ module Metadata
   # icon from manifest → HTML <link> → DuckDuckGo (same-origin icons replaced with DuckDuckGo
   # since they often fail in-app due to CORS/redirects).
   class TitleAndIconFetcher
-    DEFAULT_TIMEOUT = 5
+    DEFAULT_TIMEOUT = 4
     MAX_BODY_SIZE = 256 * 1024
     MAX_MANIFEST_SIZE = 64 * 1024
     MAX_REDIRECTS = 5
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     DUCKDUCKGO_FAVICON = "https://icons.duckduckgo.com/ip3"
+    DUCKDUCKGO_CHECK_TIMEOUT = 2
     PREFERRED_ICON_SIZES = [ 192, 96, 32 ].freeze
     NETWORK_ERRORS = [
       SocketError, OpenSSL::SSL::SSLError, Timeout::Error,
-      URI::InvalidURIError, Errno::ECONNREFUSED
+      Net::OpenTimeout, Net::ReadTimeout,
+      URI::InvalidURIError, Errno::ECONNREFUSED,
+      Errno::ECONNRESET, Errno::EHOSTUNREACH,
+      Errno::ETIMEDOUT, Errno::EPIPE, IOError
     ].freeze
 
     def self.call(url, timeout_sec: DEFAULT_TIMEOUT)
@@ -187,7 +191,30 @@ module Metadata
     end
 
     def duckduckgo_icon(uri)
-      "#{DUCKDUCKGO_FAVICON}/#{URI.encode_www_form_component(canonical_host(uri))}.ico"
+      actual = uri.host.to_s.downcase
+      alternate = actual.start_with?("www.") ? actual.sub(/\Awww\./, "") : "www.#{actual}"
+      candidates = [ actual, alternate ].uniq
+
+      duckduckgo_uri = URI.parse(DUCKDUCKGO_FAVICON)
+      http = Net::HTTP.new(duckduckgo_uri.host, duckduckgo_uri.port)
+      http.use_ssl = true
+      http.open_timeout = DUCKDUCKGO_CHECK_TIMEOUT
+      http.read_timeout = DUCKDUCKGO_CHECK_TIMEOUT
+
+      http.start do
+        candidates.each do |h|
+          path = "/ip3/#{URI.encode_www_form_component(h)}.ico"
+          return "#{DUCKDUCKGO_FAVICON}/#{URI.encode_www_form_component(h)}.ico" if http.head(path).is_a?(Net::HTTPOK)
+        end
+      end
+
+      duckduckgo_url_for(actual)
+    rescue *NETWORK_ERRORS
+      duckduckgo_url_for(actual)
+    end
+
+    def duckduckgo_url_for(host)
+      "#{DUCKDUCKGO_FAVICON}/#{URI.encode_www_form_component(host)}.ico"
     end
 
     def best_by_size(candidates)

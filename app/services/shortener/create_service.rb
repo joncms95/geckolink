@@ -2,7 +2,7 @@
 
 module Shortener
   class CreateService
-    FETCH_TIMEOUT_SEC = 5
+    METADATA_TIMEOUT_SEC = 8
     MAX_COLLISION_RETRIES = 3
     DEFAULT_CODE_LENGTH = 7
     FALLBACK_CODE_LENGTH = 8
@@ -41,8 +41,8 @@ module Shortener
     end
 
     def backfill_metadata(link)
-      result = Timeout.timeout(FETCH_TIMEOUT_SEC) do
-        Metadata::TitleAndIconFetcher.call(link.target_url, timeout_sec: FETCH_TIMEOUT_SEC)
+      result = Timeout.timeout(METADATA_TIMEOUT_SEC) do
+        Metadata::TitleAndIconFetcher.call(link.target_url)
       end
       return if result.blank?
 

@@ -59,9 +59,11 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
           to="/"
           className="flex items-center gap-2 sm:gap-2.5 text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded-lg py-1 min-h-[44px] items-center"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gecko-green text-gecko-dark">
-            <i className="fa-solid fa-link text-lg sm:text-xl" aria-hidden />
-          </span>
+          <img
+            src="/logo.png"
+            alt="GeckoLink Logo"
+            className="h-10 w-10"
+          />
           <span className="text-lg sm:text-xl font-semibold tracking-tight truncate">GeckoLink</span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2 shrink min-w-0">

@@ -5,6 +5,10 @@ require "rails_helper"
 RSpec.describe Metadata::TitleAndIconFetcher do
   let(:duckduckgo) { "https://icons.duckduckgo.com/ip3" }
 
+  before do
+    stub_request(:head, %r{#{Regexp.escape(duckduckgo)}/}).to_return(status: 200)
+  end
+
   describe ".call" do
     context "when fetch fails" do
       it "returns DuckDuckGo icon on timeout" do
@@ -24,6 +28,35 @@ RSpec.describe Metadata::TitleAndIconFetcher do
         stub_request(:get, "https://facebook.com/").to_timeout
         result = described_class.call("facebook.com")
         expect(result).to eq(icon_url: "#{duckduckgo}/facebook.com.ico")
+      end
+
+      it "falls back to www-prefixed DuckDuckGo URL when bare host 404s" do
+        stub_request(:get, "https://touchngo.com.my/").to_timeout
+        stub_request(:head, "#{duckduckgo}/touchngo.com.my.ico").to_return(status: 404)
+        stub_request(:head, "#{duckduckgo}/www.touchngo.com.my.ico").to_return(status: 200)
+        result = described_class.call("https://touchngo.com.my/", timeout_sec: 1)
+        expect(result[:icon_url]).to eq("#{duckduckgo}/www.touchngo.com.my.ico")
+      end
+
+      it "tries actual host (www) first when user typed it" do
+        stub_request(:get, "https://www.touchngo.com.my/").to_timeout
+        stub_request(:head, "#{duckduckgo}/www.touchngo.com.my.ico").to_return(status: 200)
+        result = described_class.call("https://www.touchngo.com.my/", timeout_sec: 1)
+        expect(result[:icon_url]).to eq("#{duckduckgo}/www.touchngo.com.my.ico")
+      end
+
+      it "uses actual host DuckDuckGo URL when it returns 200" do
+        stub_request(:get, "https://example.com/").to_timeout
+        stub_request(:head, "#{duckduckgo}/example.com.ico").to_return(status: 200)
+        result = described_class.call("https://example.com/", timeout_sec: 1)
+        expect(result[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
+      end
+
+      it "returns actual host URL when DuckDuckGo is unreachable" do
+        stub_request(:get, "https://example.com/").to_timeout
+        stub_request(:head, %r{#{Regexp.escape(duckduckgo)}/}).to_timeout
+        result = described_class.call("https://example.com/", timeout_sec: 1)
+        expect(result[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
       end
 
       it "returns nil for blank URL" do
