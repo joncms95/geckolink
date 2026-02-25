@@ -2,11 +2,12 @@
 
 module Redirect
   # Resolves a key to its target URL, using a read-through cache.
-  # Returns a Result with { link_id:, url: } on success (url = target URL for redirect).
+  # Returns Result with { link_id:, url: } on success.
   class ResolveService
     CACHE_TTL = 5.minutes
+    CACHE_KEY_PREFIX = "redirect"
 
-    def call(key:)
+    def self.call(key:)
       cached = Rails.cache.read(cache_key(key))
       if cached
         return Result.success(link_id: cached["link_id"], url: cached["url"])
@@ -21,10 +22,8 @@ module Redirect
       Result.success(link_id: link.id, url: link.target_url)
     end
 
-    private
-
-    def cache_key(key)
-      "redirect/#{key}"
+    def self.cache_key(key)
+      "#{CACHE_KEY_PREFIX}/#{key}"
     end
   end
 end

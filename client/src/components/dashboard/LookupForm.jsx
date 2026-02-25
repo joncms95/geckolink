@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { getLink } from "../../api/links"
-import { parseShortCode } from "../../utils/shortCode"
 import { SCROLL_TARGETS } from "../../constants"
+import { formatApiError } from "../../utils/error"
+import { parseShortKey } from "../../utils/shortKey"
 import Button from "../ui/Button"
 import Input from "../ui/Input"
 
@@ -13,7 +14,7 @@ export default function LookupForm({ onResult }) {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault()
-      const key = parseShortCode(value)
+      const key = parseShortKey(value)
       if (!key) {
         setError("Paste a short link or enter its key (e.g. TJTRrCl)")
         return
@@ -25,11 +26,10 @@ export default function LookupForm({ onResult }) {
         setValue("")
         onResult(link)
       } catch (err) {
-        const fallback = err?.errors?.[0] ?? "Request failed"
         const message =
           err?.status === 404
             ? "Short link not found. Check the URL or code and try again."
-            : fallback
+            : formatApiError(err)
         setError(message)
       } finally {
         setLoading(false)
@@ -60,7 +60,7 @@ export default function LookupForm({ onResult }) {
             {loading ? "Loading…" : "View analytics"}
           </Button>
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
       </form>
       <p className="mt-3 text-gecko-slate text-xs sm:text-sm">
         Click <strong className="text-white">View Stats →</strong> on a short link below to see

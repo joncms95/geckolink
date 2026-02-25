@@ -3,16 +3,14 @@
 require "rails_helper"
 
 RSpec.describe Shortener::CreateService do
-  subject(:service) { described_class.new }
-
   before do
-    allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+    allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(Result.failure("Invalid URL"))
   end
 
-  describe "#call" do
+  describe ".call" do
     context "with blank URL" do
       it "returns failure" do
-        result = service.call(original_url: "   ")
+        result = described_class.call(original_url: "   ")
         expect(result).to be_failure
         expect(result.error).to include("URL can't be blank")
       end
@@ -20,13 +18,13 @@ RSpec.describe Shortener::CreateService do
 
     context "with invalid URL scheme" do
       it "returns failure for javascript:" do
-        result = service.call(original_url: "javascript:alert(1)")
+        result = described_class.call(original_url: "javascript:alert(1)")
         expect(result).to be_failure
         expect(result.error).to be_present
       end
 
       it "returns failure for ftp:" do
-        result = service.call(original_url: "ftp://example.com")
+        result = described_class.call(original_url: "ftp://example.com")
         expect(result).to be_failure
       end
     end
@@ -35,7 +33,7 @@ RSpec.describe Shortener::CreateService do
       let(:url) { "https://example.com/page" }
 
       it "returns success with a link" do
-        result = service.call(original_url: url)
+        result = described_class.call(original_url: url)
         expect(result).to be_success
         expect(result.value).to be_a(Link)
         expect(result.value.target_url).to eq(url)
@@ -44,7 +42,7 @@ RSpec.describe Shortener::CreateService do
       end
 
       it "assigns a random 7-character key (alphanumeric)" do
-        result = service.call(original_url: url)
+        result = described_class.call(original_url: url)
         link = result.value
         expect(link.key).to match(/\A[0-9a-zA-Z]{7}\z/)
         expect(link.key).to be_present
@@ -57,7 +55,7 @@ RSpec.describe Shortener::CreateService do
           "abc1234",
           "xyz9876"
         )
-        result = service.call(original_url: url)
+        result = described_class.call(original_url: url)
         expect(result).to be_success
         expect(result.value.key).to eq("xyz9876")
       end
@@ -65,7 +63,7 @@ RSpec.describe Shortener::CreateService do
 
     context "with valid https URL" do
       it "returns success" do
-        result = service.call(original_url: "https://secure.example.com")
+        result = described_class.call(original_url: "https://secure.example.com")
         expect(result).to be_success
         expect(result.value.target_url).to eq("https://secure.example.com")
       end
