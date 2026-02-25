@@ -23,18 +23,18 @@ module Analytics
 
     def by_country
       @link.clicks
-        .where.not(country: nil)
-        .group(:country)
-        .count
-        .transform_keys(&:to_s)
+           .where.not(country: nil)
+           .group(:country)
+           .count
+           .transform_keys(&:to_s)
     end
 
     def by_hour
       @link.clicks
-        .group(Arel.sql("date_trunc('hour', clicked_at)"))
-        .order(Arel.sql("date_trunc('hour', clicked_at)"))
-        .count
-        .transform_keys { |k| format_time_iso8601(k) }
+           .group(Arel.sql("date_trunc('hour', clicked_at)"))
+           .order(Arel.sql("date_trunc('hour', clicked_at)"))
+           .count
+           .transform_keys { |k| format_time_iso8601(k) }
     end
 
     def top_location(countries)
@@ -45,17 +45,17 @@ module Analytics
 
     def clicks_for_report
       @link.clicks
-        .order(clicked_at: :desc)
-        .limit(MAX_CLICKS_IN_REPORT)
-        .pluck(:clicked_at, :country, :geolocation, :user_agent)
-        .map { |clicked_at, country, geolocation, user_agent|
-          {
-            clicked_at: format_time_iso8601(clicked_at),
-            country: country.to_s.presence,
-            geolocation: geolocation.to_s.presence,
-            user_agent: user_agent.to_s.presence
-          }
+           .order(clicked_at: :desc)
+           .limit(MAX_CLICKS_IN_REPORT)
+           .pluck(:clicked_at, :country, :geolocation, :user_agent)
+           .map { |clicked_at, country, geolocation, user_agent|
+        {
+          clicked_at: format_time_iso8601(clicked_at),
+          country: country.to_s.presence,
+          geolocation: geolocation.to_s.presence,
+          user_agent: user_agent.to_s.presence
         }
+      }
     end
 
     def format_time_iso8601(value)

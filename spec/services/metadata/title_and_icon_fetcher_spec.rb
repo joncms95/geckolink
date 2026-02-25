@@ -67,14 +67,14 @@ RSpec.describe Metadata::TitleAndIconFetcher do
     context "when fetch succeeds" do
       it "extracts title from HTML" do
         stub_html("https://example.com/",
-          "<html><head><title>Example</title></head></html>")
+                  "<html><head><title>Example</title></head></html>")
         result = described_class.call("https://example.com/")
         expect(result[:title]).to eq("Example")
       end
 
       it "returns nil title when page has none" do
         stub_html("https://www.facebook.com/",
-          "<html><head></head><body></body></html>")
+                  "<html><head></head><body></body></html>")
         result = described_class.call("https://www.facebook.com/")
         expect(result[:title]).to be_nil
       end
@@ -92,21 +92,21 @@ RSpec.describe Metadata::TitleAndIconFetcher do
 
       it "uses DuckDuckGo when no icon in HTML" do
         stub_html("https://example.com/",
-          "<html><head><title>No Icon</title></head></html>")
+                  "<html><head><title>No Icon</title></head></html>")
         result = described_class.call("https://example.com/")
         expect(result[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
       end
 
       it "replaces same-origin favicon with DuckDuckGo" do
         stub_html("https://example.com/",
-          '<html><head><link rel="icon" href="/fav.ico"></head></html>')
+                  '<html><head><link rel="icon" href="/fav.ico"></head></html>')
         result = described_class.call("https://example.com/")
         expect(result[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
       end
 
       it "keeps cross-origin (CDN) favicon" do
         stub_html("https://example.com/",
-          '<html><head><link rel="icon" href="https://cdn.example.net/fav.ico"></head></html>')
+                  '<html><head><link rel="icon" href="https://cdn.example.net/fav.ico"></head></html>')
         result = described_class.call("https://example.com/")
         expect(result[:icon_url]).to eq("https://cdn.example.net/fav.ico")
       end

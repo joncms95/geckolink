@@ -53,7 +53,7 @@ module Dashboard
     def top_location_for_user
       pair = Click
         .where(link_id: @user.links.select(:id))
-        .where.not(country: [ nil, "" ])
+        .where.not(country: [nil, ""])
         .group(:country)
         .count
         .max_by { |_, count| count }

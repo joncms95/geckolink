@@ -33,7 +33,7 @@ module Api
       end
 
       def index
-        page = [ params[:page].to_i, 1 ].max
+        page = [params[:page].to_i, 1].max
         per_page = DEFAULT_PER_PAGE
         scope = current_user.links.order(links_scope_order)
         total = scope.count
@@ -66,7 +66,7 @@ module Api
         return true if link.user_id.nil?
         return true if link.user_id == current_user&.id
 
-        render json: { errors: [ "You don't have permission to view this link." ] }, status: :forbidden
+        render json: { errors: ["You don't have permission to view this link."] }, status: :forbidden
         false
       end
 

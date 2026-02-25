@@ -16,7 +16,7 @@ module Metadata
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     DUCKDUCKGO_FAVICON = "https://icons.duckduckgo.com/ip3"
     DUCKDUCKGO_CHECK_TIMEOUT = 2
-    PREFERRED_ICON_SIZES = [ 192, 96, 32 ].freeze
+    PREFERRED_ICON_SIZES = [192, 96, 32].freeze
     NETWORK_ERRORS = [
       SocketError, OpenSSL::SSL::SSLError, Timeout::Error,
       Net::OpenTimeout, Net::ReadTimeout,
@@ -83,7 +83,7 @@ module Metadata
 
         body = response.body
         body = body.byteslice(0, MAX_BODY_SIZE) if body.bytesize > MAX_BODY_SIZE
-        [ body, uri ]
+        [body, uri]
       when Net::HTTPRedirection
         location = response["location"]
         return nil if location.blank?
@@ -193,7 +193,7 @@ module Metadata
     def duckduckgo_icon(uri)
       actual = uri.host.to_s.downcase
       alternate = actual.start_with?("www.") ? actual.sub(/\Awww\./, "") : "www.#{actual}"
-      candidates = [ actual, alternate ].uniq
+      candidates = [actual, alternate].uniq
 
       duckduckgo_uri = URI.parse(DUCKDUCKGO_FAVICON)
       http = Net::HTTP.new(duckduckgo_uri.host, duckduckgo_uri.port)
@@ -221,7 +221,7 @@ module Metadata
       candidates.max_by do |c|
         size = yield(c)
         size = 192 if size <= 0
-        [ icon_size_score(size), size ]
+        [icon_size_score(size), size]
       end
     end
 
@@ -233,7 +233,7 @@ module Metadata
       sizes_str.split(/\s+/).filter_map do |part|
         next unless part =~ /\A(\d+)x(\d+)\z/i
 
-        [ Regexp.last_match(1).to_i, Regexp.last_match(2).to_i ].max
+        [Regexp.last_match(1).to_i, Regexp.last_match(2).to_i].max
       end
     end
   end

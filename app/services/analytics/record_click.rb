@@ -39,7 +39,7 @@ module Analytics
       end
       return unless result
 
-      geolocation = [ result.city, result.country ].compact.join(", ")
+      geolocation = [result.city, result.country].compact.join(", ")
       click.update_columns(
         geolocation: geolocation.presence,
         country: result.country.to_s.presence
