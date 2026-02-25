@@ -6,6 +6,7 @@ module Analytics
 
     def self.call(link:)
       countries = by_country(link)
+
       {
         by_country: countries,
         by_hour: by_hour(link),
@@ -45,13 +46,13 @@ module Analytics
             .limit(MAX_CLICKS_IN_REPORT)
             .pluck(:clicked_at, :country, :geolocation, :user_agent)
             .map { |clicked_at, country, geolocation, user_agent|
-              {
-                clicked_at: utc_to_iso8601(clicked_at),
-                country: country.presence,
-                geolocation: geolocation.presence,
-                user_agent: user_agent.presence
-              }
-            }
+          {
+            clicked_at: utc_to_iso8601(clicked_at),
+            country: country.presence,
+            geolocation: geolocation.presence,
+            user_agent: user_agent.presence
+          }
+        }
       end
 
       def utc_to_iso8601(value)

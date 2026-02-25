@@ -40,6 +40,7 @@ module Dashboard
           .group(:country)
           .count
           .max_by { |_, count| count }
+
         pair&.first&.to_s.presence
       end
     end
