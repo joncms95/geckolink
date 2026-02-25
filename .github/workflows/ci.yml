@@ -42,7 +42,5 @@ jobs:
 
       - name: Run CI (Rufo, RuboCop, Brakeman, RSpec)
         run: bin/ci
-
-      - name: Ensure format and lint are committed
-        run: |
-          git diff --exit-code || (echo "Run bin/ci locally and commit the changes." && exit 1)
+        env:
+          CI: true

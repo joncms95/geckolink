@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# CI (e.g. GitHub Actions): check only, no file changes. Local: format and auto-correct.
+readonly RUN_CHECK_ONLY="${CI:-false}"
+
 run_section() {
   echo ""
   echo "═══════════════════════════════════════════════════════════════"
@@ -9,12 +12,27 @@ run_section() {
   echo ""
 }
 
-run_section "1/4  Rufo (format)"
-bundle exec rufo .
+format_lint_failed() {
+  echo "::error::Run bin/ci locally and commit the changes."
+  exit 1
+}
 
-run_section "2/4  RuboCop (lint & auto-correct)"
-bin/rubocop -A
+# --- Format & lint ---
+if [ "$RUN_CHECK_ONLY" = "true" ]; then
+  run_section "1/4  Rufo (check)"
+  bundle exec rufo --check . || format_lint_failed
 
+  run_section "2/4  RuboCop (lint check)"
+  bin/rubocop -f github || format_lint_failed
+else
+  run_section "1/4  Rufo (format)"
+  bundle exec rufo .
+
+  run_section "2/4  RuboCop (lint & auto-correct)"
+  bin/rubocop -A
+fi
+
+# --- Security & tests ---
 run_section "3/4  Brakeman (security scan)"
 bin/brakeman --no-pager
 
