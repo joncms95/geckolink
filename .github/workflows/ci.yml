@@ -6,38 +6,7 @@ on:
     branches: [ main ]
 
 jobs:
-  scan_ruby:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
-
-  test:
+  ci:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -71,6 +40,9 @@ jobs:
       - name: Setup database
         run: bin/rails db:prepare
 
-      - name: Run tests
-        run: bundle exec rspec
+      - name: Run CI (Rufo, RuboCop, Brakeman, RSpec)
+        run: bin/ci
 
+      - name: Ensure format and lint are committed
+        run: |
+          git diff --exit-code || (echo "Run bin/ci locally and commit the changes." && exit 1)

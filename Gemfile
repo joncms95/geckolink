@@ -38,6 +38,9 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
+  # Ruby formatter [https://github.com/ruby-formatter/rufo]
+  gem "rufo", require: false
+
   # Run Rails and Vite via Procfile (bin/dev)
   gem "foreman", require: false
 

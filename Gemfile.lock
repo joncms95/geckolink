@@ -282,6 +282,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    rufo (0.18.2)
     securerandom (0.4.1)
     stringio (3.2.0)
     thor (1.5.0)
@@ -326,6 +327,7 @@ DEPENDENCIES
   redis (>= 5.0)
   rspec-rails (~> 7.0)
   rubocop-rails-omakase
+  rufo
   tzinfo-data
   webmock (~> 3.23)
 

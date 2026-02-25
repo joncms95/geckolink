@@ -9,13 +9,16 @@ run_section() {
   echo ""
 }
 
-run_section "1/3  RuboCop (lint & auto-correct)"
+run_section "1/4  Rufo (format)"
+bundle exec rufo .
+
+run_section "2/4  RuboCop (lint & auto-correct)"
 bin/rubocop -A
 
-run_section "2/3  Brakeman (security scan)"
+run_section "3/4  Brakeman (security scan)"
 bin/brakeman --no-pager
 
-run_section "3/3  RSpec (tests)"
+run_section "4/4  RSpec (tests)"
 bundle exec rspec
 
 echo ""

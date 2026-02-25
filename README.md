@@ -23,6 +23,7 @@ Log in to see the analytics dashboard with sample links.
 - **Frontend:** React 18 (Vite), Tailwind CSS, React Router 7
 - **Auth:** bcrypt + Bearer tokens
 - **Testing:** RSpec, FactoryBot, Faker, WebMock
+- **Code style:** Rufo (formatting), RuboCop (lint)
 - **Containerization:** Docker & Docker Compose
 
 ---
@@ -129,10 +130,10 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 4. **Run tests**
 
-   Use the shortcut to run lint (RuboCop), Brakeman (security scan), and unit tests in one go:
+   Use the shortcut to run the same pipeline as CI: formatting (Rufo), lint (RuboCop), Brakeman (security scan), and RSpec:
 
    ```bash
-   bin/test
+   bin/ci
    ```
 
    Or run only the RSpec suite:
@@ -189,6 +190,11 @@ config/                # Rails configuration
 spec/                  # RSpec tests (models, requests, services, queries)
 docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
 ```
+
+## Code style
+
+- **Rufo** — Ruby formatter. Run `bundle exec rufo .` to format the codebase, or rely on `bin/ci`, which runs Rufo first (same as the GitHub Actions pipeline). Options are in the project root [`.rufo`](.rufo) file (e.g. double quotes, trailing commas off, aligned `case`/`when` and chained calls).
+- **RuboCop** — Linting and auto-correct via `bin/rubocop -A`; also runs as part of `bin/ci`.
 
 ## License
 
