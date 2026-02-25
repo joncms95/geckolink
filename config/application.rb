@@ -23,8 +23,11 @@ module Geckolink
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Redis cache options (used when config.cache_store = :redis_cache_store in production/development).
-    # Namespace isolates keys from other apps sharing the same Redis. Error handler avoids raising on Redis failures.
+    # Redis cache options. Used by:
+    # - Redirect::ResolveService (key → target URL, 5 min TTL)
+    # - Dashboard::StatsQuery (per-user stats, 2 min TTL)
+    # - Rack::Attack (throttle counters)
+    # Namespace isolates keys if sharing Redis. Error handler logs and degrades gracefully on Redis failures.
     config.x.redis_cache_options = {
       namespace: "geckolink:cache",
       expires_in: 5.minutes,

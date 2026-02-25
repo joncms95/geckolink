@@ -53,7 +53,7 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Redis cache store: shared across app instances (redirects, Rack::Attack).
+  # Redis cache store (redirects, dashboard stats, Rack::Attack).
   config.cache_store = :redis_cache_store, config.x.redis_cache_options.merge(
     url: ENV["REDIS_URL"].presence || "redis://localhost:6379"
   )

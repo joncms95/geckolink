@@ -49,4 +49,5 @@ group :development, :test do
   gem "faker", "~> 3.2"
   gem "database_cleaner-active_record", "~> 2.1"
   gem "webmock", "~> 3.23"
+  gem "pry"
 end
