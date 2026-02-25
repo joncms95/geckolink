@@ -1,3 +1,5 @@
+const VALID_HOST_REGEX = /^[^.]+(\.[^.]+)+$/
+
 export function normalizeUrl(input) {
   const trimmed = input.trim()
   if (!trimmed) return ""
@@ -7,9 +9,7 @@ export function normalizeUrl(input) {
 
 export function hasValidHost(urlString) {
   try {
-    const url = new URL(urlString)
-    const host = url.hostname
-    return host === "localhost" || host.includes(".")
+    return VALID_HOST_REGEX.test(new URL(urlString).hostname)
   } catch {
     return false
   }

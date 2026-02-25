@@ -81,7 +81,7 @@ export default function Pagination({
             aria-label="Next page"
             className={`${btnClass} ${btnInactive} px-3`}
           >
-           <i className="fa-solid fa-chevron-right" />
+            <i className="fa-solid fa-chevron-right" />
           </button>
         </nav>
       )}
