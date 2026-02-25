@@ -7,6 +7,7 @@ module Api
 
       def stats
         stats = Dashboard::StatsQuery.call(current_user)
+
         render json: {
           total_links: stats[:total_links],
           total_clicks: stats[:total_clicks],

@@ -69,7 +69,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 - **Title and favicon fetching** — After creating the link, the backend fetches the target URL with a **8 s maximum** for the whole metadata step. Within that, each HTTP request uses a **4 s** timeout (HTML page, manifest), and DuckDuckGo favicon checks use **2 s** each. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches HTML, and extracts:
   - **Title** from `<title>`, `og:title`, or `twitter:title` (if missing, the UI shows a dash).
   - **Favicon** from the web app manifest, then `<link rel="icon">`, then [DuckDuckGo’s favicon service](https://icons.duckduckgo.com/ip3) as a fallback. For DuckDuckGo, the app tries the **actual host** first (e.g. `www.touchngo.com.my` if that’s what the user entered), then the alternate (with or without `www`) if the first returns 404, so icons work for both apex and www domains. Same-origin favicon URLs are replaced with the DuckDuckGo URL so icons load reliably in the app (avoids CORS/redirect issues). Cross-origin icons (e.g. CDN) are kept. If the fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo favicon so the icon slot is never empty; the title is left blank (dash).
-- **Geolocation** — On each redirect, IP-to-location is resolved via Geocoder (2 s timeout) so analytics have country data without a background worker.
+- **Geolocation** — On each redirect, IP-to-location is resolved via Geocoder (3 s timeout) so analytics have country data without a background worker.
 
 ### 6. Scalability
 

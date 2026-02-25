@@ -3,7 +3,7 @@
 module Analytics
   # Records a click for a link and fills geolocation synchronously (with timeout).
   class RecordClick
-    GEOCODE_TIMEOUT_SEC = 2
+    GEOCODE_TIMEOUT_SEC = 3
 
     def self.call(link_id:, ip_address:, user_agent:)
       new.call(link_id: link_id, ip_address: ip_address, user_agent: user_agent)
