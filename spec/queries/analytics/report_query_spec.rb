@@ -12,7 +12,7 @@ RSpec.describe Analytics::ReportQuery do
       create(:click, link: link, country: "France")
       link.update!(clicks_count: 3)
 
-      report = described_class.new(link: link).call
+      report = described_class.call(link: link)
 
       expect(report[:by_country]).to eq("Germany" => 2, "France" => 1)
       expect(report[:by_hour]).to be_a(Hash)
@@ -21,7 +21,7 @@ RSpec.describe Analytics::ReportQuery do
     end
 
     it "returns nil top_location when there are no clicks" do
-      report = described_class.new(link: link).call
+      report = described_class.call(link: link)
       expect(report[:top_location]).to be_nil
       expect(report[:clicks_count]).to eq(0)
     end
@@ -32,7 +32,7 @@ RSpec.describe Analytics::ReportQuery do
       create(:click, link: link, country: "US")
       create(:click, link: link, country: nil)
 
-      report = described_class.new(link: link).call
+      report = described_class.call(link: link)
       expect(report[:by_country]).to eq("US" => 1)
     end
   end
