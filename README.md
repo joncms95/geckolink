@@ -130,7 +130,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 4. **Run tests**
 
-   Use the shortcut to run the full pipeline (format, lint, security scan, tests). In CI the same script runs in check-only mode so the job fails if format or lint need fixing:
+   Use the shortcut to run the full pipeline (format, lint, security scan, tests).
 
    ```bash
    bin/ci

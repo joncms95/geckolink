@@ -6,7 +6,52 @@ on:
     branches: [ main ]
 
 jobs:
-  ci:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Check code formatting (Rufo)
+        run: bundle exec rufo --check .
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Lint code for consistent style
+        run: bin/rubocop -f github
+
+  scan_ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Scan for common Rails security vulnerabilities using static analysis
+        run: bin/brakeman --no-pager
+
+  test:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -40,7 +85,5 @@ jobs:
       - name: Setup database
         run: bin/rails db:prepare
 
-      - name: Run CI (Rufo, RuboCop, Brakeman, RSpec)
-        run: bin/ci
-        env:
-          CI: true
+      - name: Run tests
+        run: bundle exec rspec

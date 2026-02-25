@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# CI (e.g. GitHub Actions): check only, no file changes. Local: format and auto-correct.
-readonly RUN_CHECK_ONLY="${CI:-false}"
+# Run format, lint, security scan, and tests.
 readonly RUFO_MAX_ATTEMPTS=5
 
 run_section() {
@@ -11,11 +10,6 @@ run_section() {
   echo "  $1"
   echo "═══════════════════════════════════════════════════════════════"
   echo ""
-}
-
-fail_with_message() {
-  echo "::error::$1"
-  exit 1
 }
 
 # Format with Rufo until --check passes (Rufo can need multiple passes to converge).
@@ -27,25 +21,16 @@ rufo_format_until_clean() {
     attempt=$((attempt + 1))
     [ "$attempt" -lt "$RUFO_MAX_ATTEMPTS" ] && echo "  Rufo: re-running format (pass $((attempt + 1))/${RUFO_MAX_ATTEMPTS})"
   done
-  fail_with_message "Rufo still reports unformatted files after ${RUFO_MAX_ATTEMPTS} passes. Run bin/ci and fix manually if needed."
+  echo "Rufo did not converge after ${RUFO_MAX_ATTEMPTS} passes." >&2
+  exit 1
 }
 
-# --- Format & lint ---
-if [ "$RUN_CHECK_ONLY" = "true" ]; then
-  run_section "1/4  Rufo (check)"
-  bundle exec rufo --check . || fail_with_message "Run bin/ci locally and commit the changes."
+run_section "1/4  Rufo (format)"
+rufo_format_until_clean
 
-  run_section "2/4  RuboCop (lint check)"
-  bin/rubocop -f github || fail_with_message "Run bin/ci locally and commit the changes."
-else
-  run_section "1/4  Rufo (format)"
-  rufo_format_until_clean
+run_section "2/4  RuboCop (lint & auto-correct)"
+bin/rubocop -A
 
-  run_section "2/4  RuboCop (lint & auto-correct)"
-  bin/rubocop -A
-fi
-
-# --- Security & tests ---
 run_section "3/4  Brakeman (security scan)"
 bin/brakeman --no-pager
 
