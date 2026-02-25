@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 
 const SCROLL_THRESHOLD = 100
@@ -23,13 +23,7 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
 
   const updateVisibility = useCallback(() => {
     const scrollY = window.scrollY
-    if (scrollY <= SCROLL_THRESHOLD) {
-      setVisible(true)
-    } else if (scrollY > lastScrollY.current) {
-      setVisible(false)
-    } else {
-      setVisible(true)
-    }
+    setVisible(scrollY <= SCROLL_THRESHOLD || scrollY <= lastScrollY.current)
     lastScrollY.current = scrollY
   }, [])
 

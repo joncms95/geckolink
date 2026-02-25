@@ -1,18 +1,19 @@
-import { useState, lazy, Suspense } from "react"
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "./hooks/useAuth"
 import { ToastProvider } from "./hooks/useToast"
+import { useAuthModal } from "./hooks/useAuthModal"
 import Header from "./components/Header"
 import AuthModal from "./components/AuthModal"
 import HomePage from "./pages/HomePage"
-import DashboardPage from "./components/DashboardPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 const ParticleBackground = lazy(() => import("./components/ParticleBackground"))
+const DashboardPage = lazy(() => import("./components/DashboardPage"))
 
 function AppContent() {
   const { user, login, logout, signup } = useAuth()
-  const [authModalMode, setAuthModalMode] = useState(null)
+  const { authModalMode, openLogin, openSignup, close } = useAuthModal()
 
   return (
     <div className="min-h-screen bg-gecko-dark text-white font-sans antialiased bg-pattern relative overflow-x-hidden">
@@ -26,28 +27,33 @@ function AppContent() {
         <Header
           user={user}
           onLogout={logout}
-          onOpenAuth={() => setAuthModalMode("login")}
-          onOpenSignup={() => setAuthModalMode("signup")}
+          onOpenAuth={openLogin}
+          onOpenSignup={openSignup}
         />
         {/* Spacer: must match the fixed header height (~76px on mobile, ~80px on sm+) */}
         <div className="h-20 shrink-0" aria-hidden />
         {authModalMode && (
           <AuthModal
             initialMode={authModalMode}
-            onClose={() => setAuthModalMode(null)}
+            onClose={close}
             onLogin={login}
             onSignup={signup}
           />
         )}
 
         <Routes>
-          <Route
-            path="/"
-            element={<HomePage onOpenSignup={() => setAuthModalMode("signup")} />}
-          />
+          <Route path="/" element={<HomePage onOpenSignup={openSignup} />} />
           <Route
             path="/dashboard/:key?"
-            element={user ? <DashboardPage /> : <Navigate to="/" replace />}
+            element={
+              user ? (
+                <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-gecko-slate">Loading…</div>}>
+                  <DashboardPage />
+                </Suspense>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

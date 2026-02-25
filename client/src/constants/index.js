@@ -3,10 +3,10 @@ export const LINKS_PER_PAGE = 10
 export const CLICKS_REPORT_PER_PAGE = 10
 
 export const SORT_OPTIONS = {
-  NEWEST: "created_at_desc",
-  OLDEST: "created_at_asc",
-  MOST_CLICKS: "clicks_count_desc",
-  LEAST_CLICKS: "clicks_count_asc",
+  NEWEST: "newest",
+  OLDEST: "oldest",
+  MOST_CLICKS: "most_clicks",
+  LEAST_CLICKS: "least_clicks",
 }
 
 export const SCROLL_TARGETS = {

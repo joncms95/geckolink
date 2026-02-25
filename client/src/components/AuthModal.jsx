@@ -1,7 +1,8 @@
-import { useState } from "react"
-import { formatApiError } from "../utils/error"
+import { useState, useRef, useEffect } from "react"
+import { formatApiError } from "../api/errors"
 import Button from "./ui/Button"
 import Input from "./ui/Input"
+import PasswordInput from "./ui/PasswordInput"
 
 export default function AuthModal({ initialMode = "login", onClose, onLogin, onSignup }) {
   const [mode, setMode] = useState(initialMode)
@@ -10,9 +11,7 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-
+  const emailRef = useRef(null)
   const isSignup = mode === "signup"
 
   async function handleSubmit(e) {
@@ -37,14 +36,24 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
     }
   }
 
+  useEffect(() => {
+    emailRef.current?.focus()
+  }, [])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-modal-title"
+    >
       <div
         className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl border-t sm:border border-gecko-dark-border bg-gecko-dark-card p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-white">
+          <h2 id="auth-modal-title" className="text-lg sm:text-xl font-semibold text-white">
             {isSignup ? "Sign up" : "Log in"}
           </h2>
           <button
@@ -62,6 +71,7 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               Email
             </label>
             <Input
+              ref={emailRef}
               id="auth-email"
               type="email"
               autoComplete="email"
@@ -76,27 +86,15 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
             <label htmlFor="auth-password" className="block text-sm font-medium text-gecko-slate mb-1">
               Password
             </label>
-            <div className="relative">
-              <Input
-                id="auth-password"
-                type={showPassword ? "text" : "password"}
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                variant="modal"
-                className="w-full pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gecko-slate hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden />
-              </button>
-            </div>
+            <PasswordInput
+              id="auth-password"
+              autoComplete={isSignup ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              variant="modal"
+            />
             {isSignup && (
               <p className="mt-1 text-xs text-gecko-slate">At least 8 characters</p>
             )}
@@ -106,27 +104,15 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               <label htmlFor="auth-password-confirm" className="block text-sm font-medium text-gecko-slate mb-1">
                 Confirm password
               </label>
-              <div className="relative">
-                <Input
-                  id="auth-password-confirm"
-                  type={showPasswordConfirm ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={passwordConfirmation}
-                  onChange={(e) => setPasswordConfirmation(e.target.value)}
-                  required
-                  minLength={8}
-                  variant="modal"
-                  className="w-full pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordConfirm((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gecko-slate hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded"
-                  aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
-                >
-                  <i className={`fa-solid ${showPasswordConfirm ? "fa-eye-slash" : "fa-eye"}`} aria-hidden />
-                </button>
-              </div>
+              <PasswordInput
+                id="auth-password-confirm"
+                autoComplete="new-password"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                required
+                minLength={8}
+                variant="modal"
+              />
             </div>
           )}
           {error && (

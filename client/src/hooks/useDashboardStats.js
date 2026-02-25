@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { getDashboardStats } from "../api/links"
+import { formatApiError } from "../api/errors"
 
 const INITIAL_STATE = { totalLinks: 0, totalClicks: 0, topLocation: null, loading: true, error: null }
 const EMPTY_STATE = { ...INITIAL_STATE, loading: false }
@@ -18,7 +19,7 @@ export function useDashboardStats(user) {
         setState((s) => ({
           ...s,
           loading: false,
-          error: err?.errors?.[0] ?? "Failed to load dashboard stats",
+          error: formatApiError(err),
         }))
       })
   }, [user])

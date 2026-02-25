@@ -3,18 +3,20 @@ import { ERROR_DISMISS_MS } from "../constants"
 
 export default function Toast({ message, onDismiss, visible, autoDismissMs = ERROR_DISMISS_MS }) {
   const toastRef = useRef(null)
+  const onDismissRef = useRef(onDismiss)
+  onDismissRef.current = onDismiss
 
   useEffect(() => {
-    if (!visible || !onDismiss) return
-    const t = setTimeout(onDismiss, autoDismissMs)
+    if (!visible) return
+    const t = setTimeout(() => onDismissRef.current?.(), autoDismissMs)
     return () => clearTimeout(t)
-  }, [visible, onDismiss, autoDismissMs])
+  }, [visible, autoDismissMs])
 
   useEffect(() => {
-    if (!visible || !onDismiss) return
+    if (!visible) return
     const handleClickOutside = (e) => {
       if (toastRef.current && !toastRef.current.contains(e.target)) {
-        onDismiss()
+        onDismissRef.current?.()
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -23,7 +25,7 @@ export default function Toast({ message, onDismiss, visible, autoDismissMs = ERR
       document.removeEventListener("mousedown", handleClickOutside)
       document.removeEventListener("touchstart", handleClickOutside)
     }
-  }, [visible, onDismiss])
+  }, [visible])
 
   if (!visible) return null
 

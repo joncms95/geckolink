@@ -11,7 +11,6 @@ export default function HeroForm({ onSubmit, isLoading }) {
   const isValid = /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized)
   const showError = touched && (error || (url.trim() && !isValid))
 
-  // Auto-dismiss error after timeout
   useEffect(() => {
     if (!showError) return
     const t = setTimeout(() => {
@@ -26,23 +25,17 @@ export default function HeroForm({ onSubmit, isLoading }) {
       e.preventDefault()
       setTouched(true)
       setError(null)
-      const trimmed = url.trim()
-      if (!trimmed) {
+      if (!url.trim()) {
         setError("Please enter a URL")
         return
       }
-      const toSubmit = normalizeUrl(trimmed)
-      if (!/^https?:\/\/\S+$/i.test(toSubmit)) {
-        setError("Please enter a valid URL")
+      if (!isValid) {
+        setError(!hasValidHost(normalized) ? "URL must have a valid domain (e.g. example.com)" : "Please enter a valid URL")
         return
       }
-      if (!hasValidHost(toSubmit)) {
-        setError("URL must have a valid domain (e.g. example.com)")
-        return
-      }
-      onSubmit(toSubmit)
+      onSubmit(normalized)
     },
-    [url, onSubmit]
+    [url, normalized, isValid, onSubmit]
   )
 
   return (

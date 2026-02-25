@@ -1,12 +1,12 @@
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createLink } from "../api/links"
+import useCopyToClipboard from "../hooks/useCopyToClipboard"
 import { useAuth } from "../hooks/useAuth"
 import { useToast } from "../hooks/useToast"
-import useCopyToClipboard from "../hooks/useCopyToClipboard"
-import { formatApiError } from "../utils/error"
-import HeroForm from "../components/HeroForm"
+import { formatApiError } from "../api/errors"
 import CreatedLinkResult from "../components/CreatedLinkResult"
+import HeroForm from "../components/HeroForm"
 
 export default function HomePage({ onOpenSignup }) {
   const navigate = useNavigate()

@@ -1,7 +1,7 @@
+import { SCROLL_TARGETS } from "../../constants"
+import LookupForm from "./LookupForm"
 import MetricCard from "./MetricCard"
 import MetricsGridLoading from "./MetricsGridLoading"
-import LookupForm from "./LookupForm"
-import { SCROLL_TARGETS } from "../../constants"
 
 export default function DashboardListView({ stats, onLookupResult }) {
   const { totalLinks, totalClicks, topLocation, loading, error } = stats

@@ -1,56 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { getAnalytics } from "../../api/links"
+import { CLICKS_REPORT_PER_PAGE } from "../../constants"
+import { clickGeolocation, formatTimestamp, normalizeAnalyticsReport } from "../../utils/analytics"
+import { formatApiError } from "../../api/errors"
 import { slicePage } from "../../utils/pagination"
 import ClicksOverTimeChart from "../ClicksOverTimeChart"
+import InlineError from "../ui/InlineError"
 import LinkIcon from "../ui/LinkIcon"
+import LoadingSkeleton from "../ui/LoadingSkeleton"
 import MetricCard from "./MetricCard"
 import MetricsGridLoading from "./MetricsGridLoading"
 import Pagination from "./Pagination"
-import { CLICKS_REPORT_PER_PAGE } from "../../constants"
-
-function getTopCountry(byCountry) {
-  if (!byCountry || Object.keys(byCountry).length === 0) return "N/A"
-  return Object.entries(byCountry).sort((a, b) => b[1] - a[1])[0][0]
-}
-
-function normalizeAnalyticsReport(data) {
-  if (!data || typeof data !== "object") return null
-  const byCountry = data.by_country ?? data.byCountry ?? {}
-  const topFromApi = data.top_location ?? data.topLocation
-  return {
-    by_country: byCountry,
-    by_hour: data.by_hour ?? data.byHour ?? {},
-    clicks: Array.isArray(data.clicks) ? data.clicks : [],
-    clicks_count: typeof data.clicks_count === "number" ? data.clicks_count : data.clicksCount,
-    top_location: topFromApi != null && String(topFromApi).trim() !== "" ? String(topFromApi).trim() : getTopCountry(byCountry),
-  }
-}
-
-function formatTimestamp(iso) {
-  if (!iso) return "—"
-  try {
-    const d = new Date(iso)
-    return Number.isNaN(d.getTime())
-      ? "—"
-      : d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "medium" })
-  } catch {
-    return "—"
-  }
-}
-
-function clickGeolocation(v) {
-  if (v?.geolocation?.trim()) return v.geolocation.trim()
-  if (v?.country?.trim()) return v.country.trim()
-  return "—"
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="h-[180px] flex items-center justify-center text-gecko-slate text-sm animate-pulse">
-      Loading…
-    </div>
-  )
-}
 
 export default function LinkDetailView({ link, keyFromUrl, onBack }) {
   const [report, setReport] = useState(null)
@@ -71,13 +31,14 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
       })
       .catch((err) => {
         setReport(null)
-        setError(err?.errors?.[0] || "Failed to load analytics")
+        setError(formatApiError(err))
       })
       .finally(() => setLoading(false))
   }, [effectiveKey])
 
   useEffect(() => {
     if (!effectiveKey) return
+    setReportPage(1)
     fetchReport()
   }, [fetchReport])
 
@@ -89,10 +50,6 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
     () => slicePage(clicksList, reportPage, CLICKS_REPORT_PER_PAGE),
     [clicksList, reportPage]
   )
-
-  useEffect(() => {
-    setReportPage(1)
-  }, [effectiveKey])
 
   const heading = link?.title
     ? `${link.title} — Stats`
@@ -131,18 +88,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 flex items-center justify-between">
-          <p className="text-red-400 text-sm">{error}</p>
-          <button
-            type="button"
-            onClick={fetchReport}
-            className="text-sm font-medium text-gecko-green hover:text-gecko-green-light ml-4 shrink-0"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+      {error && <InlineError message={error} onRetry={fetchReport} />}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
@@ -158,12 +104,12 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 min-w-0">
           <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Clicks Over Time</h2>
-          {loading ? <LoadingSkeleton /> : <ClicksOverTimeChart byHour={report?.by_hour} />}
+          {loading ? <LoadingSkeleton className="h-[180px]" /> : <ClicksOverTimeChart byHour={report?.by_hour} />}
         </div>
         <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 min-w-0">
           <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Top Locations</h2>
           {loading ? (
-            <LoadingSkeleton />
+            <LoadingSkeleton className="h-[180px]" />
           ) : report?.by_country && Object.keys(report.by_country).length > 0 ? (
             <ul className="space-y-2 max-h-[180px] overflow-y-auto">
               {Object.entries(report.by_country)
@@ -188,7 +134,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
           Clicks, geolocation, user agent and timestamp of each click on this short URL.
         </p>
         {loading ? (
-          <div className="py-8 text-center text-gecko-slate text-sm animate-pulse">Loading…</div>
+          <LoadingSkeleton className="py-8" />
         ) : clicksList.length === 0 ? (
           <div className="py-8 text-center text-gecko-slate text-sm">No clicks yet</div>
         ) : (
