@@ -39,7 +39,7 @@ export default function LookupForm({ onResult }) {
   )
 
   return (
-    <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4" data-scroll-target={SCROLL_TARGETS.LINK_LIST}>
+    <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4">
       <p className="text-xs sm:text-sm text-gecko-slate mb-3">
         Already have a short link? Paste it below to load its analytics.
       </p>
@@ -62,7 +62,7 @@ export default function LookupForm({ onResult }) {
         </div>
         {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
       </form>
-      <p className="mt-3 text-gecko-slate text-xs sm:text-sm">
+      <p className="mt-3 text-gecko-slate text-xs sm:text-sm" data-scroll-target={SCROLL_TARGETS.LINK_LIST}>
         Click <strong className="text-white">View Stats →</strong> on a short link below to see
         detailed analytics, including clicks over time, top locations, and a usage report.
       </p>

@@ -12,4 +12,5 @@ export const SORT_OPTIONS = {
 export const SCROLL_TARGETS = {
   DASHBOARD: "dashboard",
   LINK_LIST: "link-list",
+  USAGE_REPORT: "usage-report",
 }

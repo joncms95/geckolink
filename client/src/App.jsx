@@ -5,6 +5,7 @@ import { ToastProvider } from "./hooks/useToast"
 import { useAuthModal } from "./hooks/useAuthModal"
 import Header from "./components/Header"
 import AuthModal from "./components/AuthModal"
+import ScrollToTopButton from "./components/ScrollToTopButton"
 import HomePage from "./pages/HomePage"
 import NotFoundPage from "./pages/NotFoundPage"
 
@@ -63,6 +64,8 @@ function AppContent() {
             © {new Date().getFullYear()} GeckoLink. Short links, real insights.
           </div>
         </footer>
+
+        <ScrollToTopButton />
       </div>
     </div>
   )

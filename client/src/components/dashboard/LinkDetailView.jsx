@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { getAnalytics } from "../../api/links"
-import { CLICKS_REPORT_PER_PAGE } from "../../constants"
+import { CLICKS_REPORT_PER_PAGE, SCROLL_TARGETS } from "../../constants"
 import { clickGeolocation, formatTimestamp, normalizeAnalyticsReport } from "../../utils/analytics"
+import { scrollToTop } from "../../utils/scroll"
 import { formatApiError } from "../../api/errors"
 import { slicePage } from "../../utils/pagination"
 import ClicksOverTimeChart from "../ClicksOverTimeChart"
@@ -56,6 +57,13 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
     : link?.target_url
       ? `Stats for ${link.target_url}`
       : `Stats for /${effectiveKey}`
+
+  const handleReportPageChange = useCallback((page) => {
+    setReportPage(page)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => scrollToTop(SCROLL_TARGETS.USAGE_REPORT))
+    })
+  }, [])
 
   return (
     <>
@@ -128,7 +136,10 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         </div>
       </div>
 
-      <section className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 overflow-hidden">
+      <section
+        className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 sm:p-6 overflow-hidden"
+        data-scroll-target={SCROLL_TARGETS.USAGE_REPORT}
+      >
         <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Usage report</h2>
         <p className="text-gecko-slate text-xs sm:text-sm mb-4">
           Clicks, geolocation, user agent and timestamp of each click on this short URL.
@@ -164,7 +175,7 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
             <Pagination
               currentPage={reportCurrentPage}
               totalPages={reportTotalPages}
-              onPageChange={setReportPage}
+              onPageChange={handleReportPageChange}
               disabled={loading}
               totalItems={clicksList.length}
               perPage={CLICKS_REPORT_PER_PAGE}
