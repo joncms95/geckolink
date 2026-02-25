@@ -1,6 +1,6 @@
-# For deployment (e.g. DigitalOcean). Local development: use bin/dev.
+# Used for deployment. Please use bin/dev for local development.
 # HTTPS:     docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
-#            (HTTPS override removes the app's port 80 binding; Nginx handles 80/443)
+
 # Requires .env with SECRET_KEY_BASE, POSTGRES_PASSWORD (see docs/DEPLOY.md).
 
 services:

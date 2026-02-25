@@ -3,6 +3,7 @@ set -e
 
 # CI (e.g. GitHub Actions): check only, no file changes. Local: format and auto-correct.
 readonly RUN_CHECK_ONLY="${CI:-false}"
+readonly RUFO_MAX_ATTEMPTS=5
 
 run_section() {
   echo ""
@@ -12,21 +13,33 @@ run_section() {
   echo ""
 }
 
-format_lint_failed() {
-  echo "::error::Run bin/ci locally and commit the changes."
+fail_with_message() {
+  echo "::error::$1"
   exit 1
+}
+
+# Format with Rufo until --check passes (Rufo can need multiple passes to converge).
+rufo_format_until_clean() {
+  local attempt=0
+  while [ "$attempt" -lt "$RUFO_MAX_ATTEMPTS" ]; do
+    bundle exec rufo . || true
+    bundle exec rufo --check . && return 0
+    attempt=$((attempt + 1))
+    [ "$attempt" -lt "$RUFO_MAX_ATTEMPTS" ] && echo "  Rufo: re-running format (pass $((attempt + 1))/${RUFO_MAX_ATTEMPTS})"
+  done
+  fail_with_message "Rufo still reports unformatted files after ${RUFO_MAX_ATTEMPTS} passes. Run bin/ci and fix manually if needed."
 }
 
 # --- Format & lint ---
 if [ "$RUN_CHECK_ONLY" = "true" ]; then
   run_section "1/4  Rufo (check)"
-  bundle exec rufo --check . || format_lint_failed
+  bundle exec rufo --check . || fail_with_message "Run bin/ci locally and commit the changes."
 
   run_section "2/4  RuboCop (lint check)"
-  bin/rubocop -f github || format_lint_failed
+  bin/rubocop -f github || fail_with_message "Run bin/ci locally and commit the changes."
 else
   run_section "1/4  Rufo (format)"
-  bundle exec rufo . || true
+  rufo_format_until_clean
 
   run_section "2/4  RuboCop (lint & auto-correct)"
   bin/rubocop -A
@@ -39,8 +52,5 @@ bin/brakeman --no-pager
 run_section "4/4  RSpec (tests)"
 bundle exec rspec
 
-echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo "  All checks passed."
-echo "═══════════════════════════════════════════════════════════════"
+run_section "All checks passed."
 echo ""

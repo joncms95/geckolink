@@ -23,8 +23,8 @@ RSpec.describe "Api::V1::Links", type: :request do
 
     it "returns link with title and icon when fetch succeeds" do
       allow(Metadata::TitleAndIconFetcher).to receive(:call)
-          .with(valid_url)
-          .and_return({ title: "Example Page", icon_url: "https://example.com/favicon.ico" })
+                                                .with(valid_url)
+                                                .and_return({ title: "Example Page", icon_url: "https://example.com/favicon.ico" })
       post api_v1_links_path, params: params, as: :json
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to eq("Example Page")

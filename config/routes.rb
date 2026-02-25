@@ -4,8 +4,11 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resource :session, only: %i[create destroy], controller: "session"
+
       resources :registrations, only: %i[create], path: "signup"
+
       get "dashboard/stats", to: "dashboard#stats"
+
       resources :links, only: %i[create index show], param: :key do
         member { get :analytics }
       end

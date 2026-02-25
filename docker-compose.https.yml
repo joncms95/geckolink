@@ -26,7 +26,6 @@ services:
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
-    # One-off usage: see docs/DEPLOY.md "Setting up HTTPS with Nginx"
 
 volumes:
   certbot_www:
