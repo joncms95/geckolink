@@ -8,19 +8,20 @@ RSpec.describe Analytics::RecordClick do
   describe ".call" do
     it "creates a click with ip and user_agent" do
       allow(Geocoder).to receive(:search).and_return([])
-      click = described_class.call(
+      described_class.call(
         link_id: link.id,
         ip_address: "1.2.3.4",
         user_agent: "Mozilla/5.0"
       )
+      click = link.clicks.reload.last
       expect(click).to be_present
-      expect(click.link_id).to eq(link.id)
       expect(click.ip_address).to eq("1.2.3.4")
       expect(click.user_agent).to eq("Mozilla/5.0")
     end
 
-    it "does nothing when link does not exist" do
-      expect(described_class.call(link_id: -1, ip_address: "1.2.3.4", user_agent: nil)).to be_nil
+    it "returns nil when link does not exist" do
+      result = described_class.call(link_id: -1, ip_address: "1.2.3.4", user_agent: nil)
+      expect(result).to be_nil
     end
 
     it "invalidates dashboard stats cache for the link owner when link has user_id" do

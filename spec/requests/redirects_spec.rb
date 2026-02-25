@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe "Redirects", type: :request do
+  include ActiveJob::TestHelper
+
   let(:link) { create(:link, target_url: "https://example.com/dest") }
 
   it "redirects to the target URL and increments clicks" do
@@ -13,7 +15,9 @@ RSpec.describe "Redirects", type: :request do
   end
 
   it "records a click for the link" do
-    get "/#{link.key}"
+    perform_enqueued_jobs do
+      get "/#{link.key}"
+    end
     expect(link.clicks.reload.count).to eq(1)
     expect(link.clicks.last.ip_address).to be_present
   end

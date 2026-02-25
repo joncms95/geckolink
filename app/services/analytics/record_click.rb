@@ -1,16 +1,15 @@
 # frozen_string_literal: true
 
 module Analytics
-  # Records a click for a link and fills geolocation synchronously (with timeout).
   class RecordClick
     GEOCODE_TIMEOUT_SEC = 3
 
-    def self.call(link_id:, ip_address:, user_agent:)
-      new.call(link_id: link_id, ip_address: ip_address, user_agent: user_agent)
+    def self.call(link_id:, ip_address:, user_agent:, link: nil)
+      new.call(link_id: link_id, ip_address: ip_address, user_agent: user_agent, link: link)
     end
 
-    def call(link_id:, ip_address:, user_agent:)
-      link = Link.find_by(id: link_id)
+    def call(link_id:, ip_address:, user_agent:, link: nil)
+      link = link.presence || Link.find_by(id: link_id)
       return unless link
 
       click = link.clicks.create!(
@@ -18,8 +17,10 @@ module Analytics
         user_agent: user_agent.presence&.slice(0, 1024),
         clicked_at: Time.current
       )
+
       fill_geolocation(click)
       invalidate_dashboard_cache_for(link)
+
       click
     end
 
@@ -27,6 +28,7 @@ module Analytics
 
     def invalidate_dashboard_cache_for(link)
       return if link.user_id.blank?
+
       Dashboard::StatsQuery.invalidate_for_user(link.user_id)
     end
 

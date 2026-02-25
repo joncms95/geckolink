@@ -2,32 +2,23 @@
 
 class RedirectsController < ApplicationController
   def show
-    result = Redirect::ResolveService.new.call(key: params[:key])
+    result = Redirect::ResolveService.call(key: params[:key])
+    return head :not_found unless result.success?
 
-    unless result.success?
-      return head :not_found
-    end
-
-    record_click(result.value[:link_id])
     redirect_url = safe_redirect_url(result.value[:url])
+    return head :unprocessable_content unless redirect_url
 
-    if redirect_url
-      redirect_to redirect_url, allow_other_host: true, status: :found
-    else
-      head :unprocessable_content
-    end
-  end
-
-  private
-
-  def record_click(link_id)
-    Link.increment_counter(:clicks_count, link_id)
-    Analytics::RecordClick.call(
-      link_id: link_id,
+    Link.increment_counter(:clicks_count, result.value[:link_id])
+    RecordClickJob.perform_later(
+      link_id: result.value[:link_id],
       ip_address: request.remote_ip,
       user_agent: request.user_agent
     )
+
+    redirect_to redirect_url, allow_other_host: true, status: :found
   end
+
+  private
 
   def safe_redirect_url(url)
     uri = URI.parse(url)
