@@ -2,10 +2,10 @@
 
 module Shortener
   class CreateService
-    METADATA_TIMEOUT_SEC = 8
-    MAX_COLLISION_RETRIES = 3
     DEFAULT_KEY_LENGTH = 7
     FALLBACK_KEY_LENGTH = 8
+    MAX_COLLISION_RETRIES = 3
+    METADATA_TIMEOUT_SEC = 8
 
     def self.call(original_url:, user_id: nil)
       url = original_url.to_s.strip
@@ -43,19 +43,16 @@ module Shortener
       end
 
       def backfill_metadata(link)
-        fetcher_result = Timeout.timeout(METADATA_TIMEOUT_SEC) do
+        result = Timeout.timeout(METADATA_TIMEOUT_SEC) do
           Metadata::TitleAndIconFetcher.call(link.target_url)
         end
-        return if fetcher_result.failure? || fetcher_result.value.blank?
+        return if result.failure?
 
-        result = fetcher_result.value
-        updates = {}
-        updates[:title] = result[:title] if result[:title].present?
-        updates[:icon_url] = result[:icon_url] if result[:icon_url].present?
+        metadata = result.value
+        updates = metadata.slice(:title, :icon_url).compact_blank
         link.update_columns(updates) if updates.any?
       rescue Timeout::Error => e
         Rails.logger.warn("[Shortener::CreateService] Metadata fetch timed out for #{link.target_url}: #{e.message}")
-        # Leave title/icon null — the link is still usable
       end
     end
   end

@@ -8,7 +8,7 @@ RSpec.describe "Api::V1::Links", type: :request do
     let(:params) { { link: { target_url: valid_url } } }
 
     before do
-      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(Result.failure("Invalid URL"))
     end
 
     it "creates a link and returns short URL" do
@@ -24,7 +24,7 @@ RSpec.describe "Api::V1::Links", type: :request do
     it "returns link with title and icon when fetch succeeds" do
       allow(Metadata::TitleAndIconFetcher).to receive(:call)
                                                 .with(valid_url)
-                                                .and_return({ title: "Example Page", icon_url: "https://example.com/favicon.ico" })
+                                                .and_return(Result.success({ title: "Example Page", icon_url: "https://example.com/favicon.ico" }))
       post api_v1_links_path, params: params, as: :json
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to eq("Example Page")
@@ -32,7 +32,7 @@ RSpec.describe "Api::V1::Links", type: :request do
     end
 
     it "returns link with null title when fetch returns null (timeout or failure)" do
-      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(nil)
+      allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(Result.failure("Invalid URL"))
       post api_v1_links_path, params: params, as: :json
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to be_nil
