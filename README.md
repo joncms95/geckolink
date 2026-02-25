@@ -32,21 +32,24 @@ Log in to see the analytics dashboard with sample links.
 
 ### 1. Domain Design
 
-**Service Objects** and **Query Objects** keep controllers thin and business logic testable.
+**Service Objects** and **Query Objects** keep controllers thin and business logic testable. Invoke via `MyService.call(...)` or `MyQuery.call(...)`; each implements `self.call` with the main logic.
 
-- `Shortener::CreateService` — generates a unique short key, creates the link, and fetches page metadata.
+- `Shortener::RandomKey` — generates URL-safe short keys with `SecureRandom.alphanumeric` (uniform distribution). Default length 7 → 62^7 ≈ 3.5 trillion combinations.
+- `Shortener::CreateService` — generates a unique short key (retries on collision, fallback to 8 chars), creates the link, and fetches page metadata (synchronous).
 - `Redirect::ResolveService` — resolves a short key to a target URL with Redis-backed caching.
-- `Analytics::RecordClick` — records each redirect with IP geolocation (Geocoder).
+- `RecordClickJob` (Active Job) — runs in the background (`:async` adapter). Enqueued on each redirect; calls `Analytics::RecordClick` to insert the click and fill geolocation (Geocoder, 3 s timeout). Redirects are sent immediately without waiting for the job.
+- `Analytics::RecordClick` — records a click and geolocation; fire-and-forget.
 - `Analytics::ReportQuery` — aggregates click data by country and hour for the analytics dashboard.
 - `Dashboard::StatsQuery` — returns cached dashboard aggregates (total links, total clicks, top location) per user.
+- `Config::LinkSort` — centralizes link list sorting (params: newest, oldest, most_clicks, least_clicks).
 - `Metadata::TitleAndIconFetcher` — extracts the page `<title>` and favicon from the target URL.
 
-All services return a `Result` value object (`success?` / `failure?`) instead of raising exceptions for expected flow control.
+Services that need to signal success/failure to the caller return a `Result` value object (`success?` / `failure?`); fire-and-forget logic (e.g. `Analytics::RecordClick`) returns nothing.
 
 ### 2. Authentication
 
 - **Signup / Login** return a Bearer token. The client stores it in `localStorage` and sends it in the `Authorization` header on every request.
-- **Sessions** are stored server-side (`sessions` table) and validated on each authenticated request via the `Authentication` concern.
+- **Sessions** are stored server-side (`sessions` table) and validated on each authenticated request via the `Api::Authentication` concern (included in `Api::BaseController`).
 - Token-based auth works cross-origin and on mobile without cookies.
 
 ### 3. Dashboard Stats
@@ -69,12 +72,13 @@ When a user creates a short link, the app fetches the target page’s **title an
 - **Title and favicon fetching** — After creating the link, the backend fetches the target URL with a **8 s maximum** for the whole metadata step. Within that, each HTTP request uses a **4 s** timeout (HTML page, manifest), and DuckDuckGo favicon checks use **2 s** each. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches HTML, and extracts:
   - **Title** from `<title>`, `og:title`, or `twitter:title` (if missing, the UI shows a dash).
   - **Favicon** from the web app manifest, then `<link rel="icon">`, then [DuckDuckGo’s favicon service](https://icons.duckduckgo.com/ip3) as a fallback. For DuckDuckGo, the app tries the **actual host** first (e.g. `www.touchngo.com.my` if that’s what the user entered), then the alternate (with or without `www`) if the first returns 404, so icons work for both apex and www domains. Same-origin favicon URLs are replaced with the DuckDuckGo URL so icons load reliably in the app (avoids CORS/redirect issues). Cross-origin icons (e.g. CDN) are kept. If the fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo favicon so the icon slot is never empty; the title is left blank (dash).
-- **Geolocation** — On each redirect, IP-to-location is resolved via Geocoder (3 s timeout) so analytics have country data without a background worker.
+- **Geolocation** — Click recording (DB insert + IP-to-location via Geocoder, 3 s timeout) runs in a background job (`RecordClickJob`). The redirect response is sent immediately; the job runs asynchronously so analytics get country data without slowing the redirect.
 
 ### 6. Scalability
 
 - **Redirect lookups** are cached in Redis for 5 minutes to reduce DB load.
-- **Write Strategy** — a unique index on `links.key` prevents race-condition duplicates; the service retries with a longer key on collision.
+- **Key generation** — `SecureRandom.alphanumeric(length)`; unique index on `links.key` with retry (and 8-char fallback) on collision.
+- **Redirect path** — Resolve key → increment `clicks_count` → enqueue `RecordClickJob` → send redirect. Click insert and geolocation run in the job queue.
 - **Health check** — `GET /up` reports boot status.
 
 ---
@@ -186,9 +190,11 @@ The backend is deployed via Docker Compose on a DigitalOcean droplet; the React 
 ```
 app/
   controllers/         # Thin API controllers
+    api/               # BaseController (auth, render_errors)
     api/v1/            # Links, Session, Registrations
-    concerns/          # Authentication concern
-  models/              # User, Link, Click, Session
+    concerns/api/      # Api::Authentication, Api::RenderErrors
+  models/              # User, Link, Click, Session; Config::LinkSort
+  jobs/                # Active Job (RecordClickJob)
   services/            # Service objects (Shortener, Analytics, Redirect, Metadata)
   queries/             # Query objects (Analytics::ReportQuery, Dashboard::StatsQuery)
 client/
@@ -197,7 +203,7 @@ client/
     components/        # React components
     hooks/             # Custom hooks (useAuth, useToast, useLinksList, useCopyToClipboard)
     pages/             # Route pages (HomePage, NotFoundPage)
-    utils/             # Utilities (URL normalization, error formatting, scroll)
+    utils/             # Utilities (URL normalization, analytics, scroll, pagination, shortKey)
     constants/         # Shared constants
 config/                # Rails configuration
 spec/                  # RSpec tests (models, requests, services, queries)

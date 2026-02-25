@@ -28,11 +28,11 @@ Generating a random string using a cryptographically secure pseudo-random number
 
 ## Implementation
 
-**Code:** `Shortener::RandomKey` generates the key; `Shortener::CreateService` handles persistence and collision retries.
+**Code:** `Shortener::RandomKey` generates the key via `SecureRandom.alphanumeric(length)`; `Shortener::CreateService` handles persistence and collision retries.
 
 ### Alphabet
 
-`[A-Z, a-z, 0-9]` — 62 characters.
+`[A-Z, a-z, 0-9]` — 62 characters. `SecureRandom.alphanumeric` produces a uniform distribution.
 
 ### Default Length: 7 Characters
 
@@ -42,7 +42,7 @@ At 1,000 links generated per second, it would take ~100 years to reach a 1% coll
 
 ### Collision Handling
 
-1. Generate a random 7-character key (`SecureRandom`).
+1. Generate a random 7-character key (`SecureRandom.alphanumeric(7)`).
 2. Attempt to insert into the database (the `key` column has a unique index).
 3. If a unique-constraint violation occurs, retry — up to 3 times.
 4. If all 3 retries fail, fall back to an **8-character key** (\(62^8 \approx 218\) trillion combinations) for one final attempt.

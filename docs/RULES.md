@@ -13,15 +13,17 @@ You are acting as a Senior Ruby on Rails Engineer. Follow these rules strictly w
 
 - **Service Objects**: All complex business logic goes into `app/services/`.
   - _Naming_: `Namespace::ActionService` (e.g., `Shortener::CreateService`).
-  - _Interface_: A single `call` method. Return a `Result` object (`Result.success(value)` / `Result.failure(error)`) — never raise exceptions for expected flow control.
-- **Query Objects**: Complex SQL aggregations go into `app/queries/` (e.g., `Analytics::ReportQuery`).
-- **Concerns**: Shared controller behaviour in `app/controllers/concerns/` (e.g., `Authentication` for token-based auth).
+  - _Interface_: Invoke via `MyService.call(...)`. Implement `self.call(...)` with the main logic; use private class methods for helpers. Return a `Result` object when the caller must branch on success/failure (`Result.success(value)` / `Result.failure(error)`); fire-and-forget logic (e.g. `Analytics::RecordClick`) may return nothing. Do not raise exceptions for expected flow control.
+  - _Structure_: Constants → `self.call` → `class << self; private` → private class methods.
+- **Query Objects**: Complex SQL aggregations go into `app/queries/` (e.g., `Analytics::ReportQuery`). Same invocation: `MyQuery.call(...)`; implement `self.call` with private class methods (no instance delegation).
+- **Background Jobs**: Fire-and-forget work (e.g. click recording + geolocation) in `app/jobs/`. Use Active Job (`perform_later`). Default queue adapter is `:async` (in-process thread pool; no Redis required).
+- **Concerns**: Shared controller behaviour in `app/controllers/concerns/api/` (e.g., `Api::Authentication`, `Api::RenderErrors`). API controllers inherit from `Api::BaseController`.
 - **Slim Controllers**: Controllers handle parameter parsing, call a service or query, and render the response. No business logic in controllers.
 - **Lean Models**: Keep models to associations, scopes, simple validations, and callbacks. Move multi-step logic to services.
 
 ## 3. Authentication
 
-- Bearer-token auth via the `Authentication` concern (included in `ApplicationController`).
+- Bearer-token auth via the `Api::Authentication` concern (included in `Api::BaseController`).
 - Tokens are stored in the `sessions` table; validate on each authenticated request.
 - Use `require_authentication!` as a `before_action` for endpoints that require a logged-in user.
 - Use `current_user` and `signed_in?` for optional auth.

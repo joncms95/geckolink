@@ -10,7 +10,7 @@
 
 - [x] **Model**: Create `Link` model (`target_url`, `key`, `title`, `icon_url`, `clicks_count`).
 - [x] **Migration**: Add unique index on `key`.
-- [x] **Service**: Implement `Shortener::CreateService` — random key via `Shortener::RandomKey` (CSPRNG), retry on collision, URL validation.
+- [x] **Service**: Implement `Shortener::CreateService` — random key via `Shortener::RandomKey` (`SecureRandom.alphanumeric`), retry on collision, URL validation.
 - [x] **Service**: Implement `Redirect::ResolveService` — resolve key to target URL with Redis-backed caching (5 min TTL).
 - [x] **Controller**: `Api::V1::LinksController` (create, show, index, analytics).
 - [x] **Controller**: `RedirectsController` — `GET /:key` redirection.
@@ -18,12 +18,13 @@
 
 ## Phase 3: Metadata Fetching
 
-- [x] **Service**: `Metadata::TitleAndIconFetcher` — fetch page `<title>` and favicon (Nokogiri, 5 s timeout; DuckDuckGo fallback for favicon when fetch fails or same-origin; no hostname fallback for title).
+- [x] **Service**: `Metadata::TitleAndIconFetcher` — fetch page `<title>` and favicon (Nokogiri; 4 s HTTP timeout, 8 s max for metadata step; DuckDuckGo fallback for favicon when fetch fails or same-origin).
 
 ## Phase 4: Analytics & Tracking
 
 - [x] **Model**: Create `Click` model (`link_id`, `clicked_at`, `ip_address`, `user_agent`, `geolocation`, `country`).
-- [x] **Service**: `Analytics::RecordClick` — records click with geolocation via Geocoder (2 s timeout).
+- [x] **Service**: `Analytics::RecordClick` — records click with geolocation via Geocoder (3 s timeout). Invoked asynchronously via `RecordClickJob` so redirects are not blocked.
+- [x] **Job**: `RecordClickJob` — enqueued on each redirect; runs click insert + geolocation in background (Rails `:async` adapter).
 - [x] **Query Object**: `Analytics::ReportQuery` — aggregates clicks by country and hour.
 
 ## Phase 5: Authentication & User Accounts
