@@ -2,16 +2,16 @@
 
 module Api
   module V1
-    class SessionController < ApplicationController
+    class SessionController < Api::BaseController
       def create
         user = User.find_by(email: session_params[:email]&.downcase&.strip)
 
         unless user&.authenticate(session_params[:password])
-          return render json: { errors: ["Invalid email or password"] }, status: :unprocessable_content
+          return render_errors("Invalid email or password", :unprocessable_content)
         end
 
         token = start_session(user)
-        render json: { user: user_json(user), token: token }
+        render json: { user: { email: user.email }, token: token }
       end
 
       def destroy
@@ -23,10 +23,6 @@ module Api
 
       def session_params
         params.require(:session).permit(:email, :password)
-      end
-
-      def user_json(user)
-        { email: user.email }
       end
     end
   end

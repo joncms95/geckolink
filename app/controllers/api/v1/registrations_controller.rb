@@ -2,12 +2,12 @@
 
 module Api
   module V1
-    class RegistrationsController < ApplicationController
+    class RegistrationsController < Api::BaseController
       def create
         user = User.new(registration_params)
 
         unless user.save
-          return render json: { errors: user.errors.full_messages }, status: :unprocessable_content
+          return render_errors(user.errors.full_messages, :unprocessable_content)
         end
 
         token = start_session(user)

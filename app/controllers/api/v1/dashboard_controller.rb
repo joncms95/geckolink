@@ -2,7 +2,7 @@
 
 module Api
   module V1
-    class DashboardController < ApplicationController
+    class DashboardController < Api::BaseController
       before_action :require_authentication!
 
       def stats

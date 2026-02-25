@@ -2,24 +2,13 @@
 
 module Api
   module V1
-    class LinksController < ApplicationController
-      DEFAULT_PER_PAGE = 10
-      ALLOWED_SORTS = {
-        "created_at_desc" => { created_at: :desc, id: :desc },
-        "created_at_asc" => { created_at: :asc, id: :asc },
-        "clicks_count_desc" => { clicks_count: :desc, id: :desc },
-        "clicks_count_asc" => { clicks_count: :asc, id: :asc }
-      }.freeze
-      DEFAULT_ORDER = ALLOWED_SORTS["created_at_desc"].freeze
-
+    class LinksController < Api::BaseController
       before_action :require_authentication!, only: :index
 
       def create
-        if stale_auth?
-          return head :unauthorized
-        end
+        return head :unauthorized if stale_auth?
 
-        result = Shortener::CreateService.new.call(
+        result = Shortener::CreateService.call(
           original_url: link_params[:target_url],
           user_id: current_user&.id
         )
@@ -28,14 +17,14 @@ module Api
           Dashboard::StatsQuery.invalidate_for_user(current_user&.id)
           render json: link_json(result.value), status: :created
         else
-          render json: { errors: result.error }, status: :unprocessable_content
+          render_errors(result.error, :unprocessable_content)
         end
       end
 
       def index
         page = [params[:page].to_i, 1].max
-        per_page = DEFAULT_PER_PAGE
-        scope = current_user.links.order(links_scope_order)
+        per_page = Config::LinkSort::DEFAULT_PER_PAGE
+        scope = current_user.links.order(Config::LinkSort.order_for(params[:sort]))
         total = scope.count
         links = scope.offset((page - 1) * per_page).limit(per_page).to_a
 
@@ -48,15 +37,16 @@ module Api
 
       def show
         link = Link.find_by!(key: params[:key])
-        authorize_link_access!(link) or return
+        return unless authorize_link_access!(link)
+
         render json: link_json(link)
       end
 
       def analytics
         link = Link.find_by!(key: params[:key])
-        authorize_link_access!(link) or return
+        return unless authorize_link_access!(link)
 
-        report = Analytics::ReportQuery.new(link: link).call
+        report = Analytics::ReportQuery.call(link: link)
         render json: report
       end
 
@@ -66,7 +56,7 @@ module Api
         return true if link.user_id.nil?
         return true if link.user_id == current_user&.id
 
-        render json: { errors: ["You don't have permission to view this link."] }, status: :forbidden
+        render_errors("You don't have permission to view this link.", :forbidden)
         false
       end
 
@@ -81,16 +71,8 @@ module Api
           title: link.title,
           icon_url: link.icon_url,
           clicks_count: link.clicks_count,
-          short_url: short_url_for(link)
+          short_url: "#{request.base_url}/#{link.key}"
         }
-      end
-
-      def short_url_for(link)
-        "#{request.base_url}/#{link.key}"
-      end
-
-      def links_scope_order
-        ALLOWED_SORTS.fetch(params[:sort].to_s, DEFAULT_ORDER)
       end
     end
   end
