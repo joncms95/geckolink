@@ -1,5 +1,5 @@
-import LinkIcon from "./ui/LinkIcon"
 import Button from "./ui/Button"
+import LinkIcon from "./ui/LinkIcon"
 
 export default function CreatedLinkResult({ createdLink, onCopyShortUrl, onViewDashboard }) {
   return (

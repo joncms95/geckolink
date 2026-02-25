@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react"
-import { normalizeUrl, hasValidHost } from "../utils/url"
+import { useCallback, useEffect, useState } from "react"
 import { ERROR_DISMISS_MS } from "../constants"
+import { hasValidHost, normalizeUrl } from "../utils/url"
 
 export default function HeroForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("")

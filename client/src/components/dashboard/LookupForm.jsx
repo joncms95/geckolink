@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react"
+import { formatApiError } from "../../api/errors"
 import { getLink } from "../../api/links"
 import { SCROLL_TARGETS } from "../../constants"
-import { formatApiError } from "../../api/errors"
 import { parseShortKey } from "../../utils/shortKey"
 import Button from "../ui/Button"
 import Input from "../ui/Input"

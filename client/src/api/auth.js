@@ -1,4 +1,4 @@
-import { getApiBase, fetchWithTimeout, handleResponse, setAuthToken } from "./client"
+import { fetchWithTimeout, getApiBase, handleResponse, setAuthToken } from "./client"
 
 export async function login(email, password) {
   const res = await fetchWithTimeout(`${getApiBase()}/session`, {
