@@ -19,7 +19,7 @@ Log in to see the analytics dashboard with sample links.
 
 - **Backend:** Ruby 3.4.8, Rails 7.2.3 (API Mode)
 - **Database:** PostgreSQL 16
-- **Caching:** Redis 7 (redirect lookups)
+- **Caching:** Redis (redirect lookups)
 - **Frontend:** React 18 (Vite), Tailwind CSS, React Router 7
 - **Auth:** bcrypt + Bearer tokens
 - **Testing:** RSpec, FactoryBot, Faker, WebMock
@@ -95,7 +95,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 ---
 
-## Installation & Setup
+## Installation & Setup (macOS)
 
 ### Prerequisites
 
@@ -106,6 +106,19 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 ### Local Development
 
+1. **Install prerequisites**
+
+   ```bash
+   brew install postgresql@16 redis node
+   brew services start postgresql@16 redis
+
+   \curl -sSL https://get.rvm.io | bash
+   source ~/.rvm/scripts/rvm
+   rvm install 3.4.8
+   rvm use 3.4.8
+   gem install bundler
+   ```
+
 1. **Clone and install dependencies**
 
    ```bash
@@ -115,20 +128,20 @@ When a user creates a short link, the app fetches the target page’s **title an
    npm install --prefix client
    ```
 
-2. **Database setup**
+1. **Database setup**
 
    ```bash
    cp .env.example .env
    bin/rails db:prepare
    ```
 
-3. **Start services** (Rails + Vite dev server via foreman)
+1. **Start services** (Rails + Vite dev server via foreman)
 
    ```bash
    bin/dev
    ```
 
-4. **Run tests**
+1. **Run tests**
 
    Use the shortcut to run the full pipeline (format, lint, security scan, tests).
 
@@ -193,7 +206,7 @@ docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
 
 ## Code style
 
-- **Rufo** — Ruby formatter. Run `bundle exec rufo .` to format the codebase, or rely on `bin/ci`, which runs Rufo first (same as the GitHub Actions pipeline). Options are in the project root [`.rufo`](.rufo) file (e.g. double quotes, trailing commas off, aligned `case`/`when` and chained calls).
+- **Rufo** — Ruby formatter. Run `bundle exec rufo .` to format the codebase, or rely on `bin/ci`. Formatting configs are in the project root [`.rufo`](.rufo) file.
 - **RuboCop** — Linting and auto-correct via `bin/rubocop -A`; also runs as part of `bin/ci`.
 
 ## License
