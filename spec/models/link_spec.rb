@@ -52,10 +52,16 @@ RSpec.describe Link, type: :model do
       expect(link.target_url).to eq("https://example.com")
     end
 
-    it "leaves https:// and http:// unchanged" do
+    it "leaves https:// unchanged" do
       link = Link.new(target_url: "https://example.com")
       link.valid?
       expect(link.target_url).to eq("https://example.com")
+    end
+
+    it "leaves http:// unchanged" do
+      link = Link.new(target_url: "http://example.com")
+      link.valid?
+      expect(link.target_url).to eq("http://example.com")
     end
   end
 end
