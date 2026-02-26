@@ -72,7 +72,7 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
           className="flex items-center gap-2 sm:gap-2.5 text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded-lg py-1 min-h-[44px] items-center"
         >
           <img src="/logo.png" alt="GeckoLink Logo" className="h-10 w-10" />
-          <span className="text-xl sm:text-2xl font-brand font-bold tracking-wide truncate">
+          <span className="text-xl sm:text-2xl font-mono font-bold tracking-wide truncate">
             GECKOLINK
           </span>
         </Link>
