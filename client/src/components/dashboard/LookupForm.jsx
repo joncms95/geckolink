@@ -4,6 +4,7 @@ import { getLink } from "../../api/links";
 import { SCROLL_TARGETS } from "../../constants";
 import { parseShortKey } from "../../utils/shortKey";
 import Button from "../ui/Button";
+import FormError from "../ui/FormError";
 import Input from "../ui/Input";
 
 export default function LookupForm({ onResult }) {
@@ -64,11 +65,7 @@ export default function LookupForm({ onResult }) {
             {loading ? "Loading…" : "View analytics"}
           </Button>
         </div>
-        {error && (
-          <p className="text-sm text-red-400" role="alert">
-            {error}
-          </p>
-        )}
+        <FormError message={error} />
       </form>
       <p
         className="mt-3 text-gecko-slate text-xs sm:text-sm"

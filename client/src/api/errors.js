@@ -1,13 +1,13 @@
-/** Extracts error messages from an API response body into a string[]. */
-export function normalizeErrors(data) {
-  if (Array.isArray(data?.errors) && data.errors.length > 0) return data.errors;
-  return ["Request failed"];
+/** Response body (parsed JSON) → one user-facing message string. */
+export function getMessageFromBody(data) {
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    return data.errors.join(". ");
+  }
+  return "Request failed";
 }
 
-/** Returns a single user-facing message from an API error thrown by handleResponse. */
+/** Any error from an API call (handleResponse throw or fetch Error) → one string for UI. */
 export function formatApiError(err) {
-  if (Array.isArray(err?.errors) && err.errors.length > 0)
-    return err.errors.join(". ");
-  if (typeof err?.message === "string") return err.message;
+  if (typeof err?.message === "string" && err.message) return err.message;
   return "Something went wrong";
 }

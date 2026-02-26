@@ -7,41 +7,34 @@ import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { useToast } from "../hooks/useToast";
 import CreatedLinkResult from "../components/CreatedLinkResult";
 import HeroForm from "../components/HeroForm";
+import InlineError from "../components/ui/InlineError";
 
 export default function HomePage({ onOpenSignup }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { copy } = useCopyToClipboard();
+  const { copyWithToast } = useCopyToClipboard();
 
   const [loading, setLoading] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const [error, setError] = useState(null);
   const [createdLink, setCreatedLink] = useState(null);
 
   const handleSubmit = useCallback(
     async (url) => {
       setLoading(true);
-      setSubmitError(null);
+      setError(null);
       setCreatedLink(null);
       try {
         const data = await createLink(url);
         showToast("Short URL created!");
         setCreatedLink(data);
       } catch (err) {
-        setSubmitError(formatApiError(err));
+        setError(formatApiError(err));
       } finally {
         setLoading(false);
       }
     },
     [showToast],
-  );
-
-  const handleCopyShortUrl = useCallback(
-    async (text) => {
-      const ok = await copy(text);
-      if (ok) showToast("Copied to clipboard!");
-    },
-    [copy, showToast],
   );
 
   return (
@@ -69,18 +62,16 @@ export default function HomePage({ onOpenSignup }) {
       <div className="mt-8 sm:mt-12">
         <HeroForm onSubmit={handleSubmit} isLoading={loading} />
       </div>
-      {submitError && (
-        <div
-          role="alert"
-          className="mt-4 sm:mt-6 max-w-xl mx-auto rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm text-left"
-        >
-          {submitError}
-        </div>
+      {error && (
+        <InlineError
+          message={error}
+          className="mt-4 sm:mt-6 max-w-xl mx-auto"
+        />
       )}
       {createdLink && (
         <CreatedLinkResult
           createdLink={createdLink}
-          onCopyShortUrl={handleCopyShortUrl}
+          onCopyShortUrl={copyWithToast}
           onViewDashboard={
             user ? () => navigate(`/dashboard/${createdLink.key}`) : undefined
           }

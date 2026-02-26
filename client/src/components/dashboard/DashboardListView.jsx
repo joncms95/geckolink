@@ -1,4 +1,5 @@
 import { SCROLL_TARGETS } from "../../constants";
+import InlineError from "../ui/InlineError";
 import LookupForm from "./LookupForm";
 import MetricCard from "./MetricCard";
 import MetricsGridLoading from "./MetricsGridLoading";
@@ -21,9 +22,7 @@ export default function DashboardListView({ stats, onLookupResult }) {
         {loading ? (
           <MetricsGridLoading colSpan={4} ariaLabel="Loading dashboard stats" />
         ) : error ? (
-          <div className="col-span-2 lg:col-span-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm">
-            {error}
-          </div>
+          <InlineError message={error} className="col-span-2 lg:col-span-4" />
         ) : (
           <>
             <MetricCard label="Total Links" value={totalLinks} icon="fa-link" />

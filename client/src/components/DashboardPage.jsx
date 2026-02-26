@@ -6,7 +6,6 @@ import { useAuth } from "../hooks/useAuth";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useLinksList } from "../hooks/useLinksList";
-import { useToast } from "../hooks/useToast";
 import { scrollToTop } from "../utils/scroll";
 import DashboardListView from "./dashboard/DashboardListView";
 import LinkDetailView from "./dashboard/LinkDetailView";
@@ -16,12 +15,11 @@ export default function DashboardPage() {
   const { key: keyFromUrl } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const { copy } = useCopyToClipboard();
+  const { copyWithToast } = useCopyToClipboard();
 
   const {
-    displayedLinks,
-    displayedLinksLoading,
+    links,
+    linksLoading,
     linksTotal,
     currentPage,
     totalPages,
@@ -37,10 +35,12 @@ export default function DashboardPage() {
   const { refetch: refetchStats } = stats;
   const prevKeyFromUrl = useRef(keyFromUrl);
 
+  // Scroll to top when entering detail view
   useEffect(() => {
     if (keyFromUrl) scrollToTop();
   }, [keyFromUrl]);
 
+  // Refresh stats and links when navigating back from detail → list view
   useEffect(() => {
     const wasDetailView = Boolean(prevKeyFromUrl.current);
     const isListView = !keyFromUrl;
@@ -51,10 +51,11 @@ export default function DashboardPage() {
     }
   }, [keyFromUrl, refetchStats, refetchLinks]);
 
+  // Resolve selectedLink when URL has a :key — prefer from list, fallback to API
   useEffect(() => {
     if (!keyFromUrl) return;
 
-    const inList = displayedLinks.find((l) => l.key === keyFromUrl);
+    const inList = links.find((l) => l.key === keyFromUrl);
     if (inList) {
       setSelectedLink(inList);
       return;
@@ -64,14 +65,6 @@ export default function DashboardPage() {
       .then((link) => setSelectedLink(link))
       .catch(() => {});
   }, [keyFromUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleCopy = useCallback(
-    async (text) => {
-      const ok = await copy(text);
-      if (ok) showToast("Copied to clipboard!");
-    },
-    [copy, showToast],
-  );
 
   const handleViewStats = useCallback(
     (link) => {
@@ -117,16 +110,16 @@ export default function DashboardPage() {
       )}
 
       <LinkList
-        links={displayedLinks}
+        links={links}
         linksTotal={linksTotal}
-        loading={displayedLinksLoading}
+        loading={linksLoading}
         currentPage={currentPage}
         totalPages={totalPages}
         sort={sort}
         onSortChange={changeSort}
         onPageChange={handlePageChange}
         onViewStats={handleViewStats}
-        onCopy={handleCopy}
+        onCopy={copyWithToast}
       />
     </div>
   );

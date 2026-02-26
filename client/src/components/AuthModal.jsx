@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatApiError } from "../api/errors";
 import Button from "./ui/Button";
+import FormError from "./ui/FormError";
 import Input from "./ui/Input";
 import PasswordInput from "./ui/PasswordInput";
 
@@ -19,27 +20,38 @@ export default function AuthModal({
   const emailRef = useRef(null);
   const isSignup = mode === "signup";
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    if (isSignup && password !== passwordConfirmation) {
-      setError("Passwords don't match");
-      return;
-    }
-    setLoading(true);
-    try {
-      if (isSignup) {
-        await onSignup(email, password, passwordConfirmation);
-      } else {
-        await onLogin(email, password);
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setError(null);
+      if (isSignup && password !== passwordConfirmation) {
+        setError("Passwords don't match");
+        return;
       }
-      onClose();
-    } catch (err) {
-      setError(formatApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  }
+      setLoading(true);
+      try {
+        if (isSignup) {
+          await onSignup(email, password, passwordConfirmation);
+        } else {
+          await onLogin(email, password);
+        }
+        onClose();
+      } catch (err) {
+        setError(formatApiError(err));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      isSignup,
+      email,
+      password,
+      passwordConfirmation,
+      onLogin,
+      onSignup,
+      onClose,
+    ],
+  );
 
   useEffect(() => {
     emailRef.current?.focus();
@@ -134,11 +146,7 @@ export default function AuthModal({
               />
             </div>
           )}
-          {error && (
-            <p className="text-sm text-red-400" role="alert">
-              {error}
-            </p>
-          )}
+          <FormError message={error} />
           <div className="flex gap-2 pt-2">
             <Button
               type="submit"

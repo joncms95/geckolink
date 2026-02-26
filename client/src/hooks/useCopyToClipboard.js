@@ -1,14 +1,22 @@
 import { useCallback } from "react";
+import { useToast } from "./useToast";
 
+/** Clipboard helper. Returns { copyWithToast } which copies text and shows a toast on success. */
 export default function useCopyToClipboard() {
-  const copy = useCallback(async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      return false;
-    }
-  }, []);
+  const { showToast } = useToast();
 
-  return { copy };
+  const copyWithToast = useCallback(
+    async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Copied to clipboard!");
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  return { copyWithToast };
 }

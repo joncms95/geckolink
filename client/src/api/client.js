@@ -1,9 +1,11 @@
-import { normalizeErrors } from "./errors";
+/**
+ * API client. All HTTP requests go through fetchWithTimeout + handleResponse.
+ * Auth token is stored in localStorage and attached to every request automatically.
+ */
+import { getMessageFromBody } from "./errors";
 
-const API_BASE =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE
-    ? String(import.meta.env.VITE_API_BASE).replace(/\/$/, "")
-    : "") + "/api/v1";
+const origin = import.meta.env?.VITE_API_BASE ?? "";
+const API_BASE = `${origin}/api/v1`;
 
 export const TOKEN_KEY = "geckolink_token";
 
@@ -16,10 +18,11 @@ export function setAuthToken(token) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
   } catch {
-    /* storage unavailable */
+    /* storage unavailable (e.g. private browsing) */
   }
 }
 
+/** fetch() wrapper that adds auth headers and aborts after timeoutMs. */
 export function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -29,18 +32,14 @@ export function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
   );
 }
 
-export class UnauthorizedError extends Error {
-  constructor() {
-    super("Unauthorized");
-    this.name = "UnauthorizedError";
-  }
-}
-
+/**
+ * Parses JSON and throws { status, message } on non-ok responses.
+ * Callers use formatApiError(err) to get the message string for UI.
+ */
 export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (res.status === 401) throw new UnauthorizedError();
-    throw { status: res.status, errors: normalizeErrors(data) };
+    throw { status: res.status, message: getMessageFromBody(data) };
   }
   return data;
 }

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { ERROR_DISMISS_MS } from "../constants";
 import { hasValidHost, normalizeUrl } from "../utils/url";
+import FormError from "./ui/FormError";
+
+const ERROR_INVALID_DOMAIN = "URL must have a valid domain (e.g. example.com)";
 
 export default function HeroForm({ onSubmit, isLoading }) {
   const [url, setUrl] = useState("");
@@ -8,18 +10,13 @@ export default function HeroForm({ onSubmit, isLoading }) {
   const [touched, setTouched] = useState(false);
 
   const normalized = normalizeUrl(url);
-  const isValid =
-    /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized);
+  const isValid = hasValidHost(normalized);
   const showError = touched && (error || (url.trim() && !isValid));
 
+  // Clear validation error only when input becomes valid
   useEffect(() => {
-    if (!showError) return;
-    const t = setTimeout(() => {
-      setError(null);
-      setTouched(false);
-    }, ERROR_DISMISS_MS);
-    return () => clearTimeout(t);
-  }, [showError]);
+    if (isValid && error) setError(null);
+  }, [isValid, error]);
 
   const handleSubmit = useCallback(
     (e) => {
@@ -31,11 +28,7 @@ export default function HeroForm({ onSubmit, isLoading }) {
         return;
       }
       if (!isValid) {
-        setError(
-          !hasValidHost(normalized)
-            ? "URL must have a valid domain (e.g. example.com)"
-            : "Please enter a valid URL",
-        );
+        setError(ERROR_INVALID_DOMAIN);
         return;
       }
       onSubmit(normalized);
@@ -71,15 +64,10 @@ export default function HeroForm({ onSubmit, isLoading }) {
         />
       </div>
       {showError && (
-        <p
-          role="alert"
-          className="text-sm text-red-400 -mt-1 w-full text-center sm:text-center"
-        >
-          {error ||
-            (!hasValidHost(normalized)
-              ? "URL must have a valid domain (e.g. example.com)"
-              : "Please enter a valid URL")}
-        </p>
+        <FormError
+          message={error || ERROR_INVALID_DOMAIN}
+          className="-mt-1 w-full text-center"
+        />
       )}
       <button
         type="submit"

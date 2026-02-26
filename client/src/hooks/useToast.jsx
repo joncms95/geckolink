@@ -1,19 +1,15 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import Toast from "../components/Toast";
+import { TOAST_DISMISS_MS } from "../constants";
 
 const ToastContext = createContext(null);
-
-const DEFAULT_DISMISS_MS = 5000;
 
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null);
 
-  const showToast = useCallback(
-    (message, autoDismissMs = DEFAULT_DISMISS_MS) => {
-      setToast({ message, autoDismissMs });
-    },
-    [],
-  );
+  const showToast = useCallback((message, autoDismissMs = TOAST_DISMISS_MS) => {
+    setToast({ message, autoDismissMs });
+  }, []);
 
   const dismissToast = useCallback(() => setToast(null), []);
 

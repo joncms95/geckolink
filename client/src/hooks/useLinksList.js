@@ -2,13 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getMyLinks } from "../api/links";
 import { LINKS_PER_PAGE, SORT_OPTIONS } from "../constants";
 
+/**
+ * Manages the paginated, sortable list of user links.
+ * Fetches from getMyLinks() and exposes state + actions for DashboardPage.
+ */
 export function useLinksList(user) {
-  const [displayedLinks, setDisplayedLinks] = useState([]);
-  const [displayedLinksLoading, setDisplayedLinksLoading] = useState(false);
+  const [links, setLinks] = useState([]);
+  const [linksLoading, setLinksLoading] = useState(false);
   const [selectedLink, setSelectedLink] = useState(null);
   const [linksTotal, setLinksTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [sort, setSort] = useState(SORT_OPTIONS.NEWEST);
+
+  // Refs to access latest sort without re-creating fetchPage, and to prevent double-fetch on mount
   const sortRef = useRef(sort);
   const loadedRef = useRef(false);
 
@@ -19,15 +25,15 @@ export function useLinksList(user) {
   const fetchPage = useCallback(
     ({ page, sort: sortBy = sortRef.current, onLoaded } = {}) => {
       if (!user) return;
-      setDisplayedLinksLoading(true);
+      setLinksLoading(true);
       getMyLinks(page, sortBy)
-        .then(({ links, total }) => {
-          setDisplayedLinks(links);
+        .then(({ links: fetched, total }) => {
+          setLinks(fetched);
           setLinksTotal(total);
           setCurrentPage(page);
           setSelectedLink((prev) => {
             if (!prev?.key) return prev;
-            return links.find((l) => l.key === prev.key) || prev;
+            return fetched.find((l) => l.key === prev.key) || prev;
           });
           if (typeof onLoaded === "function") {
             requestAnimationFrame(() =>
@@ -36,23 +42,25 @@ export function useLinksList(user) {
           }
         })
         .catch(() => {
-          setDisplayedLinks([]);
+          setLinks([]);
           setLinksTotal(0);
         })
-        .finally(() => setDisplayedLinksLoading(false));
+        .finally(() => setLinksLoading(false));
     },
     [user],
   );
 
+  // Reset all state when user changes (login/logout)
   useEffect(() => {
     loadedRef.current = false;
-    setDisplayedLinks([]);
+    setLinks([]);
     setLinksTotal(0);
     setSelectedLink(null);
     setCurrentPage(1);
     setSort(SORT_OPTIONS.NEWEST);
   }, [user]);
 
+  // Initial fetch — only runs once per user (loadedRef prevents double-fetch in StrictMode)
   useEffect(() => {
     if (!user || loadedRef.current) return;
     loadedRef.current = true;
@@ -82,8 +90,8 @@ export function useLinksList(user) {
   }, [fetchPage, currentPage, sort]);
 
   return {
-    displayedLinks,
-    displayedLinksLoading,
+    links,
+    linksLoading,
     linksTotal,
     currentPage,
     totalPages,

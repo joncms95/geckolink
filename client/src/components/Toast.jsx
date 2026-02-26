@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { ERROR_DISMISS_MS } from "../constants";
+import { TOAST_DISMISS_MS } from "../constants";
 
 export default function Toast({
   message,
   onDismiss,
   visible,
-  autoDismissMs = ERROR_DISMISS_MS,
+  autoDismissMs = TOAST_DISMISS_MS,
 }) {
   const toastRef = useRef(null);
   const onDismissRef = useRef(onDismiss);

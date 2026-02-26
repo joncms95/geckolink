@@ -12,9 +12,10 @@ import {
 } from "../api/auth";
 import { TOKEN_KEY } from "../api/client";
 
-const AUTH_CACHE_KEY = "geckolink_user";
+const AUTH_CACHE_KEY = "geckolink_user"; // localStorage key for cached user object
 const AuthContext = createContext(null);
 
+/** Read cached user from localStorage (returns null if missing or unreadable). */
 function getCachedUser() {
   try {
     const raw = localStorage.getItem(AUTH_CACHE_KEY);
@@ -36,6 +37,7 @@ function setCachedUser(user) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getCachedUser);
 
+  // If another tab clears the token (e.g. logout), clear user in this tab too
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === TOKEN_KEY && e.newValue === null) {

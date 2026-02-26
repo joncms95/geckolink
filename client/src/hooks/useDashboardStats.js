@@ -11,6 +11,7 @@ const INITIAL_STATE = {
 };
 const EMPTY_STATE = { ...INITIAL_STATE, loading: false };
 
+/** Fetches dashboard aggregate stats (total links, clicks, top location). Returns { ...state, refetch }. */
 export function useDashboardStats(user) {
   const [state, setState] = useState(user ? INITIAL_STATE : EMPTY_STATE);
 
