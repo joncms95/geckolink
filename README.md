@@ -23,7 +23,7 @@ Log in to see the analytics dashboard with sample links.
 - **Frontend:** React 18 (Vite), Tailwind CSS, React Router 7
 - **Auth:** bcrypt + Bearer tokens
 - **Testing:** RSpec, FactoryBot, Faker, WebMock
-- **Code style:** Rufo (formatting), RuboCop (lint)
+- **Code style:** Rufo (Ruby formatting), RuboCop (Ruby lint), Prettier (React/frontend formatting)
 - **Containerization:** Docker & Docker Compose
 
 ---
@@ -214,6 +214,7 @@ docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
 
 - **Rufo** — Ruby formatter. Run `bundle exec rufo .` to format the codebase, or rely on `bin/ci`. Formatting configs are in the project root [`.rufo`](.rufo) file.
 - **RuboCop** — Linting and auto-correct via `bin/rubocop -A`; also runs as part of `bin/ci`.
+- **Prettier** — React/frontend formatter (client). Run `npm run format --prefix client` to format, or `npm run format:check --prefix client` to check only. Uses Prettier defaults. Also runs as part of `bin/ci` and CI.
 
 ## License
 

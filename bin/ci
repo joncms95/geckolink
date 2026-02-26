@@ -25,16 +25,19 @@ rufo_format_until_clean() {
   exit 1
 }
 
-run_section "1/4  Rufo (format)"
+run_section "1/5  Rufo (Ruby format)"
 rufo_format_until_clean
 
-run_section "2/4  RuboCop (lint & auto-correct)"
+run_section "2/5  Prettier (client format)"
+npm run format:check --prefix client
+
+run_section "3/5  RuboCop (lint & auto-correct)"
 bin/rubocop -A
 
-run_section "3/4  Brakeman (security scan)"
+run_section "4/5  Brakeman (security scan)"
 bin/brakeman --no-pager
 
-run_section "4/4  RSpec (tests)"
+run_section "5/5  RSpec (tests)"
 bundle exec rspec
 
 run_section "All checks passed."
