@@ -1,45 +1,53 @@
-import { useCallback, useEffect, useState } from "react"
-import { ERROR_DISMISS_MS } from "../constants"
-import { hasValidHost, normalizeUrl } from "../utils/url"
+import { useCallback, useEffect, useState } from "react";
+import { ERROR_DISMISS_MS } from "../constants";
+import { hasValidHost, normalizeUrl } from "../utils/url";
 
 export default function HeroForm({ onSubmit, isLoading }) {
-  const [url, setUrl] = useState("")
-  const [error, setError] = useState(null)
-  const [touched, setTouched] = useState(false)
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState(null);
+  const [touched, setTouched] = useState(false);
 
-  const normalized = normalizeUrl(url)
-  const isValid = /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized)
-  const showError = touched && (error || (url.trim() && !isValid))
+  const normalized = normalizeUrl(url);
+  const isValid =
+    /^https?:\/\/\S+$/i.test(normalized) && hasValidHost(normalized);
+  const showError = touched && (error || (url.trim() && !isValid));
 
   useEffect(() => {
-    if (!showError) return
+    if (!showError) return;
     const t = setTimeout(() => {
-      setError(null)
-      setTouched(false)
-    }, ERROR_DISMISS_MS)
-    return () => clearTimeout(t)
-  }, [showError])
+      setError(null);
+      setTouched(false);
+    }, ERROR_DISMISS_MS);
+    return () => clearTimeout(t);
+  }, [showError]);
 
   const handleSubmit = useCallback(
     (e) => {
-      e.preventDefault()
-      setTouched(true)
-      setError(null)
+      e.preventDefault();
+      setTouched(true);
+      setError(null);
       if (!url.trim()) {
-        setError("Please enter a URL")
-        return
+        setError("Please enter a URL");
+        return;
       }
       if (!isValid) {
-        setError(!hasValidHost(normalized) ? "URL must have a valid domain (e.g. example.com)" : "Please enter a valid URL")
-        return
+        setError(
+          !hasValidHost(normalized)
+            ? "URL must have a valid domain (e.g. example.com)"
+            : "Please enter a valid URL",
+        );
+        return;
       }
-      onSubmit(normalized)
+      onSubmit(normalized);
     },
-    [url, normalized, isValid, onSubmit]
-  )
+    [url, normalized, isValid, onSubmit],
+  );
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 sm:gap-6">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 sm:gap-6"
+    >
       <div className="w-full flex flex-col gap-2 sm:gap-4">
         <label className="sr-only" htmlFor="hero-url-input">
           Long URL to shorten
@@ -52,7 +60,10 @@ export default function HeroForm({ onSubmit, isLoading }) {
           spellCheck="false"
           placeholder="Enter your long URL here..."
           value={url}
-          onChange={(e) => { setUrl(e.target.value); setError(null) }}
+          onChange={(e) => {
+            setUrl(e.target.value);
+            setError(null);
+          }}
           onBlur={() => setTouched(true)}
           disabled={isLoading}
           aria-invalid={showError}
@@ -60,7 +71,10 @@ export default function HeroForm({ onSubmit, isLoading }) {
         />
       </div>
       {showError && (
-        <p role="alert" className="text-sm text-red-400 -mt-1 w-full text-center sm:text-center">
+        <p
+          role="alert"
+          className="text-sm text-red-400 -mt-1 w-full text-center sm:text-center"
+        >
           {error ||
             (!hasValidHost(normalized)
               ? "URL must have a valid domain (e.g. example.com)"
@@ -75,5 +89,5 @@ export default function HeroForm({ onSubmit, isLoading }) {
         {isLoading ? "Shortening…" : "Shorten URL"}
       </button>
     </form>
-  )
+  );
 }

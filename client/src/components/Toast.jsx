@@ -1,33 +1,40 @@
-import { useEffect, useRef } from "react"
-import { ERROR_DISMISS_MS } from "../constants"
+import { useEffect, useRef } from "react";
+import { ERROR_DISMISS_MS } from "../constants";
 
-export default function Toast({ message, onDismiss, visible, autoDismissMs = ERROR_DISMISS_MS }) {
-  const toastRef = useRef(null)
-  const onDismissRef = useRef(onDismiss)
-  onDismissRef.current = onDismiss
+export default function Toast({
+  message,
+  onDismiss,
+  visible,
+  autoDismissMs = ERROR_DISMISS_MS,
+}) {
+  const toastRef = useRef(null);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
   useEffect(() => {
-    if (!visible) return
-    const t = setTimeout(() => onDismissRef.current?.(), autoDismissMs)
-    return () => clearTimeout(t)
-  }, [visible, autoDismissMs])
+    if (!visible) return;
+    const t = setTimeout(() => onDismissRef.current?.(), autoDismissMs);
+    return () => clearTimeout(t);
+  }, [visible, autoDismissMs]);
 
   useEffect(() => {
-    if (!visible) return
+    if (!visible) return;
     const handleClickOutside = (e) => {
       if (toastRef.current && !toastRef.current.contains(e.target)) {
-        onDismissRef.current?.()
+        onDismissRef.current?.();
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside, { passive: true })
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, {
+      passive: true,
+    });
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
-    }
-  }, [visible])
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [visible]);
 
-  if (!visible) return null
+  if (!visible) return null;
 
   return (
     <div
@@ -40,5 +47,5 @@ export default function Toast({ message, onDismiss, visible, autoDismissMs = ERR
       </span>
       <p className="text-sm font-medium text-white">{message}</p>
     </div>
-  )
+  );
 }

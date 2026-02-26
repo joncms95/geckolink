@@ -1,44 +1,49 @@
-import { useEffect, useRef, useState } from "react"
-import { formatApiError } from "../api/errors"
-import Button from "./ui/Button"
-import Input from "./ui/Input"
-import PasswordInput from "./ui/PasswordInput"
+import { useEffect, useRef, useState } from "react";
+import { formatApiError } from "../api/errors";
+import Button from "./ui/Button";
+import Input from "./ui/Input";
+import PasswordInput from "./ui/PasswordInput";
 
-export default function AuthModal({ initialMode = "login", onClose, onLogin, onSignup }) {
-  const [mode, setMode] = useState(initialMode)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [passwordConfirmation, setPasswordConfirmation] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const emailRef = useRef(null)
-  const isSignup = mode === "signup"
+export default function AuthModal({
+  initialMode = "login",
+  onClose,
+  onLogin,
+  onSignup,
+}) {
+  const [mode, setMode] = useState(initialMode);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const emailRef = useRef(null);
+  const isSignup = mode === "signup";
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
     if (isSignup && password !== passwordConfirmation) {
-      setError("Passwords don't match")
-      return
+      setError("Passwords don't match");
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
       if (isSignup) {
-        await onSignup(email, password, passwordConfirmation)
+        await onSignup(email, password, passwordConfirmation);
       } else {
-        await onLogin(email, password)
+        await onLogin(email, password);
       }
-      onClose()
+      onClose();
     } catch (err) {
-      setError(formatApiError(err))
+      setError(formatApiError(err));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    emailRef.current?.focus()
-  }, [])
+    emailRef.current?.focus();
+  }, []);
 
   return (
     <div
@@ -53,7 +58,10 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 id="auth-modal-title" className="text-lg sm:text-xl font-semibold text-white">
+          <h2
+            id="auth-modal-title"
+            className="text-lg sm:text-xl font-semibold text-white"
+          >
             {isSignup ? "Sign up" : "Log in"}
           </h2>
           <button
@@ -67,7 +75,10 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="auth-email" className="block text-sm font-medium text-gecko-slate mb-1">
+            <label
+              htmlFor="auth-email"
+              className="block text-sm font-medium text-gecko-slate mb-1"
+            >
               Email
             </label>
             <Input
@@ -83,7 +94,10 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
             />
           </div>
           <div>
-            <label htmlFor="auth-password" className="block text-sm font-medium text-gecko-slate mb-1">
+            <label
+              htmlFor="auth-password"
+              className="block text-sm font-medium text-gecko-slate mb-1"
+            >
               Password
             </label>
             <PasswordInput
@@ -96,12 +110,17 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
               variant="modal"
             />
             {isSignup && (
-              <p className="mt-1 text-xs text-gecko-slate">At least 8 characters</p>
+              <p className="mt-1 text-xs text-gecko-slate">
+                At least 8 characters
+              </p>
             )}
           </div>
           {isSignup && (
             <div>
-              <label htmlFor="auth-password-confirm" className="block text-sm font-medium text-gecko-slate mb-1">
+              <label
+                htmlFor="auth-password-confirm"
+                className="block text-sm font-medium text-gecko-slate mb-1"
+              >
                 Confirm password
               </label>
               <PasswordInput
@@ -121,15 +140,19 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
             </p>
           )}
           <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={loading} className="flex-1 py-3 min-h-[48px]">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 min-h-[48px]"
+            >
               {loading ? "…" : isSignup ? "Sign up" : "Log in"}
             </Button>
             <Button
               type="button"
               variant="secondary"
               onClick={() => {
-                setMode(isSignup ? "login" : "signup")
-                setError(null)
+                setMode(isSignup ? "login" : "signup");
+                setError(null);
               }}
               className="py-3 px-4 min-h-[48px]"
             >
@@ -139,5 +162,5 @@ export default function AuthModal({ initialMode = "login", onClose, onLogin, onS
         </form>
       </div>
     </div>
-  )
+  );
 }

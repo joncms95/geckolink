@@ -1,7 +1,13 @@
-import LinkIcon from "../ui/LinkIcon"
+import LinkIcon from "../ui/LinkIcon";
 
 export default function ShortUrlCard({ link, onViewStats, onCopy }) {
-  const { short_url: shortUrl, target_url: targetUrl, title, icon_url: iconUrl, clicks_count: clicks } = link
+  const {
+    short_url: shortUrl,
+    target_url: targetUrl,
+    title,
+    icon_url: iconUrl,
+    clicks_count: clicks,
+  } = link;
 
   return (
     <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 min-w-0">
@@ -17,10 +23,18 @@ export default function ShortUrlCard({ link, onViewStats, onCopy }) {
           >
             {shortUrl}
           </a>
-          <p className={`text-sm truncate mt-0.5 ${title ? "text-white" : "text-gecko-slate"}`} title={title || undefined}>
+          <p
+            className={`text-sm truncate mt-0.5 ${title ? "text-white" : "text-gecko-slate"}`}
+            title={title || undefined}
+          >
             {title || "—"}
           </p>
-          <p className="text-gecko-slate text-xs sm:text-sm truncate mt-0.5" title={targetUrl}>{targetUrl}</p>
+          <p
+            className="text-gecko-slate text-xs sm:text-sm truncate mt-0.5"
+            title={targetUrl}
+          >
+            {targetUrl}
+          </p>
           <p className="text-gecko-slate text-xs mt-1">{clicks} clicks</p>
         </div>
       </div>
@@ -42,5 +56,5 @@ export default function ShortUrlCard({ link, onViewStats, onCopy }) {
         </button>
       </div>
     </div>
-  )
+  );
 }

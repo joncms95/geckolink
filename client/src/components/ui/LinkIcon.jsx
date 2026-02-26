@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState } from "react";
 
 export default function LinkIcon({ src, className = "" }) {
-  const [error, setError] = useState(false)
+  const [error, setError] = useState(false);
 
   if (src && !error) {
     return (
@@ -12,7 +12,7 @@ export default function LinkIcon({ src, className = "" }) {
         referrerPolicy="no-referrer"
         onError={() => setError(true)}
       />
-    )
+    );
   }
 
   return (
@@ -22,5 +22,5 @@ export default function LinkIcon({ src, className = "" }) {
     >
       <i className="fa-solid fa-link text-xl text-gecko-slate" aria-hidden />
     </div>
-  )
+  );
 }

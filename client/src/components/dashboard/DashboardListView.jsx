@@ -1,12 +1,13 @@
-import { SCROLL_TARGETS } from "../../constants"
-import LookupForm from "./LookupForm"
-import MetricCard from "./MetricCard"
-import MetricsGridLoading from "./MetricsGridLoading"
+import { SCROLL_TARGETS } from "../../constants";
+import LookupForm from "./LookupForm";
+import MetricCard from "./MetricCard";
+import MetricsGridLoading from "./MetricsGridLoading";
 
 export default function DashboardListView({ stats, onLookupResult }) {
-  const { totalLinks, totalClicks, topLocation, loading, error } = stats
-  const avgClicks = totalLinks ? (totalClicks / totalLinks).toFixed(1) : "0.0"
-  const topLocationDisplay = topLocation && topLocation.trim() !== "" ? topLocation : "N/A"
+  const { totalLinks, totalClicks, topLocation, loading, error } = stats;
+  const avgClicks = totalLinks ? (totalClicks / totalLinks).toFixed(1) : "0.0";
+  const topLocationDisplay =
+    topLocation && topLocation.trim() !== "" ? topLocation : "N/A";
 
   return (
     <>
@@ -26,13 +27,25 @@ export default function DashboardListView({ stats, onLookupResult }) {
         ) : (
           <>
             <MetricCard label="Total Links" value={totalLinks} icon="fa-link" />
-            <MetricCard label="Total Clicks" value={totalClicks} icon="fa-chart-line" />
-            <MetricCard label="Avg. Clicks/Link" value={avgClicks} icon="fa-chart-column" />
-            <MetricCard label="Top Location" value={topLocationDisplay} icon="fa-globe" />
+            <MetricCard
+              label="Total Clicks"
+              value={totalClicks}
+              icon="fa-chart-line"
+            />
+            <MetricCard
+              label="Avg. Clicks/Link"
+              value={avgClicks}
+              icon="fa-chart-column"
+            />
+            <MetricCard
+              label="Top Location"
+              value={topLocationDisplay}
+              icon="fa-globe"
+            />
           </>
         )}
       </div>
       <LookupForm onResult={onLookupResult} />
     </>
-  )
+  );
 }

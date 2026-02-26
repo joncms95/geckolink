@@ -15,5 +15,5 @@ export default function InlineError({ message, onRetry, className = "" }) {
         </button>
       )}
     </div>
-  )
+  );
 }

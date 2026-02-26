@@ -7,11 +7,11 @@
  */
 export function scrollToTop(target) {
   if (target && typeof target === "string") {
-    const el = document.querySelector(`[data-scroll-target="${target}"]`)
+    const el = document.querySelector(`[data-scroll-target="${target}"]`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" })
-      return
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
     }
   }
-  window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+  window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
 }

@@ -1,13 +1,16 @@
-import { Link } from "react-router-dom"
-import { useAuth } from "../hooks/useAuth"
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export default function NotFoundPage() {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 sm:py-16">
       <div className="max-w-md w-full text-center">
-        <p className="text-6xl sm:text-7xl font-bold text-gecko-green/30 select-none" aria-hidden>
+        <p
+          className="text-6xl sm:text-7xl font-bold text-gecko-green/30 select-none"
+          aria-hidden
+        >
           404
         </p>
         <h1 className="mt-4 text-xl sm:text-2xl font-bold text-white">
@@ -34,5 +37,5 @@ export default function NotFoundPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }

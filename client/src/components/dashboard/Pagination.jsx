@@ -1,10 +1,10 @@
-import { paginationItems } from "../../utils/pagination"
+import { paginationItems } from "../../utils/pagination";
 
 const btnClass =
-  "min-w-[2.25rem] h-9 px-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
-const btnActive = "bg-gecko-green text-gecko-dark"
+  "min-w-[2.25rem] h-9 px-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60";
+const btnActive = "bg-gecko-green text-gecko-dark";
 const btnInactive =
-  "bg-gecko-dark-card border border-gecko-dark-border text-white hover:border-gecko-green/50 hover:bg-gecko-dark-card/80"
+  "bg-gecko-dark-card border border-gecko-dark-border text-white hover:border-gecko-green/50 hover:bg-gecko-dark-card/80";
 
 /**
  * Reusable pagination: Previous / page numbers / Next, with optional "Showing X to Y of Z".
@@ -23,17 +23,19 @@ export default function Pagination({
   totalItems,
   perPage,
 }) {
-  const showPagination = totalPages > 1
-  const items = showPagination ? paginationItems(currentPage, totalPages) : []
+  const showPagination = totalPages > 1;
+  const items = showPagination ? paginationItems(currentPage, totalPages) : [];
 
-  const start = totalItems != null && perPage != null && totalItems > 0
-    ? (currentPage - 1) * perPage + 1
-    : null
-  const end = totalItems != null && perPage != null && totalItems > 0
-    ? Math.min(currentPage * perPage, totalItems)
-    : null
+  const start =
+    totalItems != null && perPage != null && totalItems > 0
+      ? (currentPage - 1) * perPage + 1
+      : null;
+  const end =
+    totalItems != null && perPage != null && totalItems > 0
+      ? Math.min(currentPage * perPage, totalItems)
+      : null;
 
-  if (!showPagination && start == null) return null
+  if (!showPagination && start == null) return null;
 
   return (
     <div className="flex flex-col items-center gap-3 mt-4">
@@ -43,7 +45,10 @@ export default function Pagination({
         </p>
       )}
       {showPagination && (
-        <nav aria-label="Pagination" className="flex flex-wrap items-center justify-center gap-2">
+        <nav
+          aria-label="Pagination"
+          className="flex flex-wrap items-center justify-center gap-2"
+        >
           <button
             type="button"
             onClick={() => onPageChange(currentPage - 1)}
@@ -56,7 +61,11 @@ export default function Pagination({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {items.map((item, i) =>
               item === "…" ? (
-                <span key={`ellipsis-${i}`} className="px-1 text-gecko-slate" aria-hidden>
+                <span
+                  key={`ellipsis-${i}`}
+                  className="px-1 text-gecko-slate"
+                  aria-hidden
+                >
                   …
                 </span>
               ) : (
@@ -71,7 +80,7 @@ export default function Pagination({
                 >
                   {item}
                 </button>
-              )
+              ),
             )}
           </div>
           <button
@@ -86,5 +95,5 @@ export default function Pagination({
         </nav>
       )}
     </div>
-  )
+  );
 }

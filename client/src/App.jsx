@@ -1,20 +1,22 @@
-import { lazy, Suspense } from "react"
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
-import { AuthProvider, useAuth } from "./hooks/useAuth"
-import { useAuthModal } from "./hooks/useAuthModal"
-import { ToastProvider } from "./hooks/useToast"
-import AuthModal from "./components/AuthModal"
-import Header from "./components/Header"
-import ScrollToTopButton from "./components/ScrollToTopButton"
-import HomePage from "./pages/HomePage"
-import NotFoundPage from "./pages/NotFoundPage"
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { useAuthModal } from "./hooks/useAuthModal";
+import { ToastProvider } from "./hooks/useToast";
+import AuthModal from "./components/AuthModal";
+import Header from "./components/Header";
+import ScrollToTopButton from "./components/ScrollToTopButton";
+import HomePage from "./pages/HomePage";
+import NotFoundPage from "./pages/NotFoundPage";
 
-const ParticleBackground = lazy(() => import("./components/ParticleBackground"))
-const DashboardPage = lazy(() => import("./components/DashboardPage"))
+const ParticleBackground = lazy(
+  () => import("./components/ParticleBackground"),
+);
+const DashboardPage = lazy(() => import("./components/DashboardPage"));
 
 function AppContent() {
-  const { user, login, logout, signup } = useAuth()
-  const { authModalMode, openLogin, openSignup, close } = useAuthModal()
+  const { user, login, logout, signup } = useAuth();
+  const { authModalMode, openLogin, openSignup, close } = useAuthModal();
 
   return (
     <div className="min-h-screen bg-gecko-dark text-white font-sans antialiased bg-pattern relative overflow-x-hidden">
@@ -48,7 +50,13 @@ function AppContent() {
             path="/dashboard/:key?"
             element={
               user ? (
-                <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-gecko-slate">Loading…</div>}>
+                <Suspense
+                  fallback={
+                    <div className="min-h-[50vh] flex items-center justify-center text-gecko-slate">
+                      Loading…
+                    </div>
+                  }
+                >
                   <DashboardPage />
                 </Suspense>
               ) : (
@@ -68,7 +76,7 @@ function AppContent() {
         <ScrollToTopButton />
       </div>
     </div>
-  )
+  );
 }
 
 export default function App() {
@@ -80,5 +88,5 @@ export default function App() {
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
-  )
+  );
 }

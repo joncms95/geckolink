@@ -5,22 +5,23 @@
  * @returns {(number|string)[]} - array of page numbers and "…" for gaps
  */
 export function paginationItems(currentPage, totalPages) {
-  const delta = 1
-  if (totalPages <= 0) return []
-  if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  const delta = 1;
+  if (totalPages <= 0) return [];
+  if (totalPages <= 3)
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
 
-  const left = Math.max(2, currentPage - delta)
-  const right = Math.min(totalPages - 1, currentPage + delta)
-  const items = [1]
+  const left = Math.max(2, currentPage - delta);
+  const right = Math.min(totalPages - 1, currentPage + delta);
+  const items = [1];
 
-  if (left > 2) items.push("…")
+  if (left > 2) items.push("…");
   for (let p = left; p <= right; p++) {
-    if (!items.includes(p)) items.push(p)
+    if (!items.includes(p)) items.push(p);
   }
-  if (right < totalPages - 1) items.push("…")
-  if (totalPages > 1) items.push(totalPages)
+  if (right < totalPages - 1) items.push("…");
+  if (totalPages > 1) items.push(totalPages);
 
-  return items
+  return items;
 }
 
 /**
@@ -31,12 +32,12 @@ export function paginationItems(currentPage, totalPages) {
  * @returns {{ pageItems: Array, start: number, end: number, totalPages: number }}
  */
 export function slicePage(items, page, perPage) {
-  const total = items.length
-  const totalPages = Math.max(1, Math.ceil(total / perPage))
-  const safePage = Math.max(1, Math.min(page, totalPages))
-  const startIndex = (safePage - 1) * perPage
-  const pageItems = items.slice(startIndex, startIndex + perPage)
-  const start = total > 0 ? startIndex + 1 : 0
-  const end = total > 0 ? Math.min(startIndex + perPage, total) : 0
-  return { pageItems, start, end, totalPages, currentPage: safePage }
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const safePage = Math.max(1, Math.min(page, totalPages));
+  const startIndex = (safePage - 1) * perPage;
+  const pageItems = items.slice(startIndex, startIndex + perPage);
+  const start = total > 0 ? startIndex + 1 : 0;
+  const end = total > 0 ? Math.min(startIndex + perPage, total) : 0;
+  return { pageItems, start, end, totalPages, currentPage: safePage };
 }

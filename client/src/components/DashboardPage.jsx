@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useRef } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { getLink } from "../api/links"
-import { SCROLL_TARGETS } from "../constants"
-import { useAuth } from "../hooks/useAuth"
-import useCopyToClipboard from "../hooks/useCopyToClipboard"
-import { useDashboardStats } from "../hooks/useDashboardStats"
-import { useLinksList } from "../hooks/useLinksList"
-import { useToast } from "../hooks/useToast"
-import { scrollToTop } from "../utils/scroll"
-import DashboardListView from "./dashboard/DashboardListView"
-import LinkDetailView from "./dashboard/LinkDetailView"
-import LinkList from "./dashboard/LinkList"
+import { useCallback, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getLink } from "../api/links";
+import { SCROLL_TARGETS } from "../constants";
+import { useAuth } from "../hooks/useAuth";
+import useCopyToClipboard from "../hooks/useCopyToClipboard";
+import { useDashboardStats } from "../hooks/useDashboardStats";
+import { useLinksList } from "../hooks/useLinksList";
+import { useToast } from "../hooks/useToast";
+import { scrollToTop } from "../utils/scroll";
+import DashboardListView from "./dashboard/DashboardListView";
+import LinkDetailView from "./dashboard/LinkDetailView";
+import LinkList from "./dashboard/LinkList";
 
 export default function DashboardPage() {
-  const { key: keyFromUrl } = useParams()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { showToast } = useToast()
-  const { copy } = useCopyToClipboard()
+  const { key: keyFromUrl } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const { copy } = useCopyToClipboard();
 
   const {
     displayedLinks,
@@ -31,78 +31,78 @@ export default function DashboardPage() {
     refetch: refetchLinks,
     selectedLink,
     setSelectedLink,
-  } = useLinksList(user)
+  } = useLinksList(user);
 
-  const stats = useDashboardStats(user)
-  const { refetch: refetchStats } = stats
-  const prevKeyFromUrl = useRef(keyFromUrl)
-
-  useEffect(() => {
-    if (keyFromUrl) scrollToTop()
-  }, [keyFromUrl])
+  const stats = useDashboardStats(user);
+  const { refetch: refetchStats } = stats;
+  const prevKeyFromUrl = useRef(keyFromUrl);
 
   useEffect(() => {
-    const wasDetailView = Boolean(prevKeyFromUrl.current)
-    const isListView = !keyFromUrl
-    prevKeyFromUrl.current = keyFromUrl
+    if (keyFromUrl) scrollToTop();
+  }, [keyFromUrl]);
+
+  useEffect(() => {
+    const wasDetailView = Boolean(prevKeyFromUrl.current);
+    const isListView = !keyFromUrl;
+    prevKeyFromUrl.current = keyFromUrl;
     if (wasDetailView && isListView) {
-      refetchStats()
-      refetchLinks()
+      refetchStats();
+      refetchLinks();
     }
-  }, [keyFromUrl, refetchStats, refetchLinks])
+  }, [keyFromUrl, refetchStats, refetchLinks]);
 
   useEffect(() => {
-    if (!keyFromUrl) return
+    if (!keyFromUrl) return;
 
-    const inList = displayedLinks.find((l) => l.key === keyFromUrl)
+    const inList = displayedLinks.find((l) => l.key === keyFromUrl);
     if (inList) {
-      setSelectedLink(inList)
-      return
+      setSelectedLink(inList);
+      return;
     }
 
     getLink(keyFromUrl)
       .then((link) => setSelectedLink(link))
-      .catch(() => {})
-  }, [keyFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
+      .catch(() => {});
+  }, [keyFromUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = useCallback(
     async (text) => {
-      const ok = await copy(text)
-      if (ok) showToast("Copied to clipboard!")
+      const ok = await copy(text);
+      if (ok) showToast("Copied to clipboard!");
     },
-    [copy, showToast]
-  )
+    [copy, showToast],
+  );
 
   const handleViewStats = useCallback(
     (link) => {
-      if (link.key === keyFromUrl) scrollToTop()
-      navigate(`/dashboard/${link.key}`)
+      if (link.key === keyFromUrl) scrollToTop();
+      navigate(`/dashboard/${link.key}`);
     },
-    [navigate, keyFromUrl]
-  )
+    [navigate, keyFromUrl],
+  );
 
   const handleLookupResult = useCallback(
     (link) => {
-      setSelectedLink(link)
-      navigate(`/dashboard/${link.key}`)
+      setSelectedLink(link);
+      navigate(`/dashboard/${link.key}`);
     },
-    [setSelectedLink, navigate]
-  )
+    [setSelectedLink, navigate],
+  );
 
   const handleBackToDashboard = useCallback(() => {
-    navigate("/dashboard")
-    requestAnimationFrame(() => scrollToTop(SCROLL_TARGETS.DASHBOARD))
-  }, [navigate])
+    navigate("/dashboard");
+    requestAnimationFrame(() => scrollToTop(SCROLL_TARGETS.DASHBOARD));
+  }, [navigate]);
 
   const handlePageChange = useCallback(
     (page) => {
-      if (keyFromUrl) navigate("/dashboard")
-      goToPage({ page, onLoaded: () => scrollToTop(SCROLL_TARGETS.LINK_LIST) })
+      if (keyFromUrl) navigate("/dashboard");
+      goToPage({ page, onLoaded: () => scrollToTop(SCROLL_TARGETS.LINK_LIST) });
     },
-    [goToPage, navigate, keyFromUrl]
-  )
+    [goToPage, navigate, keyFromUrl],
+  );
 
-  const isDetailView = Boolean(keyFromUrl)
+  const isDetailView = Boolean(keyFromUrl);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
@@ -129,5 +129,5 @@ export default function DashboardPage() {
         onCopy={handleCopy}
       />
     </div>
-  )
+  );
 }

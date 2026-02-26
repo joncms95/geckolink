@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from "react"
-import Particles, { initParticlesEngine } from "@tsparticles/react"
-import { loadSlim } from "@tsparticles/slim"
+import { useEffect, useMemo, useState } from "react";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 
 export default function ParticleBackground() {
-  const [ready, setReady] = useState(false)
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => {
-      await loadSlim(engine)
-    }).then(() => setReady(true))
-  }, [])
+      await loadSlim(engine);
+    }).then(() => setReady(true));
+  }, []);
 
   const options = useMemo(
     () => ({
@@ -44,15 +44,10 @@ export default function ParticleBackground() {
       },
       detectRetina: true,
     }),
-    []
-  )
+    [],
+  );
 
-  if (!ready) return null
+  if (!ready) return null;
 
-  return (
-    <Particles
-      className="absolute inset-0"
-      options={options}
-    />
-  )
+  return <Particles className="absolute inset-0" options={options} />;
 }

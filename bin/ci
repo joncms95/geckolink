@@ -29,7 +29,7 @@ run_section "1/5  Rufo (Ruby format)"
 rufo_format_until_clean
 
 run_section "2/5  Prettier (client format)"
-npm run format:check --prefix client
+npm run format --prefix client
 
 run_section "3/5  RuboCop (lint & auto-correct)"
 bin/rubocop -A

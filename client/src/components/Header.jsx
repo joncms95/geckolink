@@ -1,63 +1,65 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
-const SCROLL_THRESHOLD = 100
-const TOP_HOVER_ZONE = 80
-const MOUSEMOVE_THROTTLE_MS = 100
+const SCROLL_THRESHOLD = 100;
+const TOP_HOVER_ZONE = 80;
+const MOUSEMOVE_THROTTLE_MS = 100;
 
 function getInitials(email) {
-  const local = email.split("@")[0]
-  const parts = local.split(/[._-]/).filter(Boolean)
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
-  return local.slice(0, 2).toUpperCase()
+  const local = email.split("@")[0];
+  const parts = local.split(/[._-]/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return local.slice(0, 2).toUpperCase();
 }
 
 export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
-  const location = useLocation()
-  const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/")
-  const [visible, setVisible] = useState(true)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef(null)
-  const lastScrollY = useRef(0)
-  const lastMouseMoveTime = useRef(0)
+  const location = useLocation();
+  const isDashboard =
+    location.pathname === "/dashboard" ||
+    location.pathname.startsWith("/dashboard/");
+  const [visible, setVisible] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const lastScrollY = useRef(0);
+  const lastMouseMoveTime = useRef(0);
 
   const updateVisibility = useCallback(() => {
-    const scrollY = window.scrollY
-    setVisible(scrollY <= SCROLL_THRESHOLD || scrollY <= lastScrollY.current)
-    lastScrollY.current = scrollY
-  }, [])
+    const scrollY = window.scrollY;
+    setVisible(scrollY <= SCROLL_THRESHOLD || scrollY <= lastScrollY.current);
+    lastScrollY.current = scrollY;
+  }, []);
 
   useEffect(() => {
-    let ticking = false
+    let ticking = false;
     const onScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          updateVisibility()
-          ticking = false
-        })
-        ticking = true
+          updateVisibility();
+          ticking = false;
+        });
+        ticking = true;
       }
-    }
+    };
     const onMouseMove = (e) => {
-      const now = Date.now()
-      if (now - lastMouseMoveTime.current < MOUSEMOVE_THROTTLE_MS) return
-      lastMouseMoveTime.current = now
-      if (e.clientY < TOP_HOVER_ZONE) setVisible(true)
-    }
+      const now = Date.now();
+      if (now - lastMouseMoveTime.current < MOUSEMOVE_THROTTLE_MS) return;
+      lastMouseMoveTime.current = now;
+      if (e.clientY < TOP_HOVER_ZONE) setVisible(true);
+    };
     const onClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false)
+        setMenuOpen(false);
       }
-    }
-    window.addEventListener("scroll", onScroll, { passive: true })
-    window.addEventListener("mousemove", onMouseMove)
-    document.addEventListener("mousedown", onClickOutside)
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mousedown", onClickOutside);
     return () => {
-      window.removeEventListener("scroll", onScroll)
-      window.removeEventListener("mousemove", onMouseMove)
-      document.removeEventListener("mousedown", onClickOutside)
-    }
-  }, [updateVisibility])
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mousedown", onClickOutside);
+    };
+  }, [updateVisibility]);
 
   return (
     <header
@@ -69,12 +71,10 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
           to="/"
           className="flex items-center gap-2 sm:gap-2.5 text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-gecko-green focus-visible:ring-offset-2 focus-visible:ring-offset-gecko-dark rounded-lg py-1 min-h-[44px] items-center"
         >
-          <img
-            src="/logo.png"
-            alt="GeckoLink Logo"
-            className="h-10 w-10"
-          />
-          <span className="text-xl sm:text-2xl font-brand font-bold tracking-wide truncate">GECKOLINK</span>
+          <img src="/logo.png" alt="GeckoLink Logo" className="h-10 w-10" />
+          <span className="text-xl sm:text-2xl font-brand font-bold tracking-wide truncate">
+            GECKOLINK
+          </span>
         </Link>
         <nav className="flex items-center gap-3 sm:gap-4 shrink min-w-0">
           {user && (
@@ -86,7 +86,10 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
                   : "text-gecko-slate hover:text-white hover:bg-gecko-dark-card"
               }`}
             >
-              <i className="fa-solid fa-chart-column text-lg sm:text-xl shrink-0" aria-hidden />
+              <i
+                className="fa-solid fa-chart-column text-lg sm:text-xl shrink-0"
+                aria-hidden
+              />
               <span className="hidden sm:inline">Dashboard</span>
             </Link>
           )}
@@ -104,14 +107,22 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gecko-dark-border bg-gecko-dark-card shadow-lg py-2 animate-fade-in z-50">
                   <div className="px-4 py-2.5 border-b border-gecko-dark-border">
-                    <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                    <p className="text-sm font-medium text-white truncate">
+                      {user.email}
+                    </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setMenuOpen(false); onLogout(); }}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onLogout();
+                    }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gecko-slate hover:text-white hover:bg-gecko-dark-border/50 transition-colors flex items-center gap-2"
                   >
-                    <i className="fa-solid fa-right-from-bracket text-xs" aria-hidden />
+                    <i
+                      className="fa-solid fa-right-from-bracket text-xs"
+                      aria-hidden
+                    />
                     Sign out
                   </button>
                 </div>
@@ -138,5 +149,5 @@ export default function Header({ user, onLogout, onOpenAuth, onOpenSignup }) {
         </nav>
       </div>
     </header>
-  )
+  );
 }

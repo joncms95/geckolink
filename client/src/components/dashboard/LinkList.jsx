@@ -1,6 +1,6 @@
-import { LINKS_PER_PAGE, SORT_OPTIONS } from "../../constants"
-import Pagination from "./Pagination"
-import ShortUrlCard from "./ShortUrlCard"
+import { LINKS_PER_PAGE, SORT_OPTIONS } from "../../constants";
+import Pagination from "./Pagination";
+import ShortUrlCard from "./ShortUrlCard";
 
 export default function LinkList({
   links,
@@ -14,9 +14,10 @@ export default function LinkList({
   onViewStats,
   onCopy,
 }) {
-  const showPagination = linksTotal > LINKS_PER_PAGE && totalPages > 1
-  const start = linksTotal > 0 ? (currentPage - 1) * LINKS_PER_PAGE + 1 : 0
-  const end = linksTotal > 0 ? Math.min(currentPage * LINKS_PER_PAGE, linksTotal) : 0
+  const showPagination = linksTotal > LINKS_PER_PAGE && totalPages > 1;
+  const start = linksTotal > 0 ? (currentPage - 1) * LINKS_PER_PAGE + 1 : 0;
+  const end =
+    linksTotal > 0 ? Math.min(currentPage * LINKS_PER_PAGE, linksTotal) : 0;
 
   return (
     <section className="min-w-0">
@@ -32,7 +33,10 @@ export default function LinkList({
         {linksTotal > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-gecko-slate text-sm flex items-center gap-1.5">
-              <i className="fa-solid fa-arrows-up-down text-xs opacity-70" aria-hidden />
+              <i
+                className="fa-solid fa-arrows-up-down text-xs opacity-70"
+                aria-hidden
+              />
               Sort by
             </span>
             <select
@@ -57,14 +61,19 @@ export default function LinkList({
         </div>
       ) : links.length === 0 ? (
         <div className="rounded-xl border border-gecko-dark-border bg-gecko-dark-card p-8 text-center text-gecko-slate text-sm">
-          No short links yet. Create one on the home page or paste a short link above to view its stats.
+          No short links yet. Create one on the home page or paste a short link
+          above to view its stats.
         </div>
       ) : (
         <>
           <ul className="space-y-3">
             {links.map((link) => (
               <li key={link.key}>
-                <ShortUrlCard link={link} onViewStats={onViewStats} onCopy={onCopy} />
+                <ShortUrlCard
+                  link={link}
+                  onViewStats={onViewStats}
+                  onCopy={onCopy}
+                />
               </li>
             ))}
           </ul>
@@ -79,5 +88,5 @@ export default function LinkList({
         </>
       )}
     </section>
-  )
+  );
 }

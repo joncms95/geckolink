@@ -1,48 +1,48 @@
-import { useCallback, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { formatApiError } from "../api/errors"
-import { createLink } from "../api/links"
-import { useAuth } from "../hooks/useAuth"
-import useCopyToClipboard from "../hooks/useCopyToClipboard"
-import { useToast } from "../hooks/useToast"
-import CreatedLinkResult from "../components/CreatedLinkResult"
-import HeroForm from "../components/HeroForm"
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { formatApiError } from "../api/errors";
+import { createLink } from "../api/links";
+import { useAuth } from "../hooks/useAuth";
+import useCopyToClipboard from "../hooks/useCopyToClipboard";
+import { useToast } from "../hooks/useToast";
+import CreatedLinkResult from "../components/CreatedLinkResult";
+import HeroForm from "../components/HeroForm";
 
 export default function HomePage({ onOpenSignup }) {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { showToast } = useToast()
-  const { copy } = useCopyToClipboard()
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const { copy } = useCopyToClipboard();
 
-  const [loading, setLoading] = useState(false)
-  const [submitError, setSubmitError] = useState(null)
-  const [createdLink, setCreatedLink] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [createdLink, setCreatedLink] = useState(null);
 
   const handleSubmit = useCallback(
     async (url) => {
-      setLoading(true)
-      setSubmitError(null)
-      setCreatedLink(null)
+      setLoading(true);
+      setSubmitError(null);
+      setCreatedLink(null);
       try {
-        const data = await createLink(url)
-        showToast("Short URL created!")
-        setCreatedLink(data)
+        const data = await createLink(url);
+        showToast("Short URL created!");
+        setCreatedLink(data);
       } catch (err) {
-        setSubmitError(formatApiError(err))
+        setSubmitError(formatApiError(err));
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [showToast]
-  )
+    [showToast],
+  );
 
   const handleCopyShortUrl = useCallback(
     async (text) => {
-      const ok = await copy(text)
-      if (ok) showToast("Copied to clipboard!")
+      const ok = await copy(text);
+      if (ok) showToast("Copied to clipboard!");
     },
-    [copy, showToast]
-  )
+    [copy, showToast],
+  );
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-16 sm:pb-24 text-center">
@@ -51,7 +51,8 @@ export default function HomePage({ onOpenSignup }) {
         <span className="text-gecko-green">Track Everything.</span>
       </h1>
       <p className="mt-3 sm:mt-4 text-gecko-slate text-sm sm:text-base max-w-xl mx-auto">
-        Create short links and get detailed analytics on every click. Know your audience better.
+        Create short links and get detailed analytics on every click. Know your
+        audience better.
       </p>
       {!user && onOpenSignup && (
         <p className="mt-4 sm:mt-5">
@@ -86,5 +87,5 @@ export default function HomePage({ onOpenSignup }) {
         />
       )}
     </main>
-  )
+  );
 }
