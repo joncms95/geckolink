@@ -3,7 +3,7 @@
 class Result
   attr_reader :value, :error
 
-  def initialize(success: success, value: nil, error: nil)
+  def initialize(success:, value: nil, error: nil)
     @success = success
     @value = value
     @error = error

@@ -34,14 +34,17 @@ module Dashboard
       end
 
       def top_location_for_user(user)
-        pair = Click
+        Click
           .where(link_id: user.links.select(:id))
           .where.not(country: [nil, ""])
           .group(:country)
+          .order(Arel.sql("COUNT(*) DESC"))
+          .limit(1)
           .count
-          .max_by { |_, count| count }
-
-        pair&.first&.to_s.presence
+          .keys
+          .first
+          &.to_s
+          .presence
       end
     end
   end

@@ -8,7 +8,9 @@ RSpec.describe "Redirects", type: :request do
   let(:link) { create(:link, target_url: "https://example.com/dest") }
 
   it "redirects to the target URL and increments clicks" do
-    get "/#{link.key}"
+    perform_enqueued_jobs do
+      get "/#{link.key}"
+    end
     expect(response).to redirect_to("https://example.com/dest")
     expect(response).to have_http_status(:found)
     expect(link.reload.clicks_count).to eq(1)

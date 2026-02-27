@@ -36,7 +36,7 @@ module Shortener
         rescue ActiveRecord::RecordInvalid => e
           raise unless e.record.errors[:key].any?
           link.key = nil
-          link.errors.clear
+          link.errors.delete(:key)
         end
 
         raise ActiveRecord::RecordInvalid, link

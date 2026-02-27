@@ -14,6 +14,8 @@ module Analytics
         clicked_at: Time.current
       )
 
+      Link.increment_counter(:clicks_count, link.id)
+
       fill_geolocation(click)
       invalidate_dashboard_cache_for(link)
     end
