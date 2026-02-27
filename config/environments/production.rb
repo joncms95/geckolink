@@ -58,7 +58,7 @@ Rails.application.configure do
     url: ENV["REDIS_URL"].presence || "redis://localhost:6379"
   )
 
-  config.active_job.queue_adapter = :inline
+  config.active_job.queue_adapter = :sidekiq
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

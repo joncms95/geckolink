@@ -8,6 +8,7 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "redis", ">= 5.0"
 gem "connection_pool", "~> 2.4"
+gem "sidekiq", "~> 7.0"
 gem "geocoder", "~> 1.8"
 gem "rack-attack", "~> 6.7"
 
