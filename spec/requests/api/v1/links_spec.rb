@@ -103,10 +103,22 @@ RSpec.describe "Api::V1::Links", type: :request do
   end
 
   describe "GET /api/v1/links/:key" do
-    let(:link) { create(:link) }
+    let(:user) { create(:user) }
+    let(:link) { create(:link, user_id: user.id) }
+    let(:auth_headers) do
+      post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+      token = response.parsed_body["token"]
+      reset!
+      { "Authorization" => "Bearer #{token}" }
+    end
 
-    it "returns the link" do
+    it "returns 401 when not authenticated" do
       get api_v1_link_path(link.key)
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "returns the link when authenticated as owner" do
+      get api_v1_link_path(link.key), headers: auth_headers
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
       expect(json["key"]).to eq(link.key)
@@ -114,7 +126,7 @@ RSpec.describe "Api::V1::Links", type: :request do
     end
 
     it "returns 404 for unknown key" do
-      get api_v1_link_path("nonexistent")
+      get api_v1_link_path("nonexistent"), headers: auth_headers
       expect(response).to have_http_status(:not_found)
       expect(response.parsed_body["errors"]).to eq(["Not found."])
     end
@@ -134,11 +146,23 @@ RSpec.describe "Api::V1::Links", type: :request do
   end
 
   describe "GET /api/v1/links/:key/analytics" do
-    let(:link) { create(:link) }
+    let(:user) { create(:user) }
+    let(:link) { create(:link, user_id: user.id) }
+    let(:auth_headers) do
+      post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+      token = response.parsed_body["token"]
+      reset!
+      { "Authorization" => "Bearer #{token}" }
+    end
 
-    it "returns report with by_country and by_hour" do
-      create(:click, link: link, country: "US")
+    it "returns 401 when not authenticated" do
       get analytics_api_v1_link_path(link.key)
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "returns report with by_country and by_hour when authenticated as owner" do
+      create(:click, link: link, country: "US")
+      get analytics_api_v1_link_path(link.key), headers: auth_headers
       expect(response).to have_http_status(:ok)
       json = response.parsed_body
       expect(json).to have_key("by_country")
@@ -146,8 +170,14 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(json["by_country"]).to eq("US" => 1)
     end
 
+    it "returns 403 when link belongs to another user" do
+      other_link = create(:link, user_id: create(:user).id)
+      get analytics_api_v1_link_path(other_link.key), headers: auth_headers
+      expect(response).to have_http_status(:forbidden)
+    end
+
     it "returns 404 for unknown key" do
-      get analytics_api_v1_link_path("nonexistent")
+      get analytics_api_v1_link_path("nonexistent"), headers: auth_headers
       expect(response).to have_http_status(:not_found)
     end
   end

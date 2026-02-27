@@ -7,7 +7,13 @@ RSpec.describe "Link flow (create → redirect → analytics)", type: :request d
 
   it "creates a link, redirects by key, and returns analytics" do
     allow(Metadata::TitleAndIconFetcher).to receive(:call).and_return(Result.failure("Invalid URL"))
-    post api_v1_links_path, params: { link: { target_url: "https://example.com/target" } }, as: :json
+    user = create(:user)
+    post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+    token = response.parsed_body["token"]
+    reset!
+
+    post api_v1_links_path, params: { link: { target_url: "https://example.com/target" } }, as: :json,
+                            headers: { "Authorization" => "Bearer #{token}" }
     expect(response).to have_http_status(:created)
     json = response.parsed_body
     link_key = json["key"]
@@ -19,7 +25,7 @@ RSpec.describe "Link flow (create → redirect → analytics)", type: :request d
     expect(response).to have_http_status(:found)
     expect(response.headers["Location"]).to eq("https://example.com/target")
 
-    get analytics_api_v1_link_path(link_key)
+    get analytics_api_v1_link_path(link_key), headers: { "Authorization" => "Bearer #{token}" }
     expect(response).to have_http_status(:ok)
     report = response.parsed_body
     expect(report).to have_key("by_country")

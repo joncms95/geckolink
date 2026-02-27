@@ -3,7 +3,7 @@
 module Api
   module V1
     class LinksController < Api::BaseController
-      before_action :require_authentication!, only: :index
+      before_action :require_authentication!, only: %i[index show analytics]
 
       def create
         return head :unauthorized if stale_auth?
@@ -53,7 +53,6 @@ module Api
       private
 
       def authorize_link_access!(link)
-        return true if link.user_id.nil?
         return true if link.user_id == current_user&.id
 
         render_errors("You don't have permission to view this link.", :forbidden)
