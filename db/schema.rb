@@ -44,10 +44,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_23_100000) do
 
   create_table "sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "token", null: false
+    t.string "token_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["token"], name: "index_sessions_on_token", unique: true
+    t.index ["token_digest"], name: "index_sessions_on_token_digest", unique: true
     t.index ["user_id", "created_at"], name: "index_sessions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end

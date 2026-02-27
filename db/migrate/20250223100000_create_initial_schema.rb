@@ -11,10 +11,10 @@ class CreateInitialSchema < ActiveRecord::Migration[7.2]
 
     create_table :sessions do |t|
       t.references :user, null: false, foreign_key: true
-      t.string :token, null: false
+      t.string :token_digest, null: false
       t.timestamps
     end
-    add_index :sessions, :token, unique: true
+    add_index :sessions, :token_digest, unique: true
     add_index :sessions, %i[user_id created_at]
 
     create_table :links do |t|

@@ -35,7 +35,7 @@ RSpec.describe "Api::V1::Session", type: :request do
 
       delete api_v1_session_path, headers: { "Authorization" => "Bearer #{token}" }
       expect(response).to have_http_status(:no_content)
-      expect(Session.find_by(token: token)).to be_nil
+      expect(Session.find_by_token(token)).to be_nil
     end
   end
 

@@ -29,18 +29,18 @@ module Api
 
     # Create a new Session for the user and return the token for the client.
     def start_session(user)
-      Session.create_for_user(user)
+      Session.create_token_for_user(user)
     end
 
     # Destroy the Session for the token in the request (if any).
     def end_session
-      Session.find_by(token: bearer_token)&.destroy if bearer_present?
+      Session.find_by_token(bearer_token)&.destroy if bearer_present?
     end
 
     def authenticate_from_token
       return unless bearer_present?
 
-      Session.find_by(token: bearer_token)&.user
+      Session.find_by_token(bearer_token)&.user
     end
 
     def bearer_present?
@@ -48,7 +48,7 @@ module Api
     end
 
     def bearer_token
-      request.headers["Authorization"]&.split(" ", 2)&.last
+      request.headers["Authorization"]&.split(" ", 2)&.last&.presence
     end
   end
 end
