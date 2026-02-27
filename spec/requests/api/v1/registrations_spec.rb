@@ -29,5 +29,21 @@ RSpec.describe "Api::V1::Registrations", type: :request do
                                       }, as: :json
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "returns 422 for missing password" do
+      post api_v1_registrations_path, params: {
+                                        user: { email: "new@example.com", password_confirmation: "password123" }
+                                      }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["errors"]).to be_present
+    end
+
+    it "returns 422 for empty password" do
+      post api_v1_registrations_path, params: {
+                                        user: { email: "new@example.com", password: "", password_confirmation: "" }
+                                      }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["errors"]).to be_present
+    end
   end
 end

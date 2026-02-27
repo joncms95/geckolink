@@ -15,11 +15,26 @@ Log in to see the analytics dashboard with sample links.
 
 ---
 
+## Table of contents
+
+| Section                                      | Contents                                                    |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| **[Tech Stack](#tech-stack)**                 | Backend, database, frontend, testing, tooling                |
+| **[Architecture & Design Decisions](#architecture--design-decisions)** | Domain design, auth, dashboard, links, metadata, scalability |
+| **[API Endpoints](#api-endpoints)**          | All API routes and auth requirements                        |
+| **[Installation & Setup (macOS)](#installation--setup-macos)** | Prerequisites, local dev, tests, deployment                   |
+| **[Security](#security)**                    | Input sanitization, rate limiting, auth, errors              |
+| **[Project Structure](#project-structure)**  | Directory layout (app, client, config, spec, docs)          |
+| **[Code style](#code-style)**                | Rufo, RuboCop, Prettier                                     |
+
+---
+
 ## Tech Stack
 
 - **Backend:** Ruby 3.4.8, Rails 7.2.3 (API Mode)
 - **Database:** PostgreSQL 16
-- **Caching:** Redis (redirect lookups)
+- **Caching:** Redis (redirect lookups, Rack::Attack, dashboard stats)
+- **Background jobs:** Sidekiq
 - **Frontend:** React 18 (Vite), Tailwind CSS, React Router 7
 - **Auth:** bcrypt + Bearer tokens
 - **Testing:** RSpec, FactoryBot, Faker, WebMock
@@ -37,7 +52,7 @@ Log in to see the analytics dashboard with sample links.
 - `Shortener::RandomKey` — generates URL-safe short keys with `SecureRandom.alphanumeric` (uniform distribution). Default length 7 → 62^7 ≈ 3.5 trillion combinations.
 - `Shortener::CreateService` — generates a unique short key (retries on collision, fallback to 8 chars), creates the link, and fetches page metadata (synchronous).
 - `Redirect::ResolveService` — resolves a short key to a target URL with Redis-backed caching.
-- `RecordClickJob` (Active Job) — runs in the background (`:async` adapter). Enqueued on each redirect; calls `Analytics::RecordClick` to insert the click and fill geolocation (Geocoder, 3 s timeout). Redirects are sent immediately without waiting for the job.
+- `RecordClickJob` (Active Job) — runs in the background via Sidekiq in production. Enqueued on each redirect; calls `Analytics::RecordClick` to insert the click and increment `clicks_count`, then fill geolocation (Geocoder, 3 s timeout). Redirects are sent immediately without waiting for the job.
 - `Analytics::RecordClick` — records a click and geolocation; fire-and-forget.
 - `Analytics::ReportQuery` — aggregates click data by country and hour for the analytics dashboard.
 - `Dashboard::StatsQuery` — returns cached dashboard aggregates (total links, total clicks, top location) per user.
@@ -78,7 +93,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 - **Redirect lookups** are cached in Redis for 5 minutes to reduce DB load.
 - **Key generation** — `SecureRandom.alphanumeric(length)`; unique index on `links.key` with retry (and 8-char fallback) on collision.
-- **Redirect path** — Resolve key → increment `clicks_count` → enqueue `RecordClickJob` → send redirect. Click insert and geolocation run in the job queue.
+- **Redirect path** — Resolve key → enqueue `RecordClickJob` → send redirect. The job inserts the click, increments `clicks_count`, and runs geolocation so the redirect is never blocked.
 - **Health check** — `GET /up` reports boot status.
 
 ---
@@ -105,7 +120,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 - Ruby 3.4.8
 - PostgreSQL 16
-- Redis
+- **Redis**
 - Node.js 20+
 
 ### Local Development
@@ -139,11 +154,15 @@ When a user creates a short link, the app fetches the target page’s **title an
    bin/rails db:prepare
    ```
 
-1. **Start services** (Rails + Vite dev server via foreman)
+1. **Start services** (Rails, Sidekiq worker, and Vite via foreman)
+
+   Ensure Redis is running first (e.g. `brew services start redis`). Then:
 
    ```bash
    bin/dev
    ```
+
+   This starts the Rails server, the **Sidekiq worker** (click recording), and the Vite dev server. If Redis isn’t running, Sidekiq will fail to connect and clicks won’t be recorded.
 
 1. **Run tests**
 

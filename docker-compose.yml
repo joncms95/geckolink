@@ -6,6 +6,7 @@
 services:
   app:
     build: .
+    image: geckolink:latest
     restart: unless-stopped
     # No ports here; docker-compose.https.yml adds Nginx on 80/443
     env_file: .env
@@ -14,6 +15,22 @@ services:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/geckolink_production
       REDIS_URL: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    image: geckolink:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/geckolink_production
+      REDIS_URL: redis://redis:6379
+    command: ["bundle", "exec", "sidekiq"]
     depends_on:
       db:
         condition: service_healthy

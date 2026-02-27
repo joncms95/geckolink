@@ -53,6 +53,20 @@ RSpec.describe "Api::V1::Links", type: :request do
         expect(response.parsed_body["errors"]).to be_present
       end
     end
+
+    it "returns 401 when Bearer token is revoked (stale auth)" do
+      user = create(:user)
+      post api_v1_session_path, params: { session: { email: user.email, password: "password123" } }, as: :json
+      token = response.parsed_body["token"]
+      reset!
+      delete api_v1_session_path, headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:no_content)
+      reset!
+
+      post api_v1_links_path, params: { link: { target_url: valid_url } }, as: :json,
+                              headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   describe "GET /api/v1/links (index)" do
@@ -170,10 +184,12 @@ RSpec.describe "Api::V1::Links", type: :request do
       expect(json["by_country"]).to eq("US" => 1)
     end
 
-    it "returns 403 when link belongs to another user" do
-      other_link = create(:link, user_id: create(:user).id)
-      get analytics_api_v1_link_path(other_link.key), headers: auth_headers
+    it "returns 403 when User A tries to view User B's link analytics (cross-user)" do
+      user_b = create(:user)
+      link_b = create(:link, user_id: user_b.id)
+      get analytics_api_v1_link_path(link_b.key), headers: auth_headers
       expect(response).to have_http_status(:forbidden)
+      expect(response.parsed_body["errors"]).to include("You don't have permission to view this link.")
     end
 
     it "returns 404 for unknown key" do

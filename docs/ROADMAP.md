@@ -24,7 +24,7 @@
 
 - [x] **Model**: Create `Click` model (`link_id`, `clicked_at`, `ip_address`, `user_agent`, `geolocation`, `country`).
 - [x] **Service**: `Analytics::RecordClick` — records click with geolocation via Geocoder (3 s timeout). Invoked asynchronously via `RecordClickJob` so redirects are not blocked.
-- [x] **Job**: `RecordClickJob` — enqueued on each redirect; runs click insert + geolocation in background (Rails `:async` adapter).
+- [x] **Job**: `RecordClickJob` — enqueued on each redirect; runs click insert, `clicks_count` increment, and geolocation in background (Sidekiq in production).
 - [x] **Query Object**: `Analytics::ReportQuery` — aggregates clicks by country and hour.
 
 ## Phase 5: Authentication & User Accounts

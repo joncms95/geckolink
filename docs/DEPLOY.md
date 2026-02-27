@@ -96,7 +96,7 @@ Check containers:
 docker compose ps
 ```
 
-You should see `app`, `db`, and `redis`. The app is bound to **port 80** on the droplet.
+You should see `app`, `worker`, `db`, and `redis`. The app is bound to **port 80** on the droplet. The **worker** service runs Sidekiq and processes background jobs (click recording and geolocation); it uses the same image as `app` with the command overridden to `bundle exec sidekiq`.
 
 ### 7. Open port 80 (firewall)
 
@@ -127,14 +127,15 @@ docker compose logs -f app
 
 ### Backend: useful commands
 
-| Task                      | Command                                                |
-| ------------------------- | ------------------------------------------------------ |
-| View app logs             | `docker compose logs -f app`                           |
-| Stop stack                | `docker compose down`                                  |
-| Start stack               | `docker compose up -d`                                 |
-| Rebuild after code change | `docker compose build app && docker compose up -d app` |
-| Rails console             | `docker compose exec app bin/rails console`            |
-| Run migrations            | `docker compose exec app bin/rails db:migrate`         |
+| Task                       | Command                                                |
+| -------------------------- | ------------------------------------------------------ |
+| View app logs              | `docker compose logs -f app`                           |
+| View worker (Sidekiq) logs | `docker compose logs -f worker`                        |
+| Stop stack                 | `docker compose down`                                  |
+| Start stack                | `docker compose up -d`                                 |
+| Rebuild after code change  | `docker compose build app && docker compose up -d app` |
+| Rails console              | `docker compose exec app bin/rails console`            |
+| Run migrations             | `docker compose exec app bin/rails db:migrate`         |
 
 **Using HTTPS?** Prepend `-f docker-compose.yml -f docker-compose.https.yml` to every `docker compose` command (e.g. `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`).
 

@@ -19,6 +19,15 @@ RSpec.describe Analytics::RecordClick do
       expect(click.user_agent).to eq("Mozilla/5.0")
     end
 
+    it "increments the link clicks_count after persisting the click" do
+      allow(Geocoder).to receive(:search).and_return([])
+      expect(link.clicks_count).to eq(0)
+
+      described_class.call(link_id: link.id, ip_address: "1.2.3.4", user_agent: nil)
+
+      expect(link.reload.clicks_count).to eq(1)
+    end
+
     it "returns nil when link does not exist" do
       result = described_class.call(link_id: -1, ip_address: "1.2.3.4", user_agent: nil)
       expect(result).to be_nil

@@ -16,7 +16,7 @@ You are acting as a Senior Ruby on Rails Engineer. Follow these rules strictly w
   - _Interface_: Invoke via `MyService.call(...)`. Implement `self.call(...)` with the main logic; use private class methods for helpers. Return a `Result` object when the caller must branch on success/failure (`Result.success(value)` / `Result.failure(error)`); fire-and-forget logic (e.g. `Analytics::RecordClick`) may return nothing. Do not raise exceptions for expected flow control.
   - _Structure_: Constants → `self.call` → `class << self; private` → private class methods.
 - **Query Objects**: Complex SQL aggregations go into `app/queries/` (e.g., `Analytics::ReportQuery`). Same invocation: `MyQuery.call(...)`; implement `self.call` with private class methods (no instance delegation).
-- **Background Jobs**: Fire-and-forget work (e.g. click recording + geolocation) in `app/jobs/`. Use Active Job (`perform_later`). Default queue adapter is `:async` (in-process thread pool; no Redis required).
+- **Background Jobs**: Fire-and-forget work (e.g. click recording + geolocation) in `app/jobs/`. Use Active Job (`perform_later`).
 - **Concerns**: Shared controller behaviour in `app/controllers/concerns/api/` (e.g., `Api::Authentication`, `Api::RenderErrors`). API controllers inherit from `Api::BaseController`.
 - **Slim Controllers**: Controllers handle parameter parsing, call a service or query, and render the response. No business logic in controllers.
 - **Lean Models**: Keep models to associations, scopes, simple validations, and callbacks. Move multi-step logic to services.
