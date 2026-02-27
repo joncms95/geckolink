@@ -7,9 +7,9 @@ import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useLinksList } from "../hooks/useLinksList";
 import { scrollToTop } from "../utils/scroll";
-import DashboardListView from "./dashboard/DashboardListView";
-import LinkDetailView from "./dashboard/LinkDetailView";
-import LinkList from "./dashboard/LinkList";
+import DashboardListView from "../components/dashboard/DashboardListView";
+import LinkDetailView from "../components/dashboard/LinkDetailView";
+import LinkList from "../components/dashboard/LinkList";
 
 export default function DashboardPage() {
   const { key: keyFromUrl } = useParams();
@@ -64,6 +64,7 @@ export default function DashboardPage() {
     getLink(keyFromUrl)
       .then((link) => setSelectedLink(link))
       .catch(() => {});
+    // Intentionally exclude links so we only refetch when the URL key changes; including links would re-run when list updates and could overwrite selectedLink before API resolves.
   }, [keyFromUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleViewStats = useCallback(

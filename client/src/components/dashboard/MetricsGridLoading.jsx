@@ -11,6 +11,7 @@ export default function MetricsGridLoading({
   const gridClass = colSpan === 2 ? "col-span-2" : "col-span-2 lg:col-span-4";
   return (
     <div
+      role="status"
       className={`${gridClass} flex items-center justify-center py-8`}
       aria-label={ariaLabel}
     >

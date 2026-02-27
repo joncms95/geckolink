@@ -12,7 +12,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 const ParticleBackground = lazy(
   () => import("./components/ParticleBackground"),
 );
-const DashboardPage = lazy(() => import("./components/DashboardPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 
 function AppContent() {
   const { user, login, logout, signup } = useAuth();

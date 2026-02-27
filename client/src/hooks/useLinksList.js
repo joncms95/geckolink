@@ -65,6 +65,7 @@ export function useLinksList(user) {
     if (!user || loadedRef.current) return;
     loadedRef.current = true;
     fetchPage({ page: 1, sort: SORT_OPTIONS.NEWEST });
+    // Intentionally exclude fetchPage so this runs only once per user; loadedRef prevents double-fetch in StrictMode.
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const goToPage = useCallback(

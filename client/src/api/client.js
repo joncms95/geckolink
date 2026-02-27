@@ -2,7 +2,7 @@
  * API client. All HTTP requests go through fetchWithTimeout + handleResponse.
  * Auth token is stored in localStorage and attached to every request automatically.
  */
-import { getMessageFromBody } from "./errors";
+import { ApiError, getMessageFromBody } from "./errors";
 
 const origin = import.meta.env?.VITE_API_BASE ?? "";
 const API_BASE = `${origin}/api/v1`;
@@ -33,13 +33,13 @@ export function fetchWithTimeout(url, options = {}, timeoutMs = 12_000) {
 }
 
 /**
- * Parses JSON and throws { status, message } on non-ok responses.
- * Callers use formatApiError(err) to get the message string for UI.
+ * Parses JSON and throws ApiError on non-ok responses.
+ * Callers use formatApiError(err) for the message string and err.status for status (e.g. 404).
  */
 export async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw { status: res.status, message: getMessageFromBody(data) };
+    throw new ApiError(getMessageFromBody(data), res.status);
   }
   return data;
 }
