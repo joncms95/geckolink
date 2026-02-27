@@ -1,10 +1,10 @@
 # GeckoLink
 
-GeckoLink is a URL shortener with real-time analytics and geolocation tracking. Paste a long URL to get a short link, share it anywhere, and see click counts and locations in a simple dashboard. You can use it without an account or sign up to keep all your links in one place.
+GeckoLink is a URL shortener with real-time analytics and geolocation tracking. Paste a long URL to get a short link, share it anywhere, and see click counts and locations in a simple dashboard. You can use it without an account or sign up to gain dashboard access and keep all your links in one place.
 
 ## Live Demo
 
-**[GeckoLink](https://geckolink.vercel.app)** — shorten URLs and try the dashboard.
+**[GeckoLink](https://geckolink.vercel.app)** — shorten URLs and analytics in dashboard.
 
 A test account is available for trying the app:
 
@@ -13,19 +13,22 @@ A test account is available for trying the app:
 
 Log in to see the analytics dashboard with sample links.
 
+**Docs:** [Code docs](https://github.com/joncms95/geckolink/tree/main/docs) · [Wiki home](https://github.com/joncms95/geckolink/wiki) · [Wiki strategy](https://github.com/joncms95/geckolink/wiki/Strategy)
+
 ---
 
 ## Table of contents
 
-| Section                                      | Contents                                                    |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| **[Tech Stack](#tech-stack)**                 | Backend, database, frontend, testing, tooling                |
+| Section                                                                | Contents                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **[Tech Stack](#tech-stack)**                                          | Backend, database, frontend, testing, tooling                |
 | **[Architecture & Design Decisions](#architecture--design-decisions)** | Domain design, auth, dashboard, links, metadata, scalability |
-| **[API Endpoints](#api-endpoints)**          | All API routes and auth requirements                        |
-| **[Installation & Setup (macOS)](#installation--setup-macos)** | Prerequisites, local dev, tests, deployment                   |
-| **[Security](#security)**                    | Input sanitization, rate limiting, auth, errors              |
-| **[Project Structure](#project-structure)**  | Directory layout (app, client, config, spec, docs)          |
-| **[Code style](#code-style)**                | Rufo, RuboCop, Prettier                                     |
+| **[API Endpoints](#api-endpoints)**                                    | All API routes and auth requirements                         |
+| **[Installation & Setup (macOS)](#installation--setup-macos)**         | Prerequisites, local dev, tests, deployment                  |
+| **[Security](#security)**                                              | Input sanitization, rate limiting, auth, errors              |
+| **[Project Structure](#project-structure)**                            | Directory layout (app, client, config, spec, docs)           |
+| **[Code style](#code-style)**                                          | Rufo, RuboCop, Prettier                                      |
+| **[Closing Remarks](#closing-remarks)**                                | Local vs. production-scale considerations                    |
 
 ---
 
@@ -86,7 +89,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 - **Title and favicon fetching** — After creating the link, the backend fetches the target URL with a **8 s maximum** for the whole metadata step. Within that, each HTTP request uses a **4 s** timeout (HTML page, manifest), and DuckDuckGo favicon checks use **2 s** each. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches HTML, and extracts:
   - **Title** from `<title>`, `og:title`, or `twitter:title` (if missing, the UI shows a dash).
-  - **Favicon** from the web app manifest, then `<link rel="icon">`, then [DuckDuckGo’s favicon service](https://icons.duckduckgo.com/ip3) as a fallback. For DuckDuckGo, the app tries the **actual host** first (e.g. `www.touchngo.com.my` if that’s what the user entered), then the alternate (with or without `www`) if the first returns 404, so icons work for both apex and www domains. Same-origin favicon URLs are replaced with the DuckDuckGo URL so icons load reliably in the app (avoids CORS/redirect issues). Cross-origin icons (e.g. CDN) are kept. If the fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo favicon so the icon slot is never empty; the title is left blank (dash).
+  - **Favicon** from the web app manifest, then `<link rel="icon">`, then DuckDuckGo’s favicon service (https://icons.duckduckgo.com/ip3) as a fallback. For DuckDuckGo, the app tries the **actual host** first (e.g. `www.touchngo.com.my` if that’s what the user entered), then the alternate (with or without `www`) if the first returns 404, so icons work for both apex and www domains. Same-origin favicon URLs are replaced with the DuckDuckGo URL so icons load reliably in the app (avoids CORS/redirect issues). Cross-origin icons (e.g. CDN) are kept. If the fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo favicon so the icon slot is never empty; the title is left blank (dash).
 - **Geolocation** — Click recording (DB insert + IP-to-location via Geocoder, 3 s timeout) runs in a background job (`RecordClickJob`). The redirect response is sent immediately; the job runs asynchronously so analytics get country data without slowing the redirect.
 
 ### 6. Scalability
@@ -120,7 +123,7 @@ When a user creates a short link, the app fetches the target page’s **title an
 
 - Ruby 3.4.8
 - PostgreSQL 16
-- **Redis**
+- Redis
 - Node.js 20+
 
 ### Local Development
@@ -162,7 +165,7 @@ When a user creates a short link, the app fetches the target page’s **title an
    bin/dev
    ```
 
-   This starts the Rails server, the **Sidekiq worker** (click recording), and the Vite dev server. If Redis isn’t running, Sidekiq will fail to connect and clicks won’t be recorded.
+   This starts the Rails server, the Sidekiq worker, and the Vite dev server. If Redis isn’t running, Sidekiq will fail to connect and clicks won’t be recorded.
 
 1. **Run tests**
 
@@ -187,7 +190,7 @@ The backend is deployed via Docker Compose on a DigitalOcean droplet; the React 
 | Variable               | Required | Description                                         |
 | ---------------------- | -------- | --------------------------------------------------- |
 | `SECRET_KEY_BASE`      | Prod     | Rails secret (generate with `openssl rand -hex 64`) |
-| `POSTGRES_PASSWORD`    | Docker   | PostgreSQL password                                 |
+| `POSTGRES_PASSWORD`    | Prod     | PostgreSQL password                                 |
 | `DATABASE_URL`         | Prod     | PostgreSQL connection string                        |
 | `REDIS_URL`            | Prod     | Redis connection string                             |
 | `VITE_API_BASE`        | Frontend | API base URL (no trailing slash)                    |
@@ -226,7 +229,7 @@ client/
     constants/         # Shared constants
 config/                # Rails configuration
 spec/                  # RSpec tests (models, requests, services, queries)
-docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
+docs/                  # DEPLOY, QUESTION, ROADMAP, RULES, STRATEGY
 ```
 
 ## Code style
@@ -235,6 +238,10 @@ docs/                  # DEPLOY, QUESTION, ROADMAP, WIKI, RULES
 - **RuboCop** — Linting and auto-correct via `bin/rubocop -A`; also runs as part of `bin/ci`.
 - **Prettier** — React/frontend formatter (client). Run `npm run format --prefix client` to format, or `npm run format:check --prefix client` to check only. Uses Prettier defaults. Also runs as part of `bin/ci` and CI.
 
-## License
+## Closing Remarks
 
-MIT
+GeckoLink is a fully functional URL shortener deployed on a single server. The following notes outline where the current implementation would need to evolve for a high-traffic, multi-server production environment.
+
+**Key generation** — `SecureRandom.alphanumeric` with a unique-index retry covers moderate traffic well. Under heavy concurrent load across multiple application servers, collision retries increase because every server generates keys on the fly and contends on the same DB index. A dedicated key pre-generation service that produces keys in batches ahead of time would eliminate runtime collisions entirely.
+
+**Redis (single instance)** — Locally, one Redis instance backs caching, rate limiting (Rack::Attack), and Sidekiq. In a horizontally scaled deployment this becomes a bottleneck and a single point of failure. Rate-limit counters on separate Redis instances would track per-server rather than global per-IP counts, effectively multiplying the allowed threshold. A shared, replicated Redis (or a managed service like ElastiCache) is necessary so that rate limits, cache invalidation, and job queuing behave consistently across all application servers.

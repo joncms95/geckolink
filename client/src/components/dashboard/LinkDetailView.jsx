@@ -86,8 +86,11 @@ export default function LinkDetailView({ link, keyFromUrl, onBack }) {
         </button>
         <div className="flex items-start gap-3 sm:gap-4 min-w-0 text-left sm:text-right sm:flex-row-reverse">
           <LinkIcon src={link?.icon_url} />
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-xl sm:text-2xl font-bold text-white truncate"
+              title={heading}
+            >
               {heading}
             </h1>
             {link?.short_url && (
