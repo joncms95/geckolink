@@ -1,4 +1,5 @@
 import { LINKS_PER_PAGE, SORT_OPTIONS } from "../../constants";
+import { getPageRange } from "../../utils/pagination";
 import Pagination from "./Pagination";
 import ShortUrlCard from "./ShortUrlCard";
 
@@ -15,16 +16,14 @@ export default function LinkList({
   onCopy,
 }) {
   const showPagination = linksTotal > LINKS_PER_PAGE && totalPages > 1;
-  const start = linksTotal > 0 ? (currentPage - 1) * LINKS_PER_PAGE + 1 : 0;
-  const end =
-    linksTotal > 0 ? Math.min(currentPage * LINKS_PER_PAGE, linksTotal) : 0;
+  const { start, end } = getPageRange(linksTotal, LINKS_PER_PAGE, currentPage);
 
   return (
     <section className="min-w-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
         <h2 className="text-lg sm:text-xl font-semibold text-white">
           Short URLs
-          {linksTotal > 0 && (
+          {start != null && end != null && (
             <span className="ml-2 text-gecko-slate font-normal text-sm sm:text-base">
               Showing {start} to {end} of {linksTotal} results
             </span>

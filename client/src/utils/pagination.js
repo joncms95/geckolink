@@ -1,4 +1,20 @@
 /**
+ * Get 1-based start and end item indices for the current page (for "Showing X to Y of Z").
+ * @param {number} totalItems
+ * @param {number} perPage
+ * @param {number} currentPage - 1-based
+ * @returns {{ start: number | null, end: number | null }}
+ */
+export function getPageRange(totalItems, perPage, currentPage) {
+  if (totalItems == null || perPage == null || totalItems <= 0) {
+    return { start: null, end: null };
+  }
+  const start = (currentPage - 1) * perPage + 1;
+  const end = Math.min(currentPage * perPage, totalItems);
+  return { start, end };
+}
+
+/**
  * Build pagination page numbers with ellipsis, e.g. [1, "…", 4, 5, 6, "…", 20].
  * @param {number} currentPage - 1-based current page
  * @param {number} totalPages - total number of pages

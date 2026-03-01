@@ -1,4 +1,4 @@
-import { paginationItems } from "../../utils/pagination";
+import { getPageRange, paginationItems } from "../../utils/pagination";
 
 const btnClass =
   "min-w-[2.25rem] h-9 px-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60";
@@ -25,15 +25,11 @@ export default function Pagination({
 }) {
   const showPagination = totalPages > 1;
   const items = showPagination ? paginationItems(currentPage, totalPages) : [];
-
-  const start =
-    totalItems != null && perPage != null && totalItems > 0
-      ? (currentPage - 1) * perPage + 1
-      : null;
-  const end =
-    totalItems != null && perPage != null && totalItems > 0
-      ? Math.min(currentPage * perPage, totalItems)
-      : null;
+  const { start, end } = getPageRange(
+    totalItems ?? 0,
+    perPage ?? 0,
+    currentPage,
+  );
 
   if (!showPagination && start == null) return null;
 
