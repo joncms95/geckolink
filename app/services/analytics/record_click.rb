@@ -4,8 +4,8 @@ module Analytics
   class RecordClick
     GEOCODE_TIMEOUT_SEC = 3
 
-    def self.call(link_id:, ip_address:, user_agent:, link: nil)
-      link = link.presence || Link.find_by(id: link_id)
+    def self.call(link_id:, ip_address:, user_agent:)
+      link = Link.find_by(id: link_id)
       return unless link
 
       click = link.clicks.create!(
