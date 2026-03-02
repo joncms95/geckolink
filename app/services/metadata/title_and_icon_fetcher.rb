@@ -60,7 +60,7 @@ module Metadata
       @doc = Nokogiri::HTML(scrub_encoding(html_body))
     end
 
-    # --- Title extraction ---
+    # --- Title Extraction ---
 
     def extract_title
       return nil unless @doc
@@ -97,7 +97,7 @@ module Metadata
       raw_string&.strip&.slice(0, max).presence
     end
 
-    # --- Icon extraction ---
+    # --- Icon Extraction ---
 
     def resolve_icon
       icon_from_manifest || icon_from_html || duckduckgo_icon
@@ -201,7 +201,7 @@ module Metadata
       end.max || 0
     end
 
-    # --- HTTP and URL networking ---
+    # --- HTTP and URL Networking ---
 
     def normalize_url(url)
       url_string = url.to_s.strip
