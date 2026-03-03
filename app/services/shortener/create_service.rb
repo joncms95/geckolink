@@ -28,7 +28,7 @@ module Shortener
       def persist_with_unique_key!(link)
         (MAX_COLLISION_RETRIES + 1).times do |attempt|
           length = attempt < MAX_COLLISION_RETRIES ? DEFAULT_KEY_LENGTH : FALLBACK_KEY_LENGTH
-          link.key = RandomKey.generate(length: length)
+          link.key = Shortener::RandomKey.generate(length: length)
           link.save!
           return
         rescue ActiveRecord::RecordNotUnique

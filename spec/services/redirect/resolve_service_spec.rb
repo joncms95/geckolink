@@ -18,6 +18,16 @@ RSpec.describe Redirect::ResolveService do
       expect(result.error).to eq("Link not found")
     end
 
+    it "returns failure for blank key without hitting the database" do
+      allow(Link).to receive(:find_by)
+
+      result = described_class.call(key: "   ")
+
+      expect(result).to be_failure
+      expect(result.error).to eq("Link not found")
+      expect(Link).not_to have_received(:find_by)
+    end
+
     it "reads through cache on second call (cache hit)" do
       link = create(:link, key: "cachedkey", target_url: "https://cached.example.com")
       cache_key = described_class.send(:cache_key, link.key)
