@@ -8,8 +8,6 @@ module Redirect
     CACHE_KEY_PREFIX = "redirect"
 
     def self.call(key:)
-      return Result.failure("Link not found") if key.blank?
-
       cached = Rails.cache.read(cache_key(key))
       if cached
         return Result.success(link_id: cached["link_id"], url: cached["url"])
