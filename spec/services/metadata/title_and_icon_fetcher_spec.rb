@@ -3,69 +3,10 @@
 require "rails_helper"
 
 RSpec.describe Metadata::TitleAndIconFetcher do
-  let(:duckduckgo) { "https://icons.duckduckgo.com/ip3" }
-
-  before do
-    stub_request(:head, %r{#{Regexp.escape(duckduckgo)}/}).to_return(status: 200)
-  end
+  let(:ddg) { described_class::DUCKDUCKGO_FAVICON }
 
   describe ".call" do
-    context "when fetch fails" do
-      it "returns DuckDuckGo icon on timeout" do
-        stub_request(:get, "https://example.com/").to_timeout
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value).to eq(title: nil, icon_url: "#{duckduckgo}/example.com.ico")
-      end
-
-      it "returns DuckDuckGo icon for non-HTML response" do
-        stub_request(:get, "https://example.com/")
-          .to_return(status: 200, headers: { "Content-Type" => "application/json" }, body: "{}")
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value).to eq(title: nil, icon_url: "#{duckduckgo}/example.com.ico")
-      end
-
-      it "normalizes schemeless URLs before falling back" do
-        stub_request(:get, "https://facebook.com/").to_timeout
-        result = described_class.call("facebook.com")
-        expect(result).to be_success
-        expect(result.value).to eq(title: nil, icon_url: "#{duckduckgo}/facebook.com.ico")
-      end
-
-      it "falls back to www-prefixed DuckDuckGo URL when bare host 404s" do
-        stub_request(:get, "https://touchngo.com.my/").to_timeout
-        stub_request(:head, "#{duckduckgo}/touchngo.com.my.ico").to_return(status: 404)
-        stub_request(:head, "#{duckduckgo}/www.touchngo.com.my.ico").to_return(status: 200)
-        result = described_class.call("https://touchngo.com.my/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/www.touchngo.com.my.ico")
-      end
-
-      it "tries actual host (www) first when user typed it" do
-        stub_request(:get, "https://www.touchngo.com.my/").to_timeout
-        stub_request(:head, "#{duckduckgo}/www.touchngo.com.my.ico").to_return(status: 200)
-        result = described_class.call("https://www.touchngo.com.my/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/www.touchngo.com.my.ico")
-      end
-
-      it "uses actual host DuckDuckGo URL when it returns 200" do
-        stub_request(:get, "https://example.com/").to_timeout
-        stub_request(:head, "#{duckduckgo}/example.com.ico").to_return(status: 200)
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
-      end
-
-      it "returns actual host URL when DuckDuckGo is unreachable" do
-        stub_request(:get, "https://example.com/").to_timeout
-        stub_request(:head, %r{#{Regexp.escape(duckduckgo)}/}).to_timeout
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
-      end
-
+    context "with invalid URL" do
       it "returns failure for blank URL" do
         result = described_class.call("")
         expect(result).to be_failure
@@ -73,77 +14,119 @@ RSpec.describe Metadata::TitleAndIconFetcher do
       end
     end
 
-    context "when fetch succeeds" do
-      it "extracts title from HTML" do
-        stub_html("https://example.com/",
-                  "<html><head><title>Example</title></head></html>")
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:title]).to eq("Example")
+    context "with valid URL" do
+      context "when HTML fetch fails (timeout, non-HTML, or error)" do
+        it "returns success with nil title and DuckDuckGo icon by host" do
+          stub_request(:get, "https://example.com/").to_timeout
+
+          result = described_class.call("https://example.com/")
+
+          expect(result).to be_success
+          expect(result.value[:title]).to be_nil
+          expect(result.value[:icon_url]).to eq("#{ddg}/example.com.ico")
+        end
+
+        it "normalizes schemeless URL and uses normalized host for icon" do
+          stub_request(:get, "https://facebook.com/").to_timeout
+
+          result = described_class.call("facebook.com")
+
+          expect(result).to be_success
+          expect(result.value[:icon_url]).to eq("#{ddg}/facebook.com.ico")
+        end
+
+        it "uses exact host for icon (e.g. with www)" do
+          stub_request(:get, "https://www.example.com/").to_timeout
+
+          result = described_class.call("https://www.example.com/")
+
+          expect(result).to be_success
+          expect(result.value[:icon_url]).to eq("#{ddg}/www.example.com.ico")
+        end
+
+        it "rejects non-HTML response and still returns icon" do
+          stub_request(:get, "https://example.com/")
+            .to_return(status: 200, headers: { "Content-Type" => "application/json" }, body: "{}")
+
+          result = described_class.call("https://example.com/")
+
+          expect(result).to be_success
+          expect(result.value[:title]).to be_nil
+          expect(result.value[:icon_url]).to eq("#{ddg}/example.com.ico")
+        end
       end
 
-      it "returns nil title when page has none" do
-        stub_html("https://www.facebook.com/",
-                  "<html><head></head><body></body></html>")
-        result = described_class.call("https://www.facebook.com/")
-        expect(result).to be_success
-        expect(result.value[:title]).to be_nil
-      end
+      context "when HTML fetch succeeds" do
+        it "extracts title from <title> and icon from DuckDuckGo by host" do
+          stub_get("https://example.com/", "<html><head><title>My Site</title></head></html>")
 
-      it "handles application/xhtml+xml content type" do
-        stub_request(:get, "https://example.com/")
-          .to_return(
-            status: 200,
-            headers: { "Content-Type" => "application/xhtml+xml" },
-            body: "<html><head><title>XHTML Page</title></head></html>"
-          )
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:title]).to eq("XHTML Page")
-      end
+          result = described_class.call("https://example.com/")
 
-      it "uses DuckDuckGo when no icon in HTML" do
-        stub_html("https://example.com/",
-                  "<html><head><title>No Icon</title></head></html>")
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
-      end
+          expect(result).to be_success
+          expect(result.value[:title]).to eq("My Site")
+          expect(result.value[:icon_url]).to eq("#{ddg}/example.com.ico")
+        end
 
-      it "replaces same-origin favicon with DuckDuckGo" do
-        stub_html("https://example.com/",
-                  '<html><head><link rel="icon" href="/fav.ico"></head></html>')
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("#{duckduckgo}/example.com.ico")
-      end
+        it "falls back to og:title when <title> is missing" do
+          html = '<html><head><meta property="og:title" content="OG Title"></head></html>'
+          stub_get("https://example.com/", html)
 
-      it "keeps cross-origin (CDN) favicon" do
-        stub_html("https://example.com/",
-                  '<html><head><link rel="icon" href="https://cdn.example.net/fav.ico"></head></html>')
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("https://cdn.example.net/fav.ico")
-      end
+          result = described_class.call("https://example.com/")
 
-      it "prefers icon closest to preferred size" do
-        html = <<~HTML
-          <html><head>
-            <link rel="icon" href="https://cdn.example.net/small.ico" sizes="16x16">
-            <link rel="icon" href="https://cdn.example.net/large.ico" sizes="192x192">
-          </head></html>
-        HTML
-        stub_html("https://example.com/", html)
-        result = described_class.call("https://example.com/")
-        expect(result).to be_success
-        expect(result.value[:icon_url]).to eq("https://cdn.example.net/large.ico")
+          expect(result.value[:title]).to eq("OG Title")
+        end
+
+        it "falls back to twitter:title when <title> and og:title missing" do
+          html = '<html><head><meta name="twitter:title" content="Twitter Title"></head></html>'
+          stub_get("https://example.com/", html)
+
+          result = described_class.call("https://example.com/")
+
+          expect(result.value[:title]).to eq("Twitter Title")
+        end
+
+        it "returns nil title when no title source exists" do
+          stub_get("https://example.com/", "<html><head></head><body></body></html>")
+
+          result = described_class.call("https://example.com/")
+
+          expect(result.value[:title]).to be_nil
+        end
+
+        it "truncates title at 100 characters" do
+          long = "a" * 150
+          stub_get("https://example.com/", "<html><head><title>#{long}</title></head></html>")
+
+          result = described_class.call("https://example.com/")
+
+          expect(result.value[:title].length).to eq(100)
+        end
+
+        it "accepts application/xhtml+xml" do
+          stub_request(:get, "https://example.com/")
+            .to_return(
+              status: 200,
+              headers: { "Content-Type" => "application/xhtml+xml" },
+              body: "<html><head><title>XHTML</title></head></html>"
+            )
+
+          result = described_class.call("https://example.com/")
+
+          expect(result.value[:title]).to eq("XHTML")
+        end
+
+        it "always uses DuckDuckGo for icon regardless of HTML" do
+          stub_get("https://example.com/", '<html><head><link rel="icon" href="https://cdn.example.com/fav.ico"></head></html>')
+
+          result = described_class.call("https://example.com/")
+
+          expect(result.value[:icon_url]).to eq("#{ddg}/example.com.ico")
+        end
       end
     end
   end
 
-  private
-
-  def stub_html(url, body)
+  def stub_get(url, body)
     stub_request(:get, url)
       .to_return(status: 200, headers: { "Content-Type" => "text/html" }, body: body)
   end

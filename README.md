@@ -60,7 +60,7 @@ Log in to see the analytics dashboard with sample links.
 - `Analytics::ReportQuery` — aggregates click data by country and hour for the analytics dashboard.
 - `Dashboard::StatsQuery` — returns cached dashboard aggregates (total links, total clicks, top location) per user.
 - `Config::LinkSort` — centralizes link list sorting (params: newest, oldest, most_clicks, least_clicks).
-- `Metadata::TitleAndIconFetcher` — extracts the page `<title>` and favicon from the target URL.
+- `Metadata::TitleAndIconFetcher` — fetches the target URL’s HTML to extract the page title; icon from DuckDuckGo.
 
 Services that need to signal success/failure to the caller return a `Result` value object (`success?` / `failure?`); fire-and-forget logic (e.g. `Analytics::RecordClick`) returns nothing.
 
@@ -87,9 +87,9 @@ The dashboard summary (total links, total clicks, top location) is loaded **asyn
 
 When a user creates a short link, the app fetches the target page’s **title and favicon** so the dashboard can show a recognizable label and icon instead of a bare URL.
 
-- **Title and favicon fetching** — After creating the link, the backend fetches the target URL with a **8 s maximum** for the whole metadata step. Within that, each HTTP request uses a **4 s** timeout (HTML page, manifest), and DuckDuckGo favicon checks use **2 s** each. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches HTML, and extracts:
-  - **Title** from `<title>`, `og:title`, or `twitter:title` (if missing, the UI shows a dash).
-  - **Favicon** from the web app manifest, then `<link rel="icon">`, then DuckDuckGo’s favicon service (https://icons.duckduckgo.com/ip3) as a fallback. For DuckDuckGo, the app tries the **actual host** first (e.g. `www.touchngo.com.my` if that’s what the user entered), then the alternate (with or without `www`) if the first returns 404, so icons work for both apex and www domains. Same-origin favicon URLs are replaced with the DuckDuckGo URL so icons load reliably in the app (avoids CORS/redirect issues). Cross-origin icons (e.g. CDN) are kept. If the fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo favicon so the icon slot is never empty; the title is left blank (dash).
+- **Title and favicon fetching** — After creating the link, the backend has a **8 s maximum** for the metadata step. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches the HTML with a **4 s** timeout, and extracts:
+  - **Title** from `<title>`, `og:title`, or `twitter:title` (if none found, title is nil and the UI shows a dash).
+  - **Favicon** is always from DuckDuckGo: `https://icons.duckduckgo.com/ip3/{host}.ico` where `{host}` is the host of the requested URL (after redirects). No manifest or `<link rel="icon">` parsing. If the HTML fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo icon for that host and title is left blank.
 - **Geolocation** — Click recording (DB insert + IP-to-location via Geocoder, 3 s timeout) runs in a background job (`RecordClickJob`). The redirect response is sent immediately; the job runs asynchronously so analytics get country data without slowing the redirect.
 
 ### 6. Scalability
