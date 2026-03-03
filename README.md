@@ -88,7 +88,7 @@ The dashboard summary (total links, total clicks, top location) is loaded **asyn
 When a user creates a short link, the app fetches the target page’s **title and favicon** so the dashboard can show a recognizable label and icon instead of a bare URL.
 
 - **Title and favicon fetching** — After creating the link, the backend has a **8 s maximum** for the metadata step. It normalizes schemeless URLs (e.g. `facebook.com` → `https://facebook.com`), fetches the HTML with a **4 s** timeout, and extracts:
-  - **Title** from `<title>`, `og:title`, or `twitter:title` (if none found, title is nil and the UI shows a dash).
+  - **Title** from `<title>`, `og:title`, `og:site_name`, or `twitter:title` (if none found, title is nil and the UI shows a dash).
   - **Favicon** is always from DuckDuckGo: `https://icons.duckduckgo.com/ip3/{host}.ico` where `{host}` is the host of the requested URL (after redirects). No manifest or `<link rel="icon">` parsing. If the HTML fetch fails (timeout, non-HTML, error), the link still gets a DuckDuckGo icon for that host and title is left blank.
 - **Geolocation** — Click recording (DB insert + IP-to-location via Geocoder, 3 s timeout) runs in a background job (`RecordClickJob`). The redirect response is sent immediately; the job runs asynchronously so analytics get country data without slowing the redirect.
 

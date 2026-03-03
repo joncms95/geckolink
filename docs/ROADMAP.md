@@ -18,7 +18,7 @@
 
 ## Phase 3: Metadata Fetching
 
-- [x] **Service**: `Metadata::TitleAndIconFetcher` — fetch HTML (4 s timeout, 8 s max for metadata step), extract title from `<title>` / og:title / twitter:title; icon from DuckDuckGo.
+- [x] **Service**: `Metadata::TitleAndIconFetcher` — fetch HTML (4 s timeout, 8 s max for metadata step), extract title from `<title>` / og:title / og:site_name / twitter:title; icon from DuckDuckGo.
 
 ## Phase 4: Analytics & Tracking
 
