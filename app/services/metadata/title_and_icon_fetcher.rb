@@ -6,8 +6,9 @@ module Metadata
     MAX_BODY_SIZE = 256 * 1024
     MAX_REDIRECTS = 5
     MAX_TITLE_LENGTH = 100
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    DUCKDUCKGO_FAVICON = "https://icons.duckduckgo.com/ip3"
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
+    DUCKDUCKGO_FAVICON = "https://icons.duckduckgo.com/ip3".freeze
+
     NETWORK_ERRORS = [
       SocketError, OpenSSL::SSL::SSLError, Timeout::Error,
       Net::OpenTimeout, Net::ReadTimeout, URI::InvalidURIError,
@@ -20,60 +21,115 @@ module Metadata
     end
 
     def initialize(url)
-      @uri = normalize_url(url)
-      @final_uri = nil
-      @doc = nil
+      @url = url
     end
 
     def call
-      return Result.failure("Invalid URL") unless @uri
+      uri = normalize_url(@url)
+      return Result.failure("Invalid URL") unless uri
 
-      load_page_content
+      html_body = fetch_html(uri)
+      title = html_body ? extract_title(html_body) : nil
 
       Result.success(
-        title: extract_title,
-        icon_url: duckduckgo_icon
+        title: title,
+        icon_url: duckduckgo_icon(uri)
       )
     end
 
     private
 
-    def load_page_content
-      html_body, @final_uri = fetch_html(@uri)
-      @final_uri ||= @uri
+    # --- Network Logic ---
 
-      return unless html_body
+    def fetch_html(uri, redirects = 0)
+      return nil if redirects > MAX_REDIRECTS
 
-      @doc = Nokogiri::HTML(scrub_encoding(html_body))
+      http = build_http_client(uri)
+      request = build_request(uri)
+
+      body = nil
+      http.request(request) do |response|
+        case response
+        when Net::HTTPOK
+          return nil unless valid_content_type?(response)
+
+          body = read_limited_body(response)
+        when Net::HTTPRedirection
+          redirect_location = response["location"]
+          return nil if redirect_location.blank?
+
+          redirect_uri = URI.join(uri, redirect_location)
+          body = fetch_html(redirect_uri, redirects + 1)
+        end
+      end
+
+      body
+    rescue *NETWORK_ERRORS
+      nil
     end
 
-    def extract_title
-      return nil unless @doc
+    def build_http_client(uri)
+      Net::HTTP.new(uri.host, uri.port).tap do |http|
+        http.use_ssl = (uri.scheme == "https")
+        http.open_timeout = TIMEOUT
+        http.read_timeout = TIMEOUT
+      end
+    end
 
-      raw = text_from_css("title") ||
-            content_from_meta("property", "og:title") ||
-            content_from_meta("name", "twitter:title")
+    def build_request(uri)
+      Net::HTTP::Get.new(uri.request_uri).tap do |r|
+        r["User-Agent"] = USER_AGENT
+        r["Accept"] = "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+        r["Accept-Language"] = "en-US,en;q=0.9"
+      end
+    end
+
+    def valid_content_type?(response)
+      content_type = response["content-type"].to_s.split(";").first.to_s.strip.downcase
+      %w[text/html application/xhtml+xml].include?(content_type) || content_type.end_with?("+html")
+    end
+
+    def read_limited_body(response)
+      body = String.new
+      response.read_body do |chunk|
+        body << chunk
+        # Break early to prevent downloading massive files into memory
+        break if body.bytesize >= MAX_BODY_SIZE
+      end
+      body.byteslice(0, MAX_BODY_SIZE)
+    end
+
+    # --- DOM Parsing Logic ---
+
+    def extract_title(html_body)
+      doc = Nokogiri::HTML(scrub_encoding(html_body))
+
+      raw = text_from_css(doc, "title") ||
+            content_from_meta(doc, "property", "og:title") ||
+            content_from_meta(doc, "name", "twitter:title")
 
       truncate(raw)
     end
 
-    def text_from_css(selector)
-      @doc.at_css(selector)&.text
+    def text_from_css(doc, selector)
+      doc.at_css(selector)&.text
     end
 
-    def content_from_meta(attr, value)
-      node = @doc.at_css("meta[#{attr}=\"#{value}\"]")
+    def content_from_meta(doc, attr, value)
+      node = doc.at_css("meta[#{attr}=\"#{value}\"]")
       node&.[]("content").presence || node&.[]("value")
     end
 
-    def truncate(raw_string, max = MAX_TITLE_LENGTH)
-      raw_string&.strip&.slice(0, max).presence
+    def truncate(raw_string)
+      raw_string&.strip&.slice(0, MAX_TITLE_LENGTH).presence
     end
 
-    def duckduckgo_icon
-      host = @final_uri.host.to_s.downcase
-      "#{DUCKDUCKGO_FAVICON}/#{URI.encode_www_form_component(host)}.ico"
+    def scrub_encoding(body)
+      safe_body = body.dup.force_encoding(Encoding::UTF_8)
+      safe_body.valid_encoding? ? safe_body : safe_body.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
     end
+
+    # --- Utility Logic ---
 
     def normalize_url(url)
       url_string = url.to_s.strip
@@ -86,58 +142,9 @@ module Metadata
       nil
     end
 
-    def fetch_html(uri, redirects = 0)
-      response, final_uri = fetch_resource(
-        uri: uri,
-        accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-        max_size: MAX_BODY_SIZE,
-        redirects: redirects
-      )
-
-      return nil unless response && html_content_type?(response)
-      [response.body, final_uri]
-    end
-
-    def fetch_resource(uri:, accept:, max_size:, redirects: 0)
-      return nil if redirects > MAX_REDIRECTS
-
-      request = Net::HTTP::Get.new(uri.request_uri).tap do |r|
-        r["User-Agent"] = USER_AGENT
-        r["Accept"] = accept
-        r["Accept-Language"] = "en-US,en;q=0.9"
-      end
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = (uri.scheme == "https")
-      http.open_timeout = TIMEOUT
-      http.read_timeout = TIMEOUT
-
-      response = http.request(request)
-
-      case response
-      when Net::HTTPOK
-        response.body = response.body.byteslice(0, max_size) if response.body.bytesize > max_size
-        [response, uri]
-      when Net::HTTPRedirection
-        redirect_location = response["location"]
-        return nil if redirect_location.blank?
-
-        fetch_resource(uri: URI.join(uri, redirect_location), accept: accept, max_size: max_size, redirects: redirects + 1)
-      else
-        nil
-      end
-    rescue *NETWORK_ERRORS
-      nil
-    end
-
-    def html_content_type?(response)
-      content_type = response["content-type"].to_s.split(";").first.to_s.strip.downcase
-      content_type == "text/html" || content_type == "application/xhtml+xml" || content_type.end_with?("+html")
-    end
-
-    def scrub_encoding(body)
-      body = body.dup.force_encoding(Encoding::UTF_8)
-      body.valid_encoding? ? body : body.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
+    def duckduckgo_icon(uri)
+      host = uri.host.to_s.downcase
+      "#{DUCKDUCKGO_FAVICON}/#{URI.encode_www_form_component(host)}.ico"
     end
   end
 end
