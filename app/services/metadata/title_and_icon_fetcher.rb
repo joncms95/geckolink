@@ -6,15 +6,8 @@ module Metadata
     MAX_BODY_SIZE = 256 * 1024
     MAX_REDIRECTS = 5
     MAX_TITLE_LENGTH = 100
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)".freeze
     DUCKDUCKGO_FAVICON = "https://icons.duckduckgo.com/ip3".freeze
-
-    NETWORK_ERRORS = [
-      SocketError, OpenSSL::SSL::SSLError, Timeout::Error,
-      Net::OpenTimeout, Net::ReadTimeout, Net::HTTPBadResponse,
-      URI::InvalidURIError, Errno::ECONNREFUSED, Errno::ECONNRESET,
-      Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Errno::EPIPE, IOError
-    ].freeze
 
     def self.call(url)
       new(url).call
@@ -29,7 +22,7 @@ module Metadata
       return Result.failure("Invalid URL") unless uri
 
       html_body = fetch_html(uri)
-      title = html_body ? extract_title(html_body) : nil
+      title = html_body && extract_title(html_body)
 
       Result.success(
         title: title,
@@ -64,7 +57,7 @@ module Metadata
       end
 
       body
-    rescue *NETWORK_ERRORS
+    rescue StandardError
       nil
     end
 
