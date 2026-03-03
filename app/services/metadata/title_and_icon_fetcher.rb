@@ -92,11 +92,11 @@ module Metadata
     def read_limited_body(response)
       body = String.new
       response.read_body do |chunk|
-        body << chunk
-        # Break early to prevent downloading massive files into memory
-        break if body.bytesize >= MAX_BODY_SIZE
+        if body.bytesize < MAX_BODY_SIZE
+          body << chunk.byteslice(0, MAX_BODY_SIZE - body.bytesize)
+        end
       end
-      body.byteslice(0, MAX_BODY_SIZE)
+      body
     end
 
     # --- DOM Parsing Logic ---
