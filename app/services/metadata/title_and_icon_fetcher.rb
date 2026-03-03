@@ -11,9 +11,9 @@ module Metadata
 
     NETWORK_ERRORS = [
       SocketError, OpenSSL::SSL::SSLError, Timeout::Error,
-      Net::OpenTimeout, Net::ReadTimeout, URI::InvalidURIError,
-      Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH,
-      Errno::ETIMEDOUT, Errno::EPIPE, IOError
+      Net::OpenTimeout, Net::ReadTimeout, Net::HTTPBadResponse,
+      URI::InvalidURIError, Errno::ECONNREFUSED, Errno::ECONNRESET,
+      Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Errno::EPIPE, IOError
     ].freeze
 
     def self.call(url)
