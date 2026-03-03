@@ -16,7 +16,7 @@ RSpec.describe Metadata::TitleAndIconFetcher do
 
     context "with valid URL" do
       context "when HTML fetch fails (timeout, non-HTML, or error)" do
-        it "returns success with nil title and DuckDuckGo icon by host" do
+        it "returns success with nil title and DuckDuckGo icon" do
           stub_request(:get, "https://example.com/").to_timeout
 
           result = described_class.call("https://example.com/")

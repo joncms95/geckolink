@@ -106,6 +106,7 @@ module Metadata
 
       raw = text_from_css(doc, "title") ||
             content_from_meta(doc, "property", "og:title") ||
+            content_from_meta(doc, "property", "og:site_name") ||
             content_from_meta(doc, "name", "twitter:title")
 
       truncate(raw)
