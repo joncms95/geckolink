@@ -14,12 +14,14 @@ module Shortener
       link = Link.new(target_url: url, user_id: user_id)
       return Result.failure(link.errors.full_messages) unless link.valid?
 
-      persist_with_unique_key!(link)
-      backfill_metadata(link)
+      begin
+        persist_with_unique_key!(link)
+      rescue ActiveRecord::RecordInvalid => e
+        return Result.failure(e.record.errors.full_messages)
+      end
 
+      backfill_metadata(link)
       Result.success(link.reload)
-    rescue ActiveRecord::RecordInvalid => e
-      Result.failure(e.record.errors.full_messages)
     end
 
     class << self

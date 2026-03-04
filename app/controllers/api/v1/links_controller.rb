@@ -4,6 +4,7 @@ module Api
   module V1
     class LinksController < Api::BaseController
       before_action :require_authentication!, only: %i[index show analytics]
+      before_action :set_and_authorize_link!, only: %i[show analytics]
 
       def create
         return head :unauthorized if stale_auth?
@@ -36,21 +37,20 @@ module Api
       end
 
       def show
-        link = Link.find_by!(key: params[:key])
-        return unless authorize_link_access!(link)
-
-        render json: link_json(link)
+        render json: link_json(@link)
       end
 
       def analytics
-        link = Link.find_by!(key: params[:key])
-        return unless authorize_link_access!(link)
-
-        report = Analytics::ReportQuery.call(link: link)
+        report = Analytics::ReportQuery.call(link: @link)
         render json: report
       end
 
       private
+
+      def set_and_authorize_link!
+        @link = Link.find_by!(key: params[:key])
+        authorize_link_access!(@link)
+      end
 
       def authorize_link_access!(link)
         return true if link.user_id == current_user&.id
