@@ -53,7 +53,7 @@ module Api
       end
 
       def authorize_link_access!(link)
-        return true if link.user_id == current_user&.id
+        return true if link.user_id == current_user&.id || link.user_id == nil
 
         render_errors("You don't have permission to view this link.", :forbidden)
         false
