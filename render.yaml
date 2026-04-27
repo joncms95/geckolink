@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: geckolink-api
+    runtime: ruby
+    plan: free
+    buildCommand: bundle install
+    preDeployCommand: bundle exec rails db:migrate
+    startCommand: bundle exec puma -C config/puma.rb
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

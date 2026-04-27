@@ -8,7 +8,7 @@ class RedirectsController < ApplicationController
     redirect_url = safe_redirect_url(result.value[:url])
     return head :unprocessable_content unless redirect_url
 
-    RecordClickJob.perform_later(
+    Analytics::RecordClick.call(
       link_id: result.value[:link_id],
       ip_address: request.remote_ip,
       user_agent: request.user_agent

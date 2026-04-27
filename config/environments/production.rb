@@ -53,12 +53,8 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Redis cache store (redirects, dashboard stats, Rack::Attack).
-  config.cache_store = :redis_cache_store, config.x.redis_cache_options.merge(
-    url: ENV["REDIS_URL"].presence || "redis://localhost:6379"
-  )
-
-  config.active_job.queue_adapter = :sidekiq
+  # In-process cache store (redirects, dashboard stats, Rack::Attack).
+  config.cache_store = :memory_store, { size: 64.megabytes }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
