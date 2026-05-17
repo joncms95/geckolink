@@ -1,0 +1,13 @@
+name: Keepalive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl keepalive
+        run: curl -fsS https://geckolink.onrender.com/up || true

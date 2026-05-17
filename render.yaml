@@ -14,8 +14,3 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
-
-  - type: cron
-    name: geckolink-api-keepalive
-    schedule: "*/10 * * * *"
-    command: curl -fsS https://geckolink.onrender.com/up || true
