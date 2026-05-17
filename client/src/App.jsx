@@ -8,6 +8,7 @@ import Header from "./components/Header";
 import ScrollToTopButton from "./components/ScrollToTopButton";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import useKeepAlive from "./hooks/useKeepAlive";
 
 const ParticleBackground = lazy(
   () => import("./components/ParticleBackground"),
@@ -80,6 +81,8 @@ function AppContent() {
 }
 
 export default function App() {
+  // keep Render backend awake when frontend is deployed (set VITE_KEEP_ALIVE_URL)
+  useKeepAlive();
   return (
     <BrowserRouter>
       <AuthProvider>
